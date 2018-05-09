@@ -69,7 +69,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyStore;
-import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Date;
@@ -129,23 +129,17 @@ public class RangerAdminRESTClient {
                 && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
             try {
                 final DataSet finaDataset = dataset;
-                rangerExportPolicyList =
-                        UserGroupInformation.getLoginUser().doAs(new PrivilegedAction<RangerExportPolicyList>() {
+                rangerExportPolicyList = UserGroupInformation.getLoginUser()
+                        .doAs(new PrivilegedExceptionAction<RangerExportPolicyList>() {
                             @Override
-                            public RangerExportPolicyList run() {
-                                try {
-                                    return getRangerPoliciesFromFile(finaDataset, true);
-                                } catch (Exception e) {
-                                    LOG.error("Failed to export Ranger policies", e);
-                                }
-                                return null;
+                            public RangerExportPolicyList run() throws BeaconException {
+                                return getRangerPoliciesFromFile(finaDataset, true);
                             }
                         });
                 return rangerExportPolicyList;
             } catch (Exception e) {
-                LOG.error("Failed to Authenticate Using given Principal and Keytab", e);
+                throw new BeaconException("Failed to export Ranger policies", e);
             }
-            return null;
         } else {
             return getRangerPoliciesFromFile(dataset, true);
         }
@@ -158,23 +152,15 @@ public class RangerAdminRESTClient {
             try {
                 final DataSet finaDataset = dataset;
                 final RangerExportPolicyList finalList=rangerExportPolicyList;
-                result = UserGroupInformation.getLoginUser().doAs(new PrivilegedAction<RangerExportPolicyList>() {
-                    @Override
-                    public RangerExportPolicyList run() {
-                        try {
-                            return importRangerPoliciesFromFile(finaDataset, finalList);
-                        } catch (Exception e) {
-                            LOG.error("Failed to import Ranger policies", e);
-                        }
-                        return null;
-                    }
-                });
-                if (result==null) {
-                    throw new BeaconException("Ranger policy import failed, Please refer target Ranger admin logs.");
-                }
-                return result;
+                result = UserGroupInformation.getLoginUser()
+                        .doAs(new PrivilegedExceptionAction<RangerExportPolicyList>() {
+                            @Override
+                            public RangerExportPolicyList run() throws BeaconException {
+                                return importRangerPoliciesFromFile(finaDataset, finalList);
+                            }
+                        });
             } catch (Exception e) {
-                LOG.error("Ranger policy import failed", e);
+                throw new BeaconException("Ranger policy import failed, Please refer target Ranger admin logs.", e);
             }
             return result;
         } else {
@@ -249,40 +235,36 @@ public class RangerAdminRESTClient {
         String url = sourceRangerEndpoint + (uri.startsWith("/") ? uri : ("/" + uri));
         LOG.debug("URL to export policies from source Ranger: {}", url);
         RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
-        try {
-            WebResource webResource = rangerClient.resource(url);
-            if (shouldProxy) {
-                Cookie cookie =
-                        new Cookie("hadoop-jwt", getSSOToken(dataset.getSourceCluster().getKnoxGatewayURL()));
+        WebResource webResource = rangerClient.resource(url);
+        if (shouldProxy) {
+            Cookie cookie =
+                    new Cookie("hadoop-jwt", getSSOToken(dataset.getSourceCluster().getKnoxGatewayURL()));
 
-                WebResource.Builder builder = webResource.getRequestBuilder().cookie(cookie);
-                clientResp = builder.get(ClientResponse.class);
-            } else {
-                clientResp = webResource.get(ClientResponse.class);
-            }
-            String response = null;
-            if (clientResp!=null) {
-                if (clientResp.getStatus()==HttpServletResponse.SC_OK) {
-                    Gson gson = new GsonBuilder().create();
-                    response = clientResp.getEntity(String.class);
-                    if (StringUtils.isNotEmpty(response)) {
-                        rangerExportPolicyList = gson.fromJson(response, RangerExportPolicyList.class);
-                        return rangerExportPolicyList;
-                    }
-                } else if (clientResp.getStatus()==HttpServletResponse.SC_NO_CONTENT) {
-                    LOG.debug("Ranger policy export request returned empty list");
+            WebResource.Builder builder = webResource.getRequestBuilder().cookie(cookie);
+            clientResp = builder.get(ClientResponse.class);
+        } else {
+            clientResp = webResource.get(ClientResponse.class);
+        }
+        String response = null;
+        if (clientResp!=null) {
+            if (clientResp.getStatus()==HttpServletResponse.SC_OK) {
+                Gson gson = new GsonBuilder().create();
+                response = clientResp.getEntity(String.class);
+                if (StringUtils.isNotEmpty(response)) {
+                    rangerExportPolicyList = gson.fromJson(response, RangerExportPolicyList.class);
                     return rangerExportPolicyList;
-                } else if (clientResp.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
-                    throw new BeaconException("Authentication Failure while communicating to Ranger admin");
                 }
+            } else if (clientResp.getStatus()==HttpServletResponse.SC_NO_CONTENT) {
+                LOG.debug("Ranger policy export request returned empty list");
+                return rangerExportPolicyList;
+            } else if (clientResp.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
+                throw new BeaconException("Authentication Failure while communicating to Ranger admin");
+            } else if (clientResp.getStatus()==HttpServletResponse.SC_FORBIDDEN) {
+                throw new BeaconException("Authorization Failure while communicating to Ranger admin");
             }
-            if (StringUtils.isEmpty(response)) {
-                LOG.debug(
-                    "Ranger policy export request returned empty list or failed, Please refer Ranger admin logs.");
-            }
-        } catch (Exception ex){
-            LOG.warn("Ranger policy export request returned empty list or failed, Please refer Ranger admin logs.");
-            LOG.warn("Exception occurred while exporting Ranger policies: {}", ex);
+        }
+        if (StringUtils.isEmpty(response)) {
+            LOG.debug("Ranger policy export request returned empty list or failed, Please refer Ranger admin logs.");
         }
         return rangerExportPolicyList;
     }
@@ -336,23 +318,31 @@ public class RangerAdminRESTClient {
         String url = sourceRangerEndpoint + (uri.startsWith("/") ? uri : ("/" + uri));
         LOG.debug("URL to export policies from source Ranger: {}", url);
         RangerPolicyList rangerPolicies = new RangerPolicyList();
-        try {
-            WebResource webResource = rangerClient.resource(url);
-            if (shouldProxy) {
-                Cookie cookie =
-                        new Cookie("hadoop-jwt", getSSOToken(dataset.getSourceCluster().getKnoxGatewayURL()));
 
-                WebResource.Builder builder = webResource.getRequestBuilder().cookie(cookie);
-                clientResp = builder.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
-            } else {
-                clientResp = webResource.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
+        WebResource webResource = rangerClient.resource(url);
+        if (shouldProxy) {
+            Cookie cookie =
+                    new Cookie("hadoop-jwt", getSSOToken(dataset.getSourceCluster().getKnoxGatewayURL()));
+
+            WebResource.Builder builder = webResource.getRequestBuilder().cookie(cookie);
+            clientResp = builder.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
+        } else {
+            clientResp = webResource.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
+        }
+        if (clientResp!=null) {
+            if (clientResp.getStatus()==HttpServletResponse.SC_OK) {
+                Gson gson = new GsonBuilder().create();
+                String response = clientResp.getEntity(String.class);
+                if (StringUtils.isNotEmpty(response)) {
+                    rangerPolicies = gson.fromJson(response, RangerPolicyList.class);
+                }
+            } else if (clientResp.getStatus()==HttpServletResponse.SC_NO_CONTENT) {
+                LOG.debug("Ranger policy export request returned empty list");
+            } else if (clientResp.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
+                throw new BeaconException("Authentication Failure while communicating to Ranger admin");
+            } else if (clientResp.getStatus()==HttpServletResponse.SC_FORBIDDEN) {
+                throw new BeaconException("Authorization Failure while communicating to Ranger admin");
             }
-            Gson gson = new GsonBuilder().create();
-            String response = clientResp.getEntity(String.class);
-            rangerPolicies=(RangerPolicyList) gson.fromJson(response, RangerPolicyList.class);
-        } catch (Exception ex){
-            LOG.info("Ranger policy export request returned empty list or failed, Please refer Ranger admin logs.");
-            LOG.error("Exception occurred while exporting Ranger policies: {}", ex);
         }
         if (!CollectionUtils.isEmpty(rangerPolicies.getPolicies())) {
             return rangerPolicies.getPolicies();
@@ -391,9 +381,7 @@ public class RangerAdminRESTClient {
 
     //Dataset.getTargetCluster can't be null
     public List<RangerPolicy> addSingleDenyPolicies(DataSet dataset, List<RangerPolicy> rangerPolicies) {
-        String source= dataset.getSourceCluster() != null ? dataset.getSourceCluster().getName()
-                : "source";
-
+        String source= dataset.getSourceCluster() != null ? dataset.getSourceCluster().getName() : "source";
         List<RangerPolicy> rangerPoliciesToImport = new ArrayList<RangerPolicy>();
         if (CollectionUtils.isNotEmpty(rangerPolicies)) {
             for (RangerPolicy rangerPolicy : rangerPolicies) {
@@ -656,7 +644,7 @@ public class RangerAdminRESTClient {
         return rangerExportPolicyList;
     }
 
-    private String writeJsonStringToFile(String jsonString, String fileName) {
+    private String writeJsonStringToFile(String jsonString, String fileName) throws BeaconException {
         Charset encoding = StandardCharsets.UTF_8;
         String filePath= "";
         try {
@@ -670,9 +658,9 @@ public class RangerAdminRESTClient {
             fileContents.add(jsonString);
             Files.write(path, fileContents, encoding);
         } catch (IOException ex) {
-            LOG.error("Failed to write json string to file: {}, {}", filePath, ex);
+            throw new BeaconException("Failed to write json string to file", ex);
         } catch (Exception ex) {
-            LOG.error("Failed to write json string to file: {}, {}", filePath, ex);
+            throw new BeaconException("Failed to write json string to file", ex);
         }
         return filePath;
     }
@@ -749,7 +737,7 @@ public class RangerAdminRESTClient {
                         }
                     };
                 } catch (Throwable t) {
-                    LOG.error("Unable to create SSLConext for communication to Ranger admin", t);
+                    throw new BeaconException("Unable to create SSLConext for communication to Ranger admin", t);
                 }
             }
             config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hv, sslContext));
@@ -803,7 +791,7 @@ public class RangerAdminRESTClient {
         return ret;
     }
 
-    private static boolean isSpnegoEnable() {
+    private static boolean isSpnegoEnable() throws BeaconException {
         boolean isKerberos = AUTHCONFIG.getBooleanProperty(BEACON_KERBEROS_AUTH_ENABLED, false);
         if (isKerberos && KERBEROS_TYPE.equalsIgnoreCase(AUTHCONFIG.getProperty(BEACON_AUTH_TYPE))) {
             return isKerberos;
@@ -816,7 +804,7 @@ public class RangerAdminRESTClient {
                 principal = SecureClientLogin.getPrincipal(AUTHCONFIG.getProperty(BEACON_USER_PRINCIPAL),
                         BeaconConfig.getInstance().getEngine().getHostName());
             } catch (IOException e) {
-                LOG.error("Unable to read principal: {}", e.toString());
+                throw new BeaconException("Unable to read given principal", e);
             }
             String hostname = BeaconConfig.getInstance().getEngine().getHostName();
             if (StringUtils.isNotEmpty(keytab) && StringUtils.isNotEmpty(principal)
@@ -895,7 +883,8 @@ public class RangerAdminRESTClient {
         return null;
     }
 
-    private Path writeExportedRangerPoliciesToJsonFile(String jsonString, String fileName, Path stagingDirPath) {
+    private Path writeExportedRangerPoliciesToJsonFile(String jsonString, String fileName, Path stagingDirPath)
+            throws BeaconException {
         String filePath= "";
         Path newPath=null;
         FSDataOutputStream outStream=null;
@@ -917,12 +906,12 @@ public class RangerAdminRESTClient {
             if (newPath!=null) {
                 filePath=newPath.toString();
             }
-            LOG.error("Failed to write json string to file: {}, {}", filePath, ex);
+            throw new BeaconException("Failed to write json string to file:"+filePath, ex);
         } catch (Exception ex) {
             if (newPath!=null) {
                 filePath=newPath.toString();
             }
-            LOG.error("Failed to write json string to file: {}, {}", filePath, ex);
+            throw new BeaconException("Failed to write json string to file:"+filePath, ex);
         } finally {
             try{
                 if (writer!=null) {
@@ -967,7 +956,7 @@ public class RangerAdminRESTClient {
             Reader reader = new InputStreamReader(inputStream, Charset.forName("UTF-8"));
             rangerExportPolicyList = gsonBuilder.fromJson(reader, RangerExportPolicyList.class);
         } catch(Exception ex){
-            LOG.error("Error reading file :"+filePath, ex);
+            throw new BeaconException("Error reading file :"+filePath, ex);
         }
         return rangerExportPolicyList;
     }

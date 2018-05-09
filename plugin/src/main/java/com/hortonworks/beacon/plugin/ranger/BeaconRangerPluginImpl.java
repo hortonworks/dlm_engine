@@ -125,7 +125,7 @@ public class BeaconRangerPluginImpl implements Plugin{
             if (filePath!=null) {
                 LOG.info("Ranger policy export finished successfully");
             } else {
-                LOG.info("Ranger policy export to file failed");
+                throw new BeaconException("Unable to save exported Ranger policies");
             }
         }
         LOG.debug("Ranger policy export filePath:"+filePath);

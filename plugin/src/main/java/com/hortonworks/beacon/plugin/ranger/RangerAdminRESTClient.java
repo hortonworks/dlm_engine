@@ -588,9 +588,18 @@ public class RangerAdminRESTClient {
         if (targetRangerEndpoint.endsWith("/")) {
             targetRangerEndpoint=StringUtils.removePattern(targetRangerEndpoint, "/+$");
         }
+
+        boolean shouldProxy = BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled();
+
+        if (shouldProxy) {
+            targetRangerEndpoint =
+                    KnoxTokenUtils.getKnoxProxiedURL(dataset.getTargetCluster().getKnoxGatewayURL(), "ranger");
+        }
+
         String url = targetRangerEndpoint + (uri.startsWith("/") ? uri : ("/" + uri));
+
         LOG.debug("URL to import policies on target Ranger: {}", url);
-        Client rangerClient = getRangerClient(dataset.getTargetCluster(), false);
+        Client rangerClient = getRangerClient(dataset.getTargetCluster(), shouldProxy);
         ClientResponse clientResp = null;
         WebResource webResource = rangerClient.resource(url);
         FileDataBodyPart filePartPolicies = new FileDataBodyPart("file", new File(rangerPoliciesJsonFileName));
@@ -601,8 +610,17 @@ public class RangerAdminRESTClient {
         try {
             multipartEntity = formDataMultiPart.bodyPart(filePartPolicies).bodyPart(filePartServiceMap);
             try {
-                clientResp = webResource.accept(MediaType.APPLICATION_JSON).type(MediaType.MULTIPART_FORM_DATA)
-                    .post(ClientResponse.class, multipartEntity);
+                if (shouldProxy) {
+                    Cookie cookie =
+                            new Cookie("hadoop-jwt", getSSOToken(dataset.getTargetCluster().getKnoxGatewayURL()));
+
+                    WebResource.Builder builder = webResource.getRequestBuilder().cookie(cookie);
+                    clientResp = builder.accept(MediaType.APPLICATION_JSON).type(MediaType.MULTIPART_FORM_DATA)
+                            .post(ClientResponse.class, multipartEntity);
+                } else {
+                    clientResp = webResource.accept(MediaType.APPLICATION_JSON).type(MediaType.MULTIPART_FORM_DATA)
+                            .post(ClientResponse.class, multipartEntity);
+                }
             } catch (Throwable t) {
                 if (clientResp==null) {
                     throw new BeaconException("Ranger policy import failed, Please refer target Ranger admin logs.", t);

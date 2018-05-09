@@ -200,10 +200,11 @@ public class RangerAdminRESTClient {
     }
 
     private RangerExportPolicyList getRangerPoliciesFromExportREST(DataSet dataset) throws BeaconException {
-        String sourceRangerEndpoint = dataset.getSourceCluster().getRangerEndpoint();
-        if (StringUtils.isEmpty(sourceRangerEndpoint)) {
+        String sourceRangerEndpoint = BeaconRangerPluginImpl.getSourceRangerEndpoint(dataset);
+        if (sourceRangerEndpoint == null) {
             return new RangerExportPolicyList();
         }
+
         boolean shouldProxy = BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled();
 
         if (shouldProxy) {
@@ -214,6 +215,7 @@ public class RangerAdminRESTClient {
         LOG.info("Ranger endpoint for cluster " + dataset.getSourceCluster().getName() + " is " + sourceRangerEndpoint);
 
         Properties clusterProperties = dataset.getSourceCluster().getCustomProperties();
+
         String rangerHIVEServiceName = null;
         String rangerHDFSServiceName = null;
         if (clusterProperties != null) {
@@ -286,10 +288,11 @@ public class RangerAdminRESTClient {
     }
 
     private List<RangerPolicy> getRangerPolicies(DataSet dataset) throws BeaconException {
-        String sourceRangerEndpoint = dataset.getSourceCluster().getRangerEndpoint();
-        if (StringUtils.isEmpty(sourceRangerEndpoint)) {
+        String sourceRangerEndpoint = BeaconRangerPluginImpl.getSourceRangerEndpoint(dataset);
+        if (sourceRangerEndpoint == null) {
             return new ArrayList<RangerPolicy>();
         }
+
         boolean shouldProxy = BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled();
 
         if (shouldProxy) {
@@ -386,16 +389,16 @@ public class RangerAdminRESTClient {
         return rangerPoliciesToImport;
     }
 
+    //Dataset.getTargetCluster can't be null
     public List<RangerPolicy> addSingleDenyPolicies(DataSet dataset, List<RangerPolicy> rangerPolicies) {
-        String clusterName=dataset.getSourceCluster().getName();
-        if (StringUtils.isEmpty(clusterName)) {
-            clusterName="source";
-        }
+        String source= dataset.getSourceCluster() != null ? dataset.getSourceCluster().getName()
+                : "source";
+
         List<RangerPolicy> rangerPoliciesToImport = new ArrayList<RangerPolicy>();
         if (CollectionUtils.isNotEmpty(rangerPolicies)) {
             for (RangerPolicy rangerPolicy : rangerPolicies) {
                 rangerPolicy.setDescription(rangerPolicy.getName() + " created by beacon while importing from "
-                        + clusterName + " on " + DateUtil.formatDate(new Date()));
+                        + source + " on " + DateUtil.formatDate(new Date()));
                 rangerPoliciesToImport.add(rangerPolicy);
             }
         }
@@ -404,12 +407,14 @@ public class RangerAdminRESTClient {
         }
         RangerPolicy denyRangerPolicy = null;
         Properties clusterProperties = null;
-        String sourceRangerEndpoint = dataset.getSourceCluster().getRangerEndpoint();
-        if (!StringUtils.isEmpty(sourceRangerEndpoint)) {
+        String sourceRangerEndpoint = BeaconRangerPluginImpl.getSourceRangerEndpoint(dataset);
+        if (sourceRangerEndpoint != null) {
             clusterProperties=dataset.getSourceCluster().getCustomProperties();
         } else {
             clusterProperties=dataset.getTargetCluster().getCustomProperties();
         }
+
+
         String rangerServiceName = null;
         if (clusterProperties != null) {
             if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
@@ -430,8 +435,8 @@ public class RangerAdminRESTClient {
         if (!StringUtils.isEmpty(rangerServiceName)) {
             denyRangerPolicy = new RangerPolicy();
             denyRangerPolicy.setService(rangerServiceName);
-            denyRangerPolicy.setName(clusterName + "_beacon deny policy for " + targetDataSet);
-            denyRangerPolicy.setDescription("Deny policy created by beacon while importing from " + clusterName + " on "
+            denyRangerPolicy.setName(source + "_beacon deny policy for " + targetDataSet);
+            denyRangerPolicy.setDescription("Deny policy created by beacon while importing from " + source + " on "
                     + DateUtil.formatDate(new Date()));
         }
         if (denyRangerPolicy!=null) {
@@ -525,13 +530,14 @@ public class RangerAdminRESTClient {
         return rangerPoliciesToImport;
     }
 
+    //dataset.getTargetCluster() != null
     public RangerExportPolicyList importRangerPoliciesFromFile(DataSet dataset,
             RangerExportPolicyList rangerExportPolicyList) throws BeaconException {
-        String targetRangerEndpoint = dataset.getTargetCluster().getRangerEndpoint();
-        if (StringUtils.isEmpty(targetRangerEndpoint)) {
+        String targetRangerEndpoint = BeaconRangerPluginImpl.getTargetRangerEndpoint(dataset);
+        if (targetRangerEndpoint == null) {
             return rangerExportPolicyList;
         }
-        Properties sourceClusterProperties = dataset.getSourceCluster().getCustomProperties();
+
         Properties targetClusterProperties = dataset.getTargetCluster().getCustomProperties();
         String sourceClusterServiceName = null;
         String targetClusterServiceName = null;
@@ -542,22 +548,31 @@ public class RangerAdminRESTClient {
             sourceDataSet=StringUtils.removePattern(sourceDataSet, "/+$");
         }
         String uri = RANGER_REST_URL_IMPORTJSONFILE+"&polResource="+sourceDataSet;
-        if (sourceClusterProperties != null && targetClusterProperties != null) {
+        if (targetClusterProperties != null) {
             if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
-                sourceClusterServiceName = sourceClusterProperties.getProperty("rangerHDFSServiceName");
                 targetClusterServiceName = targetClusterProperties.getProperty("rangerHDFSServiceName");
                 serviceMapJsonFileName = "hdfs_servicemap.json";
                 rangerPoliciesJsonFileName = "hdfs_replicationPolicies.json";
             } else if (dataset.getType().equals(DataSet.DataSetType.HIVE)) {
-                sourceClusterServiceName = sourceClusterProperties.getProperty("rangerHIVEServiceName");
                 targetClusterServiceName = targetClusterProperties.getProperty("rangerHIVEServiceName");
                 serviceMapJsonFileName = "hive_servicemap.json";
                 rangerPoliciesJsonFileName = "hive_replicationPolicies.json";
             }
         }
+        Properties sourceClusterProperties = dataset.getSourceCluster() != null
+                ? dataset.getSourceCluster().getCustomProperties() : null;
+        if (sourceClusterProperties != null) {
+            if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
+                sourceClusterServiceName = sourceClusterProperties.getProperty("rangerHDFSServiceName");
+            } else if (dataset.getType().equals(DataSet.DataSetType.HIVE)) {
+                sourceClusterServiceName = sourceClusterProperties.getProperty("rangerHIVEServiceName");
+            }
+        }
+
         if (StringUtils.isEmpty(sourceClusterServiceName)) {
             sourceClusterServiceName=targetClusterServiceName;
         }
+
         Map<String, String> serviceMap = new LinkedHashMap<String, String>();
         if (!StringUtils.isEmpty(sourceClusterServiceName) && !StringUtils.isEmpty(targetClusterServiceName)) {
             serviceMap.put(sourceClusterServiceName, targetClusterServiceName);
@@ -590,7 +605,7 @@ public class RangerAdminRESTClient {
                     .post(ClientResponse.class, multipartEntity);
             } catch (Throwable t) {
                 if (clientResp==null) {
-                    throw new BeaconException("Ranger policy import failed, Please refer target Ranger admin logs.");
+                    throw new BeaconException("Ranger policy import failed, Please refer target Ranger admin logs.", t);
                 }
             }
             if (clientResp!=null) {

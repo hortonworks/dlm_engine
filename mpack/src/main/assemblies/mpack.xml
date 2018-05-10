@@ -56,10 +56,6 @@
             <source>../COPYING</source>
             <outputDirectory>legal</outputDirectory>
         </file>
-        <file>
-            <source>../COPYRIGHT</source>
-            <outputDirectory>legal</outputDirectory>
-        </file>
     </files>
     <dependencySets>
     </dependencySets>

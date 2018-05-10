@@ -22,18 +22,6 @@
 
 package com.hortonworks.beacon.plugin.ranger;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
-import com.hortonworks.beacon.entity.util.PolicyHelper;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.fs.Path;
-import org.hsqldb.lib.StringUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.BeaconInfo;
@@ -41,6 +29,16 @@ import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.plugin.Plugin;
 import com.hortonworks.beacon.plugin.PluginInfo;
 import com.hortonworks.beacon.plugin.PluginStats;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.fs.Path;
+import org.hsqldb.lib.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple plugin provider interface for DLM.
@@ -102,34 +100,35 @@ public class BeaconRangerPluginImpl implements Plugin{
      */
     @Override
     public Path exportData(DataSet dataset) throws BeaconException{
+        String sourceRangerEndpoint = getSourceRangerEndpoint(dataset);
+        if (sourceRangerEndpoint == null) {
+            LOG.info("Skipping Ranger policy export, as source ranger endpoint is not set");
+            return null;
+        }
+
         Path filePath=null;
-        if (PolicyHelper.isDatasetHCFS(dataset.getSourceDataSet())) {
-            return filePath;
-        }
         Path stagingDirPath = new Path(dataset.getStagingPath());
-        String sourceRangerEndpoint = dataset.getSourceCluster().getRangerEndpoint();
         RangerAdminRESTClient rangerAdminRESTClient = new RangerAdminRESTClient();
-        if (!StringUtils.isEmpty(sourceRangerEndpoint)) {
-            LOG.info("Ranger policy export started");
-            RangerExportPolicyList rangerExportPolicyList=rangerAdminRESTClient.exportRangerPolicies(dataset);
-            List<RangerPolicy> rangerPolicies =rangerExportPolicyList.getPolicies();
-            if (rangerPolicies.isEmpty()) {
-                LOG.info("Ranger policy export request returned empty list or failed, Please refer Ranger admin logs.");
-                rangerExportPolicyList=new RangerExportPolicyList();
+        LOG.info("Ranger policy export started");
+        RangerExportPolicyList rangerExportPolicyList=rangerAdminRESTClient.exportRangerPolicies(dataset);
+        List<RangerPolicy> rangerPolicies =rangerExportPolicyList.getPolicies();
+        if (rangerPolicies.isEmpty()) {
+            LOG.info("Ranger policy export request returned empty list or failed, Please refer Ranger admin logs.");
+            rangerExportPolicyList=new RangerExportPolicyList();
+        } else {
+            rangerPolicies=rangerAdminRESTClient.removeMutilResourcePolicies(dataset, rangerPolicies);
+        }
+        if (!CollectionUtils.isEmpty(rangerPolicies)){
+            rangerExportPolicyList.setPolicies(rangerPolicies);
+            filePath=rangerAdminRESTClient.saveRangerPoliciesToFile(dataset, rangerExportPolicyList,
+                    stagingDirPath);
+            if (filePath!=null) {
+                LOG.info("Ranger policy export finished successfully");
             } else {
-                rangerPolicies=rangerAdminRESTClient.removeMutilResourcePolicies(dataset, rangerPolicies);
-            }
-            if (!CollectionUtils.isEmpty(rangerPolicies)){
-                rangerExportPolicyList.setPolicies(rangerPolicies);
-                filePath=rangerAdminRESTClient.saveRangerPoliciesToFile(dataset, rangerExportPolicyList,
-                        stagingDirPath);
-                if (filePath!=null) {
-                    LOG.info("Ranger policy export finished successfully");
-                } else {
-                    LOG.info("Ranger policy export to file failed");
-                }
+                throw new BeaconException("Unable to save exported Ranger policies");
             }
         }
+        LOG.debug("Ranger policy export filePath:"+filePath);
         return filePath;
     }
 
@@ -147,34 +146,55 @@ public class BeaconRangerPluginImpl implements Plugin{
     @Override
     public void importData(DataSet dataset, Path exportedDataPath)
             throws BeaconException{
-        String targetRangerEndpoint = dataset.getTargetCluster().getRangerEndpoint();
-        if (!StringUtils.isEmpty(targetRangerEndpoint)) {
-            RangerAdminRESTClient rangerAdminRESTClient = new RangerAdminRESTClient();
-            RangerExportPolicyList rangerExportPolicyList=null;
-            List<RangerPolicy> rangerPolicies=null;
-            if (exportedDataPath!=null && !"null".equalsIgnoreCase(exportedDataPath.toString())) {
-                LOG.info("Ranger policy import started");
-                rangerExportPolicyList=rangerAdminRESTClient.readRangerPoliciesFromJsonFile(exportedDataPath);
-                if (rangerExportPolicyList!=null && !CollectionUtils.isEmpty(rangerExportPolicyList.getPolicies())) {
-                    rangerPolicies=rangerExportPolicyList.getPolicies();
-                }
-            }
-            if (CollectionUtils.isEmpty(rangerPolicies)) {
-                rangerPolicies=new ArrayList<RangerPolicy>();
-            }
-            List<RangerPolicy> rangerPoliciesWithDenyPolicy = rangerAdminRESTClient.addSingleDenyPolicies(dataset,
-                    rangerPolicies);
-            List<RangerPolicy> updatedRangerPolicies = rangerAdminRESTClient.changeDataSet(dataset,
-                    rangerPoliciesWithDenyPolicy);
-            if (!CollectionUtils.isEmpty(updatedRangerPolicies)){
-                if (rangerExportPolicyList==null) {
-                    rangerExportPolicyList=new RangerExportPolicyList();
-                }
-                rangerExportPolicyList.setPolicies(updatedRangerPolicies);
-                rangerAdminRESTClient.importRangerPolicies(dataset, rangerExportPolicyList);
-                LOG.info("Ranger policy import finished");
+        LOG.info("Ranger policy import started.");
+        String targetRangerEndpoint = getTargetRangerEndpoint(dataset);
+        if (targetRangerEndpoint == null) {
+            LOG.info("Skipping Ranger policy import, as target ranger endpoint is not set");
+            return;
+        }
+
+        RangerAdminRESTClient rangerAdminRESTClient = new RangerAdminRESTClient();
+        RangerExportPolicyList rangerExportPolicyList=null;
+        List<RangerPolicy> rangerPolicies=null;
+
+        if (exportedDataPath != null) {
+            rangerExportPolicyList = rangerAdminRESTClient.readRangerPoliciesFromJsonFile(exportedDataPath);
+            if (rangerExportPolicyList != null && !CollectionUtils.isEmpty(rangerExportPolicyList.getPolicies())) {
+                rangerPolicies = rangerExportPolicyList.getPolicies();
             }
         }
+
+        if (CollectionUtils.isEmpty(rangerPolicies)) {
+            rangerPolicies=new ArrayList<RangerPolicy>();
+        }
+        List<RangerPolicy> rangerPoliciesWithDenyPolicy = rangerAdminRESTClient.addSingleDenyPolicies(dataset,
+                rangerPolicies);
+        List<RangerPolicy> updatedRangerPolicies = rangerAdminRESTClient.changeDataSet(dataset,
+                rangerPoliciesWithDenyPolicy);
+        if (!CollectionUtils.isEmpty(updatedRangerPolicies)){
+            if (rangerExportPolicyList==null) {
+                rangerExportPolicyList=new RangerExportPolicyList();
+            }
+            rangerExportPolicyList.setPolicies(updatedRangerPolicies);
+            rangerAdminRESTClient.importRangerPolicies(dataset, rangerExportPolicyList);
+            LOG.info("Ranger policy import finished");
+        }
+    }
+
+    public static String getSourceRangerEndpoint(DataSet dataSet) {
+        if (dataSet.getSourceCluster() != null
+                && StringUtils.isNotEmpty(dataSet.getSourceCluster().getRangerEndpoint())) {
+            return dataSet.getSourceCluster().getRangerEndpoint();
+        }
+        return null;
+    }
+
+    public static String getTargetRangerEndpoint(DataSet dataSet) {
+        if (dataSet.getTargetCluster() != null
+                && StringUtils.isNotEmpty(dataSet.getTargetCluster().getRangerEndpoint())) {
+            return dataSet.getTargetCluster().getRangerEndpoint();
+        }
+        return null;
     }
 
     /**

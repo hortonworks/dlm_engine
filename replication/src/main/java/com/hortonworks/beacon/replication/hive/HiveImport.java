@@ -79,7 +79,9 @@ public class HiveImport extends InstanceReplication {
             performImport(dumpDirectory, jobContext);
             LOG.info("Beacon Hive replication successful");
         } else {
-            throw new BeaconException("Repl Dump Directory is null");
+            LOG.info("Repl Dump Directory is null, thus not performing Hive import");
+            jobContext.getJobContextMap().put(BeaconConstants.END_TIME,
+                    String.valueOf(System.currentTimeMillis()));
         }
     }
 

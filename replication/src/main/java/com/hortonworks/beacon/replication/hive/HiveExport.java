@@ -79,7 +79,7 @@ public class HiveExport extends InstanceReplication {
             jobContext.getJobContextMap().put(DUMP_DIRECTORY, dumpDirectory);
             LOG.info("Beacon Hive export completed successfully");
         } else {
-            throw new BeaconException("Repl Dump Directory is null");
+            LOG.info("Repl Dump Directory is null as there are no events to replicate");
         }
     }
 
@@ -124,9 +124,15 @@ public class HiveExport extends InstanceReplication {
                 dumpDirectory = sourceNN + res.getString(1);
                 currReplEventId = Long.parseLong(res.getString(2));
             }
-
             LOG.info("Source Current Repl Event id : {} , Target Last Repl Event id : {}", currReplEventId,
-                lastReplEventId);
+                    lastReplEventId);
+            /**
+             *  Returning dump directory as null if currReplEventId and lastReplEventId are same as there will not be any extra
+             *  events to replicate. This will disable the {@link HiveImport#perform(JobContext)}
+             */
+            if (currReplEventId == lastReplEventId) {
+                return null;
+            }
         } catch (SQLException e) {
             throw new BeaconException(e, "SQL Exception occurred");
         } catch (BeaconException e) {

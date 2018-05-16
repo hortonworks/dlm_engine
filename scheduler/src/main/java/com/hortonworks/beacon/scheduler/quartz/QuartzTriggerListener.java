@@ -98,6 +98,7 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
         } catch (BeaconException e) {
             LOG.error("Exception while removing dangling jobs from quartz.", e);
         }
+        RequestContext.get().clear();
     }
 
     @Override

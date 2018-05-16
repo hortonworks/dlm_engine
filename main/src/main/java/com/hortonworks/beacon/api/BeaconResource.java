@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.api;
 
+import com.codahale.metrics.annotation.Timed;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.SchemeType;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
@@ -72,6 +73,7 @@ public class BeaconResource extends AbstractResourceManager {
     @GET
     @Path("file/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.file.list")
     public FileListResult listFiles(@QueryParam("filePath") String filePath,
                                     @QueryParam("credId") String cloudCredId) {
         try {
@@ -95,6 +97,7 @@ public class BeaconResource extends AbstractResourceManager {
     @GET
     @Path("hive/listDBs")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.hive.listDBs")
     public DBListResult listHiveDBs() {
         try {
             LOG.info("List Database with tables on cluster {}", ClusterHelper.getLocalCluster().getName());
@@ -109,6 +112,7 @@ public class BeaconResource extends AbstractResourceManager {
     @GET
     @Path("hive/listTables")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.hive.listTables")
     public DBListResult listHiveTables(@QueryParam("db") String dbName) {
         try {
             if (StringUtils.isBlank(dbName)) {
@@ -127,6 +131,7 @@ public class BeaconResource extends AbstractResourceManager {
     @GET
     @Path("user")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.user.privilege")
     public UserPrivilegesResult getUserPrivileges() {
         Configuration conf = new Configuration();
         if (conf.get(BeaconConstants.NN_PRINCIPAL) != null) {
@@ -160,6 +165,7 @@ public class BeaconResource extends AbstractResourceManager {
     @GET
     @Path("instance/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.listInstances")
     public PolicyInstanceList listInstances(@QueryParam("filterBy") String filters,
                                             @DefaultValue("startTime") @QueryParam("orderBy") String orderBy,
                                             @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
@@ -182,6 +188,7 @@ public class BeaconResource extends AbstractResourceManager {
     @GET
     @Path("logs")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.logs")
     public APIResult getPolicyLogs(@QueryParam("filterBy") String filters,
                                    @QueryParam("start") String startStr,
                                    @QueryParam("end") String endStr,

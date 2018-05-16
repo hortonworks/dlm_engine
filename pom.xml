@@ -331,7 +331,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
-                <version>2.8.11.1</version>
+                <version>${jackson.version}</version>
             </dependency>
 
             <dependency>
@@ -618,7 +618,6 @@
                 <artifactId>commons-net</artifactId>
                 <version>${commons-net.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
@@ -629,6 +628,26 @@
                 <groupId>log4j</groupId>
                 <artifactId>apache-log4j-extras</artifactId>
                 <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-core</artifactId>
+                <version>${metrics.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-jersey</artifactId>
+                <version>${metrics.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-servlets</artifactId>
+                <version>${metrics.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-jvm</artifactId>
+                <version>${metrics.version}</version>
             </dependency>
             <dependency>
                <groupId>com.nimbusds</groupId>
@@ -961,6 +980,7 @@
         <powermock.version>1.7.0</powermock.version>
         <javax.servlet.version>3.0.0.v201112011016</javax.servlet.version>
         <json.version>20090211</json.version>
+        <metrics.version>3.2.5</metrics.version>
         <license-maven-plugin.version>1.14</license-maven-plugin.version>
         <beacon.basedir>${project.basedir}</beacon.basedir>
         <beacon.minReplicationFrequency>60</beacon.minReplicationFrequency>

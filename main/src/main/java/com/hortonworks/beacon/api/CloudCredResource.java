@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.api;
 
+import com.codahale.metrics.annotation.Timed;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
@@ -65,6 +66,7 @@ public class CloudCredResource extends AbstractResourceManager {
 
     @POST
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.cloudcred.submit")
     public APIResult submit(@Context HttpServletRequest request) {
         try {
             PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
@@ -81,6 +83,7 @@ public class CloudCredResource extends AbstractResourceManager {
     @PUT
     @Path("{cloud-cred-id}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.cloudcred.update")
     public APIResult update(@PathParam("cloud-cred-id") String cloudCredId,
                             @Context HttpServletRequest request) {
         try {
@@ -99,6 +102,7 @@ public class CloudCredResource extends AbstractResourceManager {
     @DELETE
     @Path("{cloud-cred-id}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.cloudcred.delete")
     public APIResult delete(@PathParam("cloud-cred-id") String cloudCredId) {
         try {
             deleteInternal(cloudCredId);
@@ -113,6 +117,7 @@ public class CloudCredResource extends AbstractResourceManager {
     @GET
     @Path("{cloud-cred-id}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.cloudcred.get")
     public CloudCred get(@PathParam("cloud-cred-id") String cloudCredId) {
         try {
             return cloudCredDao.cloudCredResults(cloudCredId);
@@ -125,6 +130,7 @@ public class CloudCredResource extends AbstractResourceManager {
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.cloudcred.list")
     public CloudCredList list(@DefaultValue("") @QueryParam("filterBy") String filterBy,
                               @DefaultValue("name") @QueryParam("orderBy") String orderBy,
                               @DefaultValue("ASC") @QueryParam("sortOrder") String sortOrder,
@@ -142,6 +148,7 @@ public class CloudCredResource extends AbstractResourceManager {
     @GET
     @Path("{cloud-cred-id}/validate")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.cloudcred.validate")
     public APIResult validatePath(@PathParam("cloud-cred-id") String cloudCredId,
                            @QueryParam("filePath") String filePath) {
         try {

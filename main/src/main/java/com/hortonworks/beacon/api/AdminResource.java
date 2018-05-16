@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.api;
 
+import com.codahale.metrics.annotation.Timed;
 import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.ServerVersionResult;
 import com.hortonworks.beacon.config.PropertiesUtil;
@@ -45,6 +46,7 @@ public class AdminResource extends AbstractResourceManager {
     @GET
     @Path("version")
     @Produces({MediaType.APPLICATION_JSON})
+    @Timed(absolute = true, name="api.beacon.admin.version")
     public ServerVersionResult getServerVersion() {
         return getServerVersionInternal();
     }
@@ -52,6 +54,7 @@ public class AdminResource extends AbstractResourceManager {
     @GET
     @Path("status")
     @Produces({MediaType.APPLICATION_JSON})
+    @Timed(absolute = true, name="api.beacon.admin.status")
     public ServerStatusResult getServerStatus() {
         return getServerStatusInternal();
     }

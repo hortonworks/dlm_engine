@@ -22,6 +22,8 @@
 
 package com.hortonworks.beacon.replication.hive;
 
+import com.hortonworks.beacon.RequestContext;
+import com.hortonworks.beacon.Timer;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
@@ -56,7 +58,6 @@ public class HiveExport extends InstanceReplication {
     private Statement sourceStatement = null;
     private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
 
-
     public HiveExport(ReplicationJobDetails details) {
         super(details);
         database = properties.getProperty(HiveDRProperties.SOURCE_DATASET.getName());
@@ -76,12 +77,20 @@ public class HiveExport extends InstanceReplication {
 
     @Override
     public void perform(JobContext jobContext) throws BeaconException, InterruptedException {
-        String dumpDirectory = performExport(jobContext);
-        if (StringUtils.isNotBlank(dumpDirectory)) {
-            jobContext.getJobContextMap().put(DUMP_DIRECTORY, dumpDirectory);
-            LOG.info("Beacon Hive export completed successfully");
-        } else {
-            LOG.info("Repl Dump Directory is null as there are no events to replicate");
+        RequestContext requestContext = RequestContext.get();
+        final String methodName = this.getClass().getSimpleName() + '.'
+                + Thread.currentThread().getStackTrace()[1].getMethodName();
+        Timer methodTimer = requestContext.startTimer(methodName);
+        try {
+            String dumpDirectory = performExport(jobContext);
+            if (StringUtils.isNotBlank(dumpDirectory)) {
+                jobContext.getJobContextMap().put(DUMP_DIRECTORY, dumpDirectory);
+                LOG.info("Beacon Hive export completed successfully");
+            } else {
+                LOG.info("Repl Dump Directory is null as there are no events to replicate");
+            }
+        } finally {
+            methodTimer.stop();
         }
     }
 

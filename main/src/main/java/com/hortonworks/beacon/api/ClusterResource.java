@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.api;
 
+import com.codahale.metrics.annotation.Timed;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.util.ValidationUtil;
@@ -84,6 +85,7 @@ public class ClusterResource extends AbstractResourceManager {
     @POST
     @Path("submit/{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.cluster.submit")
     public APIResult submit(@PathParam("cluster-name") String clusterName, @Context HttpServletRequest request) {
         PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
         try {
@@ -109,6 +111,7 @@ public class ClusterResource extends AbstractResourceManager {
     @PUT
     @Path("{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.cluster.update")
     public APIResult update(@PathParam("cluster-name") String clusterName, @Context HttpServletRequest request) {
         try {
             PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
@@ -125,6 +128,7 @@ public class ClusterResource extends AbstractResourceManager {
     @GET
     @Path("list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.cluster.list")
     public ClusterList list(@DefaultValue("") @QueryParam("fields") String fields,
                             @DefaultValue("name") @QueryParam("orderBy") String orderBy,
                             @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
@@ -139,6 +143,7 @@ public class ClusterResource extends AbstractResourceManager {
     @GET
     @Path("status/{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.cluster.status")
     public StatusResult status(@PathParam("cluster-name") String clusterName) {
         try {
             return getClusterStatus(clusterName);
@@ -152,6 +157,7 @@ public class ClusterResource extends AbstractResourceManager {
     @GET
     @Path("getEntity/{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.cluster.definition")
     public String definition(@PathParam("cluster-name") String clusterName) {
         return getClusterDefinition(clusterName);
     }
@@ -159,6 +165,7 @@ public class ClusterResource extends AbstractResourceManager {
     @DELETE
     @Path("delete/{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.cluster.delete")
     public APIResult delete(@PathParam("cluster-name") String clusterName) {
         try {
             return deleteCluster(clusterName);
@@ -172,6 +179,7 @@ public class ClusterResource extends AbstractResourceManager {
     @POST
     @Path("pair")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.cluster.pair")
     public APIResult pair(@QueryParam("remoteClusterName") String remoteClusterName,
                           @DefaultValue("false") @QueryParam("isInternalPairing") boolean isInternalPairing) {
         if (StringUtils.isBlank(remoteClusterName)) {
@@ -190,6 +198,7 @@ public class ClusterResource extends AbstractResourceManager {
     @POST
     @Path("unpair")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.cluster.unpair")
     public APIResult unPair(@QueryParam("remoteClusterName") String remoteClusterName,
                             @DefaultValue("false") @QueryParam("isInternalUnpairing")
                                             boolean isInternalUnpairing) {

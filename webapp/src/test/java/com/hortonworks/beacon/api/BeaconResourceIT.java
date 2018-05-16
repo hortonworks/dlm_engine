@@ -1535,6 +1535,22 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         });
     }
 
+    @Test
+    public void testBeaconMetricsServlet() throws Exception {
+        String fsEndPoint = srcDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
+        String api = BASE_API + "admin/metrics";
+        HttpURLConnection conn = sendRequest(getSourceBeaconServer() + api, null, GET);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String response = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(response);
+        int count = jsonObject.getJSONObject("timers").getJSONObject("api.beacon.cluster.submit").getInt("count");
+        Assert.assertEquals(count, 1);
+    }
+
     private PolicyInstanceList.InstanceElement getFirstInstance(BeaconClient client, String policyName)
             throws BeaconClientException {
         PolicyInstanceList myinstances = client.listPolicyInstances(policyName);

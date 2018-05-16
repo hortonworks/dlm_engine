@@ -22,6 +22,8 @@
 
 package com.hortonworks.beacon.replication.fs;
 
+import com.hortonworks.beacon.RequestContext;
+import com.hortonworks.beacon.Timer;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
@@ -139,10 +141,16 @@ public class HDFSReplication extends FSReplication {
                     ReplicationMetrics.JobType jobType) throws BeaconException, InterruptedException {
         boolean isInRecoveryMode = jobType == ReplicationMetrics.JobType.RECOVERY;
         DistCpOptions options = null;
+        final String methodName = this.getClass().getSimpleName() + '.'
+                + Thread.currentThread().getStackTrace()[1].getMethodName();
+        RequestContext requestContext = RequestContext.get();
+        Timer timer = requestContext.startTimer(methodName);
         try {
             options = getDistCpOptions(toSnapshot, fromSnapshot, isInRecoveryMode);
         } catch (IOException e) {
             throw new BeaconException(e);
+        } finally {
+            timer.stop();
         }
         Configuration conf = getConfiguration();
         return performCopy(jobContext, options, conf, jobType);

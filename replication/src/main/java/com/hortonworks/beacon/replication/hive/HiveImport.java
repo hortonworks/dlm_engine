@@ -22,6 +22,8 @@
 
 package com.hortonworks.beacon.replication.hive;
 
+import com.hortonworks.beacon.RequestContext;
+import com.hortonworks.beacon.Timer;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
@@ -74,15 +76,23 @@ public class HiveImport extends InstanceReplication {
 
     @Override
     public void perform(JobContext jobContext) throws BeaconException, InterruptedException {
-        String dumpDirectory = jobContext.getJobContextMap().get(DUMP_DIRECTORY);
-        LOG.info("Location of repl dump directory: {}", dumpDirectory);
-        if (StringUtils.isNotBlank(dumpDirectory)) {
-            performImport(dumpDirectory, jobContext);
-            LOG.info("Beacon Hive replication successful");
-        } else {
-            LOG.info("Repl Dump Directory is null, thus not performing Hive import");
-            jobContext.getJobContextMap().put(BeaconConstants.END_TIME,
-                    String.valueOf(System.currentTimeMillis()));
+        final String methodName = this.getClass().getSimpleName() + '.'
+                + Thread.currentThread().getStackTrace()[1].getMethodName();
+        RequestContext requestContext = RequestContext.get();
+        Timer methodTimer = requestContext.startTimer(methodName);
+        try {
+            String dumpDirectory = jobContext.getJobContextMap().get(DUMP_DIRECTORY);
+            LOG.info("Location of repl dump directory: {}", dumpDirectory);
+            if (StringUtils.isNotBlank(dumpDirectory)) {
+                performImport(dumpDirectory, jobContext);
+                LOG.info("Beacon Hive replication successful");
+            } else {
+                LOG.info("Repl Dump Directory is null, thus not performing Hive import");
+                jobContext.getJobContextMap().put(BeaconConstants.END_TIME,
+                        String.valueOf(System.currentTimeMillis()));
+            }
+        } finally {
+            methodTimer.stop();
         }
     }
 

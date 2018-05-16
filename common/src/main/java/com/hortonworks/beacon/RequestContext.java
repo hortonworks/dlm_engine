@@ -25,8 +25,12 @@ package com.hortonworks.beacon;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.service.BeaconStoreService;
 import com.hortonworks.beacon.service.Services;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -41,6 +45,8 @@ public final class RequestContext {
     private boolean transaction = false;
     private BeaconLogUtils.Info logPrefix = new BeaconLogUtils.Info();
     private static ThreadLocal<RequestContext> context = new ThreadLocal<>();
+    private Map<String, Timer> methodTimers = new HashMap<>();
+    private static final Logger LOG = LoggerFactory.getLogger(RequestContext.class);
 
     private RequestContext() {
         this.requestId = UUID.randomUUID().toString();
@@ -63,6 +69,10 @@ public final class RequestContext {
 
     public String getRequestId() {
         return requestId;
+    }
+
+    public Map<String, Timer> getMethodTimers() {
+        return methodTimers;
     }
 
     public void startTransaction() {
@@ -110,5 +120,27 @@ public final class RequestContext {
             context.get().clear();
         }
         context.set(new RequestContext());
+    }
+
+    public Timer startTimer(String methodName) {
+        Timer timer = new Timer();
+        methodTimers.put(methodName, timer);
+        return timer;
+    }
+
+    public void stopTimer(String methodName) {
+        if (!methodTimers.containsKey(methodName)) {
+            LOG.error("Timer for method {} not started!", methodName);
+        } else {
+            methodTimers.get(methodName).stop();
+        }
+    }
+
+    public Timer getTimer(String methodName) {
+        if (methodTimers.containsKey(methodName)) {
+            return methodTimers.get(methodName);
+        }
+        LOG.error("Timer for method {} doesn't exist!", methodName);
+        return null;
     }
 }

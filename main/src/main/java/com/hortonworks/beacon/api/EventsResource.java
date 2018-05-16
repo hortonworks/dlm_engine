@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.api;
 
+import com.codahale.metrics.annotation.Timed;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.result.EventsResult;
 import com.hortonworks.beacon.events.EventEntityType;
@@ -52,6 +53,7 @@ public class EventsResource extends AbstractResourceManager {
     @GET
     @Path("policy/{policy_name}")
     @Produces({MediaType.APPLICATION_JSON})
+    @Timed(absolute = true, name="api.beacon.events.eventsWithPolicyName")
     public EventsResult eventsWithPolicyName(@PathParam("policy_name") String policyName,
                                              @QueryParam("start") String startDate,
                                              @QueryParam("end") String endDate,
@@ -80,6 +82,7 @@ public class EventsResource extends AbstractResourceManager {
     @GET
     @Path("{event_name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.events.eventsWithName")
     public EventsResult eventsWithName(@PathParam("event_name") String eventName,
                                        @QueryParam("start") String startStr,
                                        @QueryParam("end") String endStr,
@@ -105,6 +108,7 @@ public class EventsResource extends AbstractResourceManager {
     @GET
     @Path("entity/{entity_type}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.events.entityTypeEvents")
     public EventsResult entityTypeEvents(@PathParam("entity_type") String entityType,
                                          @QueryParam("start") String startStr,
                                          @QueryParam("end") String endStr,
@@ -130,6 +134,7 @@ public class EventsResource extends AbstractResourceManager {
     @GET
     @Path("instance")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.events.eventsForInstance")
     public EventsResult eventsForInstance(@QueryParam("instanceId") String instanceId) {
 
         if (StringUtils.isBlank(instanceId)) {
@@ -147,6 +152,7 @@ public class EventsResource extends AbstractResourceManager {
     @GET
     @Path("policy/{policy_name}/{action_id}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.events.eventsWithPolicyActionId")
     public EventsResult eventsWithPolicyActionId(@PathParam("policy_name") String policyName,
                                                  @PathParam("action_id") Integer actionId) {
 
@@ -167,6 +173,7 @@ public class EventsResource extends AbstractResourceManager {
     @GET
     @Path("all")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.events.all")
     public EventsResult allEventsInfo(@QueryParam("start") String startStr,
                                       @QueryParam("end") String endStr,
                                       @DefaultValue("eventTimeStamp") @QueryParam("orderBy") String orderBy,
@@ -188,6 +195,7 @@ public class EventsResource extends AbstractResourceManager {
     @GET
     @Path("/")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.events.supportedEventDetails")
     public EventsResult supportedEventDetails() {
         try {
             return getSupportedEventDetails();

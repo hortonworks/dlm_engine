@@ -72,6 +72,29 @@
         <servlet-name>BeaconRESTApi</servlet-name>
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
+    <listener>
+        <listener-class>com.hortonworks.beacon.servlet.BeaconMetricsServletContextListener</listener-class>
+    </listener>
+    <servlet>
+        <servlet-name>metrics</servlet-name>
+        <servlet-class>com.codahale.metrics.servlets.MetricsServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>metrics</servlet-name>
+        <url-pattern>/api/beacon/admin/metrics/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>threaddump</servlet-name>
+        <servlet-class>com.codahale.metrics.servlets.ThreadDumpServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>threaddump</servlet-name>
+        <url-pattern>/api/beacon/admin/threaddump</url-pattern>
+    </servlet-mapping>
+
     <filter>
         <filter-name>BeaconAPIFilter</filter-name>
         <filter-class>com.hortonworks.beacon.api.filter.APIFilter</filter-class>
@@ -104,7 +127,7 @@
        <filter-name>BeaconBasicAuthFilter</filter-name>
        <url-pattern>/*</url-pattern>
      </filter-mapping>
-n    <filter>
+     <filter>
         <filter-name>BeaconPostAuthAPIFilter</filter-name>
         <filter-class>com.hortonworks.beacon.api.filter.PostAuthAPIFilter</filter-class>
     </filter>

@@ -234,7 +234,6 @@ public abstract class InstanceReplication implements BeaconJob {
             if (hiveStatement == null || hiveStatement.isClosed()) {
                 return;
             }
-
             final HiveReplicationMetrics hiveReplicationMetrics = new HiveReplicationMetrics();
             List<String> queryLog = hiveStatement.getQueryLog();
             boolean bootstrap = false;

@@ -22,6 +22,8 @@
 
 package com.hortonworks.beacon.entity.util;
 
+import com.hortonworks.beacon.RequestContext;
+import com.hortonworks.beacon.Timer;
 import com.hortonworks.beacon.client.entity.Notification;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.Retry;
@@ -120,11 +122,17 @@ public final class PolicyDao {
     }
 
     public void markPolicyInstanceDeleted(String policyId, Date retirementTime) throws BeaconStoreException {
+        final String methodName = this.getClass().getSimpleName() + '.'
+                + Thread.currentThread().getStackTrace()[1].getMethodName();
+        RequestContext requestContext = RequestContext.get();
+        Timer timer = requestContext.startTimer(methodName);
         PolicyInstanceBean instanceBean = new PolicyInstanceBean();
         instanceBean.setPolicyId(policyId);
         instanceBean.setRetirementTime(retirementTime);
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
         executor.executeUpdate(PolicyInstanceExecutor.PolicyInstanceQuery.DELETE_POLICY_INSTANCE);
+        timer.stop();
+        LOG.debug("{} duration: {}", methodName, timer);
     }
 
     public void markInstanceJobDeleted(List<PolicyInstanceBean> instances, Date retirementTime) {

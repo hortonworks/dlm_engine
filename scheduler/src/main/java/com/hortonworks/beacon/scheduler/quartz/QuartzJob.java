@@ -22,6 +22,8 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.RequestContext;
+import com.hortonworks.beacon.Timer;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.Retry;
 import com.hortonworks.beacon.config.BeaconConfig;
@@ -79,6 +81,11 @@ public class QuartzJob implements InterruptableJob {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         JobKey jobKey = null;
+        final String methodName = this.getClass().getSimpleName() + '.'
+                + Thread.currentThread().getStackTrace()[1].getMethodName();
+        RequestContext requestContext = RequestContext.get();
+        Timer timer = requestContext.startTimer(methodName);
+
         try {
             JobDataMap qJobDataMap = context.getJobDetail().getJobDataMap();
             jobContext = (JobContext) qJobDataMap.get(QuartzDataMapEnum.JOB_CONTEXT.getValue());
@@ -148,7 +155,17 @@ public class QuartzJob implements InterruptableJob {
                     LOG.warn("Ignoring cleanup failure", t);
                 }
             }
+            timer.stop();
+            logTimers();
         }
+    }
+
+    private void logTimers() {
+        if (RequestContext.get().getMethodTimers().size() != 0) {
+            LOG.info("Time duration of method(s) executed : {}", RequestContext.get().getMethodTimers()
+                    .toString());
+        }
+        RequestContext.get().clear();
     }
 
     private void checkInterruption(JobKey jobKey, String interruptPoint) throws InterruptedException {

@@ -23,6 +23,7 @@
 package com.hortonworks.beacon.api;
 
 import com.google.common.base.Joiner;
+import com.codahale.metrics.annotation.Timed;
 import com.hortonworks.beacon.BeaconClientFactory;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
@@ -102,6 +103,7 @@ public class PolicyResource extends AbstractResourceManager {
     @POST
     @Path("submitAndSchedule/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.policy.submitAndSchedule")
     public APIResult submitAndSchedule(@PathParam("policy-name") String policyName,
                                        @DefaultValue("true") @QueryParam("validateCloud") String validateCloudStr,
                                        @Context HttpServletRequest request) {
@@ -130,6 +132,7 @@ public class PolicyResource extends AbstractResourceManager {
     @PUT
     @Path("{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.policy.update")
     public APIResult update(@PathParam("policy-name") String policyName, @Context HttpServletRequest request) {
         try {
             LOG.info("Request for policy update is received. Policy-name: [{}]", policyName);
@@ -150,6 +153,7 @@ public class PolicyResource extends AbstractResourceManager {
     @POST
     @Path("dryrun/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.policy.dryrun")
     public APIResult validatePolicy(@PathParam("policy-name") String policyName,
                                        @Context HttpServletRequest request) {
         PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
@@ -171,6 +175,7 @@ public class PolicyResource extends AbstractResourceManager {
     @GET
     @Path("list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.policy.list")
     public PolicyList list(@DefaultValue("") @QueryParam("fields") String fields,
                            @DefaultValue("name") @QueryParam("orderBy") String orderBy,
                            @DefaultValue("") @QueryParam("filterBy") String filterBy,
@@ -193,6 +198,7 @@ public class PolicyResource extends AbstractResourceManager {
     @GET
     @Path("status/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.policy.status")
     public StatusResult status(@PathParam("policy-name") String policyName) {
         BeaconLogUtils.prefixPolicy(policyName);
         try {
@@ -210,6 +216,7 @@ public class PolicyResource extends AbstractResourceManager {
     @GET
     @Path("info/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.policy.replicationPolicyType")
     public APIResult replicationPolicyType(@PathParam("policy-name") String policyName) {
         BeaconLogUtils.prefixPolicy(policyName);
         String replicationPolicyType = getReplicationType(policyName);
@@ -221,6 +228,7 @@ public class PolicyResource extends AbstractResourceManager {
     @GET
     @Path("getEntity/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.policy.definition")
     public PolicyList definition(@PathParam("policy-name") String policyName,
                                  @DefaultValue("false") @QueryParam("archived") String archived) {
         BeaconLogUtils.prefixPolicy(policyName);
@@ -242,6 +250,7 @@ public class PolicyResource extends AbstractResourceManager {
     @DELETE
     @Path("delete/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.policy.delete")
     public APIResult delete(@PathParam("policy-name") String policyName,
                             @DefaultValue("false") @QueryParam("isInternalSyncDelete") boolean isInternalSyncDelete) {
         BeaconLogUtils.prefixPolicy(policyName);
@@ -264,6 +273,7 @@ public class PolicyResource extends AbstractResourceManager {
     @POST
     @Path("suspend/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.policy.suspend")
     public APIResult suspend(@PathParam("policy-name") String policyName) {
         BeaconLogUtils.prefixPolicy(policyName);
         try {
@@ -283,6 +293,7 @@ public class PolicyResource extends AbstractResourceManager {
     @POST
     @Path("resume/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.policy.resume")
     public APIResult resume(@PathParam("policy-name") String policyName) {
         BeaconLogUtils.prefixPolicy(policyName);
         try {
@@ -304,6 +315,7 @@ public class PolicyResource extends AbstractResourceManager {
     @POST
     @Path("sync/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.policy.sync")
     public APIResult syncPolicy(@PathParam("policy-name") String policyName,
                                 @QueryParam("update") boolean update,
                                 @Context HttpServletRequest request) {
@@ -342,6 +354,7 @@ public class PolicyResource extends AbstractResourceManager {
     @POST
     @Path("syncStatus/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.policy.syncStatus")
     public APIResult syncPolicyStatus(@PathParam("policy-name") String policyName,
                                       @QueryParam("status") String status,
                                       @DefaultValue("false") @QueryParam("isInternalStatusSync")
@@ -368,6 +381,7 @@ public class PolicyResource extends AbstractResourceManager {
     @GET
     @Path("instance/list/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.policy.listInstances")
     public PolicyInstanceList listPolicyInstances(@PathParam("policy-name") String policyName,
                                                   @QueryParam("filterBy") String filters,
                                                   @DefaultValue("startTime") @QueryParam("orderBy") String orderBy,
@@ -393,6 +407,7 @@ public class PolicyResource extends AbstractResourceManager {
     @POST
     @Path("instance/abort/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.policy.abort")
     public APIResult abortPolicyInstance(@PathParam("policy-name") String policyName) {
         BeaconLogUtils.prefixPolicy(policyName);
         try {
@@ -410,6 +425,7 @@ public class PolicyResource extends AbstractResourceManager {
     @POST
     @Path("instance/rerun/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Timed(absolute = true, name="api.beacon.policy.rerun")
     public APIResult rerunPolicyInstance(@PathParam("policy-name") String policyName) {
         BeaconLogUtils.prefixPolicy(policyName);
         try {

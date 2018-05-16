@@ -23,6 +23,7 @@
 package com.hortonworks.beacon.api.filter;
 
 import com.hortonworks.beacon.RequestContext;
+import com.hortonworks.beacon.Timer;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -63,15 +64,19 @@ public class APIFilter implements Filter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException {
+        String timerKey = null;
+        Timer timer = null;
         try {
             HttpServletRequest request = (HttpServletRequest) servletRequest;
             MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(request);
 
+            String apiPath = request.getPathInfo();
+            timerKey = request.getMethod() + "->" + apiPath;
             RequestContext.setInitialValue();
             RequestContext requestContext = RequestContext.get();
+            timer = requestContext.startTimer(timerKey);
             BeaconLogUtils.prefixRequest(requestContext.getRequestId());
             String queryString = request.getQueryString();
-            String apiPath = request.getPathInfo();
             LOG.info("ThreadId: {}, HTTP method: {}, Query Parameters: {}, APIPath: {}",
                     Thread.currentThread().getName(), request.getMethod(), queryString, apiPath);
             String body = multiReadRequest.getRequestBody();
@@ -81,6 +86,15 @@ public class APIFilter implements Filter {
 
             filterChain.doFilter(multiReadRequest, servletResponse);
         } finally {
+            if (timer != null) {
+                timer.stop();
+            }
+            if (StringUtils.isNotEmpty(timerKey)) {
+                if (RequestContext.get().getMethodTimers().size() != 0) {
+                    LOG.info("Time duration of method(s) executed : {}", RequestContext.get().getMethodTimers()
+                            .toString());
+                }
+            }
             // Clear the thread level request context
             RequestContext.get().clear();
             NDC.remove();

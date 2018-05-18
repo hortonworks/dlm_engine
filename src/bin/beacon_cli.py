@@ -53,7 +53,7 @@ jdk_options.extend([os.getenv('BEACON_PROPERTIES'),
                     '-Dbeacon.log.appender=console',
                     '-Dbeacon.log.level=error'])
 
-java_class = 'com.hortonworks.beacon.client.cli.BeaconCLI'
+java_class = 'com.hortonworks.beacon.cli.BeaconCLI'
 launch_java_process(bc.java_bin, java_class, bc.class_path, jdk_options, sys.argv[1:len(sys.argv)])
 
 

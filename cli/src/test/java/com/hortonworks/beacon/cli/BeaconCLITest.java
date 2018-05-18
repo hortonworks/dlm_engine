@@ -20,7 +20,7 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.client;
+package com.hortonworks.beacon.cli;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +33,7 @@ import java.io.Writer;
 
 import java.util.ArrayList;
 
+import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.util.CloudCredBuilder;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
@@ -41,7 +42,6 @@ import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.hortonworks.beacon.client.cli.BeaconCLI;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 
@@ -167,6 +167,11 @@ public class BeaconCLITest {
 
         cli.processCommand("-user".split(" "));
         verify(beaconClient).getUserPrivileges();
+    }
+
+    @Test
+    public void testMetaFileDumpCommand() throws Exception {
+        cli.processCommand("-metafiledump /tmp/mukund ".split(" "));
     }
 
     public PolicyInstanceList getRandomInstanceList() {

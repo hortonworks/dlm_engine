@@ -45,6 +45,7 @@
         <module>main</module>
         <module>mpack</module>
         <module>tools</module>
+        <module>cli</module>
     </modules>
     <name>beacon</name>
     <organization>
@@ -164,6 +165,11 @@
             <dependency>
                 <groupId>com.hortonworks.beacon</groupId>
                 <artifactId>beacon-scheduler</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hortonworks.beacon</groupId>
+                <artifactId>beacon-cli</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

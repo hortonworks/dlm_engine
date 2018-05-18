@@ -208,4 +208,9 @@ bin/beacon -listdb
 bin/beacon -user
 ----------------------------------------------
 
+* Dump the contents of permission meta file
+----------------------------------------------
+bin/beacon -metafiledump <file_path>
+----------------------------------------------
+
 

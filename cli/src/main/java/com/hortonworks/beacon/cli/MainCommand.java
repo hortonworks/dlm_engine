@@ -21,7 +21,7 @@
  */
 
 
-package com.hortonworks.beacon.client.cli;
+package com.hortonworks.beacon.cli;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -67,22 +67,20 @@ public class MainCommand extends CommandBase {
         if (cmd.hasOption(URL)) {
             client = new BeaconWebClient(cmd.getOptionValue(URL));
         }
-
         if (cmd.hasOption(CLUSTER)) {
             handleClusterCommand(cmd.getOptionValue(CLUSTER), originalArgs);
         } else if (cmd.hasOption(POLICY)) {
             handlePolicyCommand(cmd.getOptionValue(POLICY), originalArgs);
-        }else if (cmd.hasOption(CLOUDCRED)) {
+        } else if (cmd.hasOption(CLOUDCRED)) {
             handleCloudCredCommand(cmd.getOptionValue(CLOUDCRED), originalArgs);
         } else if (cmd.hasOption(STATUS)) {
             printStatus();
         } else if (cmd.hasOption(VERSION)) {
             printVersion();
         } else {
-            handleResourceCommand(originalArgs);
+            handleMiscCommand(originalArgs);
         }
     }
-
     private void handlePolicyCommand(String policyName, String[] originalArgs) throws BeaconClientException {
         String cmdString = MAIN_COMMAND + " -" + POLICY;
         PolicyCommand policyCmd = new PolicyCommand(cmdString, client, policyName);
@@ -101,9 +99,11 @@ public class MainCommand extends CommandBase {
         clusterCommand.processCommand(originalArgs);
     }
 
-    private void handleResourceCommand(String[] originalArgs) throws BeaconClientException {
-        MiscCommand datasetCommand = new MiscCommand(MAIN_COMMAND, client);
-        datasetCommand.processCommand(originalArgs);
+
+
+    private void handleMiscCommand(String[] originalArgs) throws BeaconClientException {
+        MiscCommand miscCommand = new MiscCommand(MAIN_COMMAND, client);
+        miscCommand.processCommand(originalArgs);
     }
 
     public void printStatus() throws BeaconClientException {

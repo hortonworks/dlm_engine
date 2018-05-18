@@ -20,7 +20,7 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.client.cli;
+package com.hortonworks.beacon.cli;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hortonworks.beacon.client.BeaconClient;

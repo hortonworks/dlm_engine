@@ -73,9 +73,11 @@ public class HCFSReplication extends FSReplication {
 
     private static final Logger LOG = LoggerFactory.getLogger(HCFSReplication.class);
     private boolean isPushRepl;
+    private PermissionMetaFileOperator permissionMetaFileOperator;
 
     public HCFSReplication(ReplicationJobDetails details) {
         super(details);
+        permissionMetaFileOperator =  new PermissionMetaFileOperator();
     }
 
     @Override
@@ -149,19 +151,11 @@ public class HCFSReplication extends FSReplication {
 
     private void debugMetaInfo(Path metaFilePath) {
         LOG.debug("Logging Meta info preserved at {}", metaFilePath.toString());
-        SequenceFile.Reader reader = null;
         try {
-            reader = new SequenceFile.Reader(getConfiguration(),
-                    SequenceFile.Reader.file(metaFilePath));
-            CopyListingFileStatus fileStatus = new CopyListingFileStatus();
-            Text relPath = new Text();
-            while (reader.next(relPath, fileStatus)) {
-                LOG.info("Path: {}, File Status: {}", relPath, fileStatus);
-            }
+            String metaInfo = permissionMetaFileOperator.infoLogger(metaFilePath, getConfiguration());
+            LOG.debug("Logging Meta info preserved at {} {} ", metaFilePath.toString(), metaInfo);
         } catch (IOException e) {
-            LOG.error("Error while reading the meta file: {}", metaFilePath.toString(), e);
-        } finally {
-            IOUtils.closeStream(reader);
+            LOG.error("Error while reading the permissionMeta file: {}", metaFilePath.toString(), e);
         }
     }
 
@@ -184,7 +178,7 @@ public class HCFSReplication extends FSReplication {
         SequenceFile.Writer writer = null;
         Path sourceInfoPath = new Path(metaLocation, "sourceInfo.seq");
         try {
-            writer = getWriter(sourceInfoPath, getConfiguration());
+            writer = permissionMetaFileOperator.writer(sourceInfoPath, getConfiguration());
             CopyListingFileStatus fileStatus = DistCpUtils.toCopyListingFileStatus(sourceFs, sourceFs.getFileStatus(
                     new Path(sourceStagingUri)), true, true, true);
             writer.append(new Text(Path.SEPARATOR), fileStatus);
@@ -213,7 +207,7 @@ public class HCFSReplication extends FSReplication {
             Text existingRelPath = new Text();
             CopyListingFileStatus modifiedFileStatus = new CopyListingFileStatus();
             Text modifiedRelPath = new Text();
-            writer = getWriter(path, getConfiguration());
+            writer = permissionMetaFileOperator.writer(path, getConfiguration());
 
             boolean modifiedAvailable = modifiedReader.next(modifiedRelPath, modifiedFileStatus);
             boolean existingAvailable = existingReader.next(existingRelPath, existingFileStatus);
@@ -401,15 +395,4 @@ public class HCFSReplication extends FSReplication {
         jobContext.setPerformJobAfterRecovery(true);
     }
 
-    private static SequenceFile.Writer getWriter(Path pathToListFile, Configuration conf) throws IOException {
-        FileSystem fs = pathToListFile.getFileSystem(conf);
-        if (fs.exists(pathToListFile)) {
-            fs.delete(pathToListFile, false);
-        }
-        return SequenceFile.createWriter(conf,
-                SequenceFile.Writer.file(pathToListFile),
-                SequenceFile.Writer.keyClass(Text.class),
-                SequenceFile.Writer.valueClass(CopyListingFileStatus.class),
-                SequenceFile.Writer.compression(SequenceFile.CompressionType.NONE));
-    }
 }

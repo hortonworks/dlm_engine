@@ -21,21 +21,13 @@
  */
 
 
-package com.hortonworks.beacon.client.cli;
-
-import java.util.ListIterator;
-
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.ParseException;
+package com.hortonworks.beacon.cli;
 
 /**
- * Ignores unrecognised option while parsing command.
+ * Exception used when CLI command is invalid.
  */
-public class IgnoreUnrecognisedOptionParser extends GnuParser {
-    @Override
-    protected void processOption(final String arg, final ListIterator iter) throws ParseException {
-        if (getOptions().hasOption(arg)) {
-            super.processOption(arg, iter);
-        }
+public class InvalidCommandException extends Exception {
+    public InvalidCommandException(String message) {
+        super(message);
     }
 }

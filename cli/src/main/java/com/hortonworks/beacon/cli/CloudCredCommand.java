@@ -21,7 +21,7 @@
  */
 
 
-package com.hortonworks.beacon.client.cli;
+package com.hortonworks.beacon.cli;
 
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;

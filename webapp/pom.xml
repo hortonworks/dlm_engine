@@ -60,6 +60,11 @@
 
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>beacon-cli</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
             <artifactId>beacon-scheduler</artifactId>
         </dependency>
 

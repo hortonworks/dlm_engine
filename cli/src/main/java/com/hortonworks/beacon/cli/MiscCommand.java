@@ -19,7 +19,7 @@
  *    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
  *    OR LOSS OR CORRUPTION OF DATA.
  */
-package com.hortonworks.beacon.client.cli;
+package com.hortonworks.beacon.cli;
 
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
@@ -27,12 +27,17 @@ import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
 import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.FileListResult;
+import com.hortonworks.beacon.replication.fs.PermissionMetaFileOperator;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+
+import java.io.IOException;
 
 /**
  * Handles beacon resource commands like list files, list dbs etc.
@@ -42,6 +47,7 @@ public class MiscCommand extends CommandBase {
     private static final String LISTFS = "listfs";
     private static final String LISTDB = "listdb";
     private static final String USER = "user";
+    private static final String METAFILEDUMP = "metafiledump";
 
     MiscCommand(String cmd, BeaconClient client) {
         super(cmd, client);
@@ -58,10 +64,24 @@ public class MiscCommand extends CommandBase {
             String dbName = cmd.getOptionValue(LISTDB);
             checkOptionValue(LISTDB, dbName);
             listDBs();
+        } else if (cmd.hasOption(METAFILEDUMP)) {
+            String path = cmd.getOptionValue(METAFILEDUMP);
+            checkOptionValue(METAFILEDUMP, path);
+            dumpMetaFile(path);
         } else if (cmd.hasOption(USER)) {
             fetchUserPrivileges();
         } else {
             printUsage();
+        }
+    }
+
+    private void dumpMetaFile(String path) {
+        PermissionMetaFileOperator metaFileOperator = new PermissionMetaFileOperator();
+        try {
+            String metaFileInfo = metaFileOperator.infoLogger(new Path(path), new Configuration());
+            System.out.println(metaFileInfo);
+        } catch (IOException e) {
+            System.out.println(String.format("Error while reading the sequence file: %s %s", path, e));
         }
     }
 
@@ -77,9 +97,6 @@ public class MiscCommand extends CommandBase {
     }
 
     protected void printUsage() {
-        System.out.println("Dataset file list: beacon -listfs <path>");
-        System.out.println("Dataset db list: beacon -listdb");
-        System.out.println("Get user privileges: beacon -user");
         super.printUsage();
     }
 
@@ -118,6 +135,8 @@ public class MiscCommand extends CommandBase {
                 .withDescription("file list").create(LISTFS));
         options.addOption(OptionBuilder.withArgName("dbname").hasOptionalArg()
                 .withDescription("db name").create(LISTDB));
+        options.addOption(OptionBuilder.withArgName("path").hasArg()
+                .withDescription("dump the contents of permission meta file").create(METAFILEDUMP));
         options.addOption(new Option(USER, "Fetches user privileges"));
         return options;
     }

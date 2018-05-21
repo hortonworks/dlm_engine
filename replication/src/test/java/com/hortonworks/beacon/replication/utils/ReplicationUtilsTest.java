@@ -46,6 +46,7 @@ public class ReplicationUtilsTest {
         fsPolicyDataset.add("/user/A/1/2");
         fsPolicyDataset.add("/user/A/1/2_1");
         fsPolicyDataset.add("/user/B");
+        fsPolicyDataset.add("/dataset1");
         fsPolicyDataset.add("s3://user/A/");
         fsPolicyDataset.add("s3://user/");
         hivePolicyDataset.add("sales");
@@ -74,6 +75,8 @@ public class ReplicationUtilsTest {
             {"/user/A/1/2_3", false},
             {"/user/C", false},
             {"/home/A", false},
+            {"/dataset", false},
+            {"/dataset12", false},
         };
     }
 

@@ -277,10 +277,6 @@ public final class ReplicationUtils {
             return true;
         }
 
-        if (replicationDataset.startsWith(dataset)) {
-            return true;
-        }
-
         if (sourceDatasetLen > replicationDataset.split(SEPARATOR).length) {
             childDataset = dataset;
             parentDataset = replicationDataset;

@@ -53,6 +53,8 @@ public class HiveExport extends InstanceReplication {
     private String database;
     private String sourceConnectionString;
     private String targetConnectionString;
+    private Statement sourceStatement = null;
+    private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
 
 
     public HiveExport(ReplicationJobDetails details) {
@@ -87,14 +89,12 @@ public class HiveExport extends InstanceReplication {
         LOG.info("Performing export for database: {}", database);
         int limit = Integer.parseInt(properties.getProperty(HiveDRProperties.MAX_EVENTS.getName()));
         String sourceNN = properties.getProperty(HiveDRProperties.SOURCE_NN.getName());
-        ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
 
         String dumpDirectory = null;
         ReplCommand replCommand = new ReplCommand(database);
         HiveServerClient sourceHiveClient = null;
         HiveServerClient targetHiveClient = null;
         Statement targetStatement = null;
-        Statement sourceStatement = null;
         ResultSet res = null;
         try {
             if (jobContext.shouldInterrupt().get()) {
@@ -147,7 +147,6 @@ public class HiveExport extends InstanceReplication {
         return dumpDirectory;
     }
 
-
     @Override
     public void cleanUp(JobContext jobContext) throws BeaconException {
     }
@@ -159,6 +158,20 @@ public class HiveExport extends InstanceReplication {
 
     @Override
     public void interrupt() throws BeaconException {
-        //do nothing, can't interrupt hive replication
+        shutdownTimer();
+        if (sourceStatement != null) {
+            try {
+                LOG.debug("Interrupting Hive Export job!");
+                sourceStatement.cancel();
+            } catch (SQLException e) {
+                throw new BeaconException("Unable to interrupt Hive Export job!", e);
+            }
+        }
+    }
+
+    private void shutdownTimer() {
+        if (!timer.isShutdown()) {
+            timer.shutdown();
+        }
     }
 }

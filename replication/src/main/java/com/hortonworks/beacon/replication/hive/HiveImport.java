@@ -52,6 +52,8 @@ public class HiveImport extends InstanceReplication {
 
     private static final Logger LOG = LoggerFactory.getLogger(HiveImport.class);
     private String database;
+    private Statement targetStatement = null;
+    private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
 
     public HiveImport(ReplicationJobDetails details) {
         super(details);
@@ -96,8 +98,6 @@ public class HiveImport extends InstanceReplication {
         }
 
         LOG.info("REPL Load statement: {}", replLoad);
-        ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
-        Statement targetStatement = null;
         HiveServerClient hiveServerClient = null;
         try {
             if (jobContext.shouldInterrupt().get()) {
@@ -115,7 +115,7 @@ public class HiveImport extends InstanceReplication {
             LOG.debug("Capturing hive import metrics after job execution");
             jobContext.getJobContextMap().put(BeaconConstants.END_TIME,
                     String.valueOf(System.currentTimeMillis()));
-            timer.shutdownNow();
+            shutdownTimer();
             captureHiveReplicationMetrics(jobContext, HiveActionType.IMPORT, targetStatement);
             close(targetStatement);
             HiveClientFactory.close(hiveServerClient);
@@ -162,6 +162,20 @@ public class HiveImport extends InstanceReplication {
 
     @Override
     public void interrupt() throws BeaconException {
-        //do nothing, can't interrupt hive replication
+        shutdownTimer();
+        if (targetStatement != null) {
+            try {
+                LOG.debug("Interrupting Hive Import job!");
+                targetStatement.cancel();
+            } catch (SQLException e) {
+                throw new BeaconException("Unable to interrupt Hive Import job!", e);
+            }
+        }
+    }
+
+    private void shutdownTimer() {
+        if (!timer.isShutdown()) {
+            timer.shutdownNow();
+        }
     }
 }

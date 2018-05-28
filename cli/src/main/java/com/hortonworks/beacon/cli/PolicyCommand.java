@@ -43,8 +43,8 @@ import org.apache.commons.lang.builder.ToStringStyle;
 public class PolicyCommand extends CommandBase {
     private static final String ABORT = "abort";
     private static final String DRYRUN = "dryrun";
-    private static final String RERUN = "rerun";
     private static final String INSTANCE_LIST = "instancelist";
+    private static final String UPDATE = "update";
     private static final String LOGS = "logs";
     private static final String ID = "id";
     private final String policyName;
@@ -78,6 +78,10 @@ public class PolicyCommand extends CommandBase {
         } else if (cmd.hasOption(DELETE)) {
             checkOptionValue(policyName);
             delete();
+        } else if (cmd.hasOption(UPDATE)) {
+            checkOptionValue(policyName);
+            checkOptionValue(cmd, CONFIG);
+            updatePolicy(cmd.getOptionValue(CONFIG));
         } else if (cmd.hasOption(INSTANCE_LIST)) {
             checkOptionValue(policyName);
             listInstances();
@@ -149,6 +153,7 @@ public class PolicyCommand extends CommandBase {
         System.out.println("Policy get: beacon -policy <policy name> -get");
         System.out.println("Policy status: beacon -policy <policy name> -status");
         System.out.println("Policy delete: beacon -policy <policy name> -delete");
+        System.out.println("Policy update: beacon -policy <policy name> -update -config <config file path>");
         System.out.println("Policy instance list: beacon -policy <policy name> -instancelist");
         System.out.println("Policy abort instance: beacon -policy <policy name> -abort");
         System.out.println("Policy logs: beacon -policy [<policy name>] -logs [-id <policy id>]");
@@ -192,6 +197,11 @@ public class PolicyCommand extends CommandBase {
         printResult("Dry-run of policy " + policyName);
     }
 
+    private void updatePolicy(String configFile) throws BeaconClientException {
+        client.updatePolicy(policyName, configFile);
+        printResult("Policy update of " + policyName);
+    }
+
     @Override
     protected Options createOptions() {
         Options options = new Options();
@@ -203,6 +213,7 @@ public class PolicyCommand extends CommandBase {
         options.addOption(new Option(STATUS, "Prints policy's status"));
         options.addOption(new Option(GET, "Prints policy definition"));
         options.addOption(new Option(DELETE, "Deletes policy"));
+        options.addOption(new Option(UPDATE, "Updates policy"));
         options.addOption(new Option(HELP, "Prints command usage"));
         options.addOption(new Option(INSTANCE_LIST, "Lists the instances for the policy"));
         options.addOption(new Option(ABORT, "Aborts the instances of a policy"));

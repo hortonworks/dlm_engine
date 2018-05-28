@@ -399,7 +399,7 @@ DELETE api/beacon/cluster/delete/:cluster-name
 POST api/beacon/policy/submitAndSchedule/:policy-name
 -----------------------------------------------------
 
-*Description:* Submit and schedule an replication policy
+*Description:* Submit and schedule a replication policy
 
 *Parameters:* _:policy-name_ Name of the replication policy
 
@@ -458,10 +458,40 @@ The target dataset path is provided with AWS S3 bucket.
  is provided when the encryptionAlgorithm is AWS_SSEKMS and when targetDataset is on cloud object store.
 
 
+PUT api/beacon/policy/:policy-name
+-----------------------------------------------------
+
+*Description:* Update a replication policy
+
+*Parameters:* _:policy-name_ Name of the replication policy
+
+*REST Call:* PUT http://localhost:25968/api/beacon/policy/hivePolicy[__http://localhost:25968/api/beacon/policy/hivePolicy__]
+
+[source, properties]
+description=hive daily policy
+tde.sameKey=true
+frequencyInSec=3600
+starTime="yyyy-MM-dd’T’HH:mm:ss" (only valid if policy instance has not run yet)
+endTime="yyyy-MM-dd’T’HH:mm:ss"
+distcpMapBandwidth=25
+distcpMaxMaps=10
+queueName=test
+
+* Payload data can be subset of any of the above properties
+
+*Response:*
+
+[source, json]
+{
+  "status": "SUCCEEDED",
+  "message": "Policy [hdfspolicy] update successful",
+  "requestId": "1917442783@qtp-1933129092-1"
+}
+
 POST api/beacon/policy/dryrun/:policy-name
 ------------------------------------------
 
-*Description:* Performs a dry run on a replication policy
+*Description:* Perform a dry run on a replication policy
 
 *Parameters:* _:policy-name_ Name of the replication policy
 
@@ -1522,6 +1552,7 @@ GET api/beacon/admin/status
     "replication_TDE": true,
     "replication_cloud_fs": true,
     "replication_cloud_hive_withCluster": true,
+    "policy_edit": true,
     "cloudHosted": false
 }
 

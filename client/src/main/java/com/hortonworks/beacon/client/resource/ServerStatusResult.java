@@ -72,6 +72,9 @@ public class ServerStatusResult {
     @XmlElement
     private boolean knoxProxyingEnabled;
 
+    @XmlElement(name = "policy_edit")
+    private boolean policyEditSupported;
+
     private boolean cloudHosted;
 
 
@@ -194,6 +197,14 @@ public class ServerStatusResult {
         this.knoxProxyingEnabled = knoxProxyingEnabled;
     }
 
+    @JsonProperty
+    public boolean getPolicyEditSupported() {
+        return policyEditSupported;
+    }
+
+    public void setPolicyEditSupported(boolean policyEditSupported) {
+        this.policyEditSupported = policyEditSupported;
+    }
 
     @JsonProperty
     public boolean getKnoxProxyingSupported() {

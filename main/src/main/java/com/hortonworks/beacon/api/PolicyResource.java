@@ -69,6 +69,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -81,6 +82,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Properties;
 
 /**
  * Beacon policy resource management operations as REST API. Root resource (exposed at "myresource" path).
@@ -115,6 +117,26 @@ public class PolicyResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable);
+        }
+    }
+
+    @PUT
+    @Path("{policy-name}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public APIResult update(@PathParam("policy-name") String policyName, @Context HttpServletRequest request) {
+        try {
+            LOG.info("Request for policy update is received. Policy-name: [{}]", policyName);
+            PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
+            properties.load(request.getInputStream());
+            ReplicationPolicy policy = policyDao.getActivePolicy(policyName);
+            BeaconLogUtils.prefixPolicy(policyName, policy.getPolicyId());
+            ValidationUtil.validatePolicyOnUpdate(policy,  properties);
+            updatePolicy(policyName, properties);
+            return new APIResult(APIResult.Status.SUCCEEDED, "Policy [{}] update request succeeded.", policyName);
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -274,6 +296,7 @@ public class PolicyResource extends AbstractResourceManager {
     @Path("sync/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult syncPolicy(@PathParam("policy-name") String policyName,
+                                @QueryParam("update") boolean update,
                                 @Context HttpServletRequest request) {
         BeaconLogUtils.prefixPolicy(policyName);
         PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
@@ -292,7 +315,7 @@ public class PolicyResource extends AbstractResourceManager {
             }
             requestProperties.remove(ReplicationPolicy.ReplicationPolicyFields.ID.getName());
             requestProperties.remove(ReplicationPolicy.ReplicationPolicyFields.EXECUTIONTYPE.getName());
-            APIResult result = syncPolicy(policyName, requestProperties, id, executionType);
+            APIResult result = syncPolicy(policyName, requestProperties, id, executionType, update);
             if (APIResult.Status.SUCCEEDED == result.getStatus()) {
                 LOG.info("Request for policy sync is processed successfully. Policy-name: [{}]", policyName);
             }
@@ -389,10 +412,10 @@ public class PolicyResource extends AbstractResourceManager {
         }
     }
 
-    private synchronized APIResult submit(ReplicationPolicy policy, boolean isSync) throws BeaconWebException {
+    private synchronized APIResult submit(ReplicationPolicy policy, boolean syncWithPeer) throws BeaconWebException {
         try {
             RequestContext.get().startTransaction();
-            submitInternal(policy, isSync);
+            submitInternal(policy, syncWithPeer);
             RequestContext.get().commitTransaction();
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful {}: {}", policy.getEntityType(),
                     policy.getName());
@@ -403,13 +426,13 @@ public class PolicyResource extends AbstractResourceManager {
         }
     }
 
-    private void submitInternal(ReplicationPolicy policy, boolean isSync) throws BeaconException {
+    private void submitInternal(ReplicationPolicy policy, boolean syncWithPeer) throws BeaconException {
         validate(policy);
         policyDao.retireCompletedPolicy(policy.getName());
         policyDao.persistPolicy(policy);
         // Sync the policy with remote cluster
-        if (isSync) {
-            syncPolicyInRemote(policy);
+        if (syncWithPeer) {
+            syncPolicyInRemote(policy, false);
         }
         //Sync Event is true, if current cluster is equal to source cluster.
         boolean syncEvent = StringUtils.isNotBlank(policy.getSourceCluster())
@@ -419,16 +442,111 @@ public class PolicyResource extends AbstractResourceManager {
         LOG.info("Request for submit policy is processed successfully. Policy-name: [{}]", policy.getName());
     }
 
-    private APIResult syncPolicy(String policyName, PropertiesIgnoreCase requestProperties, String id,
-                                 String executionType) {
+    private synchronized APIResult updatePolicy(String policyName, PropertiesIgnoreCase properties)
+            throws BeaconException {
         try {
-            ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName, false);
+            ReplicationPolicy policy = policyDao.getActivePolicy(policyName);
+            updateSubmittedPolicy(policy, properties, true);
+            rescheduleJob(policy, properties);
+            return new APIResult(APIResult.Status.SUCCEEDED, "Update policy successful ({})", policyName);
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
+        }
+    }
+
+    private APIResult updateSubmittedPolicy(ReplicationPolicy policy, PropertiesIgnoreCase properties,
+                                            boolean syncWithPeer) throws BeaconException {
+        try {
+            RequestContext.get().startTransaction();
+            if (!syncWithPeer) {
+                ValidationUtil.validatePolicyFields(policy, properties);
+            }
+            updatePolicyInternal(policy, properties, syncWithPeer);
+            RequestContext.get().commitTransaction();
+            return new APIResult(APIResult.Status.SUCCEEDED, "Update successful {}: {}", policy.getEntityType(),
+                    policy.getName());
+        } finally {
+            RequestContext.get().rollbackTransaction();
+        }
+    }
+
+    private void updatePolicyInternal(ReplicationPolicy policy, PropertiesIgnoreCase properties,
+                                      boolean syncWithPeer) throws BeaconException {
+        // Prepare policy objects for existing and updated request.
+        ReplicationPolicy updatedPolicy = ReplicationPolicyBuilder.buildPolicyWithPartialData(
+                                                                                          properties, policy.getName());
+        if (updatedPolicy.getFrequencyInSec() == -1) {
+            //set it to the active policy value;
+            updatedPolicy.setFrequencyInSec(policyDao.getActivePolicy(policy.getName()).getFrequencyInSec());
+        }
+        // Prepare for policy update into store
+        PropertiesIgnoreCase updatedProps = new PropertiesIgnoreCase();
+        PropertiesIgnoreCase newProps = new PropertiesIgnoreCase();
+        findUpdatedAndNewCustomProps(updatedPolicy, policy, updatedProps, newProps);
+        ReplicationPolicy modifiedExistingPolicy = policy;
+        addNewPropsAndUpdateOlderPropsValue(modifiedExistingPolicy, updatedPolicy, newProps, updatedProps);
+        // persist policy update information
+        policyDao.persistUpdatedPolicy(modifiedExistingPolicy, updatedProps, newProps);
+
+        if (syncWithPeer) {
+            syncPolicyInRemote(modifiedExistingPolicy, true);
+        }
+        LOG.info("Request for update policy is processed successfully. Policy-name: [{}]", policy.getName());
+
+    }
+    private void addNewPropsAndUpdateOlderPropsValue(ReplicationPolicy modifiedExistingPolicy,
+                                                     ReplicationPolicy updatedPolicy, PropertiesIgnoreCase newProps,
+                                                     PropertiesIgnoreCase updatedProps) {
+        Properties customProps = modifiedExistingPolicy.getCustomProperties();
+        customProps.putAll(newProps);
+        customProps.putAll(updatedProps);
+        if (StringUtils.isNotBlank(updatedPolicy.getDescription())) {
+            modifiedExistingPolicy.setDescription(updatedPolicy.getDescription());
+        }
+        if (updatedPolicy.getStartTime() != null) {
+            modifiedExistingPolicy.setStartTime(updatedPolicy.getStartTime());
+        }
+        if (updatedPolicy.getEndTime() != null) {
+            modifiedExistingPolicy.setEndTime(updatedPolicy.getEndTime());
+        }
+        modifiedExistingPolicy.setFrequencyInSec(updatedPolicy.getFrequencyInSec());
+    }
+
+    private void rescheduleJob(ReplicationPolicy policy, PropertiesIgnoreCase properties)
+            throws BeaconWebException, BeaconException {
+        BeaconScheduler scheduler = getScheduler();
+        scheduler.reschedulePolicy(policy.getPolicyId(), policy.getStartTime(), policy.getEndTime(),
+                policy.getFrequencyInSec());
+    }
+
+    private APIResult syncPolicy(String policyName, PropertiesIgnoreCase requestProperties, String id,
+                                 String executionType, boolean update) throws BeaconException {
+        String message = null;
+        ReplicationPolicy policy = null;
+        if (update) {
+            policy = policyDao.getActivePolicy(policyName);
+            updateSubmittedPolicy(policy, requestProperties, false);
+            message = "Update and sync policy successful ({})";
+        } else {
+            policy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName, false);
             policy.setPolicyId(id);
             policy.setExecutionType(executionType);
             submit(policy, false);
-            return new APIResult(APIResult.Status.SUCCEEDED, "Submit and sync policy successful ({})", policyName);
-        } catch (Throwable e) {
-            throw BeaconWebException.newAPIException(e);
+            message = "Submit and sync policy successful ({})";
+        }
+        return new APIResult(APIResult.Status.SUCCEEDED, message, policyName);
+    }
+
+    private void findUpdatedAndNewCustomProps(ReplicationPolicy updatedPolicy, ReplicationPolicy existingPolicy,
+                                              PropertiesIgnoreCase updatedProps, PropertiesIgnoreCase newProps) {
+        Properties existingPolicyCustomProps = existingPolicy.getCustomProperties();
+        Properties updatedClusterCustomProps = updatedPolicy.getCustomProperties();
+        for (String property : updatedClusterCustomProps.stringPropertyNames()) {
+            if (existingPolicyCustomProps.getProperty(property) != null) {
+                updatedProps.setProperty(property, updatedClusterCustomProps.getProperty(property));
+            } else {
+                newProps.setProperty(property, updatedClusterCustomProps.getProperty(property));
+            }
         }
     }
 
@@ -827,30 +945,28 @@ public class PolicyResource extends AbstractResourceManager {
         }
     }
 
-    private void syncPolicyInRemote(ReplicationPolicy policy) throws BeaconException {
+    private void syncPolicyInRemote(ReplicationPolicy policy, boolean update)
+            throws BeaconException {
         if (PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())) {
             // No policy sync needed for HCFS
             return;
         }
         syncPolicyInRemote(policy,
                 PolicyHelper.getRemoteBeaconEndpoint(policy), PolicyHelper.getRemoteClusterName(policy),
-                PolicyHelper.getRemoteKnoxBaseURL(policy));
+                PolicyHelper.getRemoteKnoxBaseURL(policy), update);
     }
 
     // TODO : In future when house keeping async is added ignore any errors as this will be retried async
     private void syncPolicyInRemote(ReplicationPolicy policy, String remoteBeaconEndpoint,
-                                    String remoteClusterName, String knoxBaseUrl) {
+                                    String remoteClusterName, String knoxBaseUrl, boolean update) {
         try {
             BeaconClient remoteClient = BeaconClientFactory.getBeaconClient(remoteBeaconEndpoint, knoxBaseUrl);
-            remoteClient.syncPolicy(policy.getName(), policy.toString());
+            remoteClient.syncPolicy(policy.getName(), policy.toString(), update);
             BeaconEvents.createEvents(Events.SYNCED, EventEntityType.POLICY,
                     policyDao.getPolicyBean(policy), getEventInfo(policy, false));
         } catch (BeaconClientException e) {
             throw BeaconWebException.newAPIException(
                     Response.Status.fromStatusCode(e.getStatus()), e, "Remote cluster returned error: ");
-        } catch (Exception e) {
-            throw BeaconWebException.newAPIException("Exception while sync policy to source cluster: [{}]",
-                policy.getSourceCluster());
         }
     }
 

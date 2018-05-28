@@ -194,6 +194,18 @@ public final class BeaconQuartzScheduler implements BeaconScheduler, BeaconServi
     }
 
     @Override
+    public void reschedulePolicy(String policyId, Date startTime,
+                                 Date endTime, int frequency) throws BeaconException {
+        Trigger trigger = QuartzTriggerBuilder.createTrigger(policyId, START_NODE_GROUP, startTime, endTime,
+                frequency);
+        try {
+            scheduler.rescheduleJob(policyId, START_NODE_GROUP, trigger);
+        } catch (SchedulerException e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    @Override
     public void stopScheduler() throws BeaconException {
         try {
             if (isStarted()) {

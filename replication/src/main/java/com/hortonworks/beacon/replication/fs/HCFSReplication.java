@@ -36,6 +36,7 @@ import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.FSUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -294,7 +295,7 @@ public class HCFSReplication extends FSReplication {
     private Configuration getConfiguration() {
         Configuration conf = getHAConfigOrDefault();
         String queueName = properties.getProperty(FSDRProperties.QUEUE_NAME.getName());
-        if (queueName != null) {
+        if (StringUtils.isNotBlank(queueName)) {
             conf.set(BeaconConstants.MAPRED_QUEUE_NAME, queueName);
         }
 

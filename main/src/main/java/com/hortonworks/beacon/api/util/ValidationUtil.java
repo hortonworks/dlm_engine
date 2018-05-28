@@ -26,6 +26,7 @@ package com.hortonworks.beacon.api.util;
 import com.hortonworks.beacon.Destination;
 import com.hortonworks.beacon.EncryptionAlgorithmType;
 import com.hortonworks.beacon.SchemeType;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.api.EncryptionZoneListing;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
@@ -34,6 +35,7 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
+import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.CloudCredDao;
 import com.hortonworks.beacon.entity.util.ClusterDao;
@@ -43,13 +45,16 @@ import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
+import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.notification.BeaconNotification;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
 import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
 import com.hortonworks.beacon.replication.fs.SnapshotListing;
 import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
+import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.FSUtils;
+import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.util.StringFormat;
@@ -70,9 +75,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.AccessDeniedException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.Set;
 
 import static com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields.CLOUD_ENCRYPTIONALGORITHM;
 import static com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields.CLOUD_ENCRYPTIONKEY;
@@ -149,6 +158,68 @@ public final class ValidationUtil {
         validateEntityDataset(replicationPolicy);
         validatePolicy(replicationPolicy, validateCloud);
     }
+
+    public static void validatePolicyOnUpdate(ReplicationPolicy replicationPolicy,
+                                          PropertiesIgnoreCase properties) throws BeaconException {
+        ValidationUtil.isFSRequestAllowed(replicationPolicy);
+        ValidationUtil.validatePolicyPropsUpdateAllowed(properties);
+        validatePolicyFields(replicationPolicy, properties);
+    }
+
+    public static  void validatePolicyPropsUpdateAllowed(Properties properties)
+            throws ValidationException {
+        Set<String> allowedUpdateProps = ReplicationPolicyProperties.propsAllowedForUpdate();
+        List propsNotAllowed = new LinkedList();
+        for (Object prop : properties.keySet()) {
+            if (!allowedUpdateProps.contains(prop)) {
+                propsNotAllowed.add(prop);
+            }
+        }
+        if (!propsNotAllowed.isEmpty()) {
+            throw new ValidationException("Properties {} are not allowed to be updated.", propsNotAllowed);
+        }
+    }
+
+    public static void validatePolicyFields(ReplicationPolicy existingPolicy, PropertiesIgnoreCase properties)
+            throws BeaconException {
+        String startTime = properties.getPropertyIgnoreCase(ReplicationPolicyProperties.STARTTIME.getName());
+        if (StringUtils.isNotBlank(startTime)) {
+            Date oldStart = existingPolicy.getStartTime();
+            if (oldStart == null || oldStart.before(new Date())) {
+                throw new BeaconException("Start time can not be modified as the policy has already started");
+            }
+            Date newStart = DateUtil.parseDate(startTime);
+            if (newStart.before(new Date())) {
+                throw new BeaconException("Start time can not be earlier than current time");
+            }
+        }
+        String policyStatus = existingPolicy.getStatus();
+        if (!(JobStatus.RUNNING.toString().equalsIgnoreCase(policyStatus)
+                || JobStatus.SUBMITTED.toString().equalsIgnoreCase(policyStatus)
+                || JobStatus.SUSPENDED.toString().equalsIgnoreCase(policyStatus))) {
+            throw new BeaconException("Policy with a status [{}] can not be updated.", policyStatus);
+        }
+        String endTime = properties.getPropertyIgnoreCase(ReplicationPolicyProperties.ENDTIME.getName());
+        if (StringUtils.isNotBlank(endTime)) {
+            Date newEnd = DateUtil.parseDate(endTime);
+            Date currentDay = Calendar.getInstance().getTime();
+            if (newEnd.before(currentDay)) {
+                throw new BeaconException("End time cannot be earlier than current time");
+            }
+        }
+
+        String frequencyInSecStr =  properties.getPropertyIgnoreCase(ReplicationPolicyProperties.FREQUENCY.getName());
+        if (StringUtils.isNotBlank(frequencyInSecStr)) {
+            Integer frequencyInSec = Integer.parseInt(frequencyInSecStr);
+            int deftReplicationFrequencyInSec = BeaconConfig.getInstance().getScheduler().getMinReplicationFrequency();
+            if (frequencyInSec < deftReplicationFrequencyInSec) {
+                throw new BeaconException("Specified replication frequency {} should not be less than {} seconds",
+                        frequencyInSec, deftReplicationFrequencyInSec);
+            }
+        }
+    }
+
+
 
     public static void validateWriteToPolicyCloudPath(ReplicationPolicy replicationPolicy, String pathStr)
             throws ValidationException{
@@ -275,7 +346,7 @@ public final class ValidationUtil {
         }
     }
 
-    private static void isFSRequestAllowed(ReplicationPolicy policy) throws BeaconException {
+    public static void isFSRequestAllowed(ReplicationPolicy policy) throws BeaconException {
         String sourceClusterName = policy.getSourceCluster();
         String targetClusterName = policy.getTargetCluster();
         String localClusterName = ClusterHelper.getLocalCluster().getName();

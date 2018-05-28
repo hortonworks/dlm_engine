@@ -41,6 +41,7 @@ import org.quartz.impl.matchers.NotMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
@@ -99,6 +100,18 @@ public final class QuartzScheduler {
         }
         LOG.info("Job [key: {}] and trigger [key: {}] are being scheduled", jobs.get(0).getKey(), trigger.getKey());
         scheduler.scheduleJob(jobs.get(0), trigger);
+    }
+
+    void rescheduleJob(String name, String group, Trigger newTrigger) throws SchedulerException {
+        JobKey jobKey = new JobKey(name, group);
+        List<? extends Trigger> triggers = scheduler.getTriggersOfJob(jobKey);
+        TriggerKey oldTriggerKey = triggers.get(0).getKey();
+        LOG.info("Job [Oldkey: {}] having [TriggerKey: {}] is being re-scheduled as new [TriggerKey: {}]",
+                name, oldTriggerKey, newTrigger.getKey());
+        Date fireTime = scheduler.rescheduleJob(oldTriggerKey, newTrigger);
+        if (fireTime == null) {
+            throw new SchedulerException("Could not reschedule the job:" + name);
+        }
     }
 
     boolean isStarted() throws SchedulerException {

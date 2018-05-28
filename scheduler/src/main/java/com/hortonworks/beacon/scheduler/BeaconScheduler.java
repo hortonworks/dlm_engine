@@ -56,6 +56,15 @@ public interface BeaconScheduler {
      */
     String schedulePolicy(List<ReplicationJobDetails> jobs, boolean recovery, String policyId, Date startTime,
                           Date endTime, int frequency) throws BeaconException;
+    /**
+     * reschedule a job.
+     * @param policyId policyid for the jobs
+     * @param startTime new start time for the jobs
+     * @param endTime new end time for the jobs
+     * @param frequency new frequency for jobs
+     * @throws BeaconException
+     */
+    void reschedulePolicy(String policyId, Date startTime, Date endTime, int frequency) throws BeaconException;
 
     /**
      * stop running scheduler.

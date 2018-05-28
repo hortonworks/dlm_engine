@@ -42,7 +42,9 @@ import java.util.Date;
 @Table(name = "BEACON_POLICY_PROP")
 @NamedQueries({
         @NamedQuery(name = "GET_POLICY_PROP", query = "select OBJECT(b) from PolicyPropertiesBean b "
-                + "where b.policyId = :policyId")
+                + "where b.policyId = :policyId"),
+        @NamedQuery(name = "UPDATE_POLICY_PROP", query = "update PolicyPropertiesBean b set b.value = :valueParam "
+                + "where b.policyId = :policyIdParam AND b.name = :nameParam")
     })
 public class PolicyPropertiesBean {
 

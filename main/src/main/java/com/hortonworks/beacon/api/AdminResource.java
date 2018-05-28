@@ -91,6 +91,10 @@ public class AdminResource extends AbstractResourceManager {
         result.setKnoxProxyingEnabled(config.getEngine().isKnoxProxyEnabled());
 
         result.setCloudHosted(BeaconServer.getInstance().isCloudHosted());
+
+        //Beacon DLM-Jun18 features
+        result.setPolicyEditSupported(true);
+
         return result;
     }
 }

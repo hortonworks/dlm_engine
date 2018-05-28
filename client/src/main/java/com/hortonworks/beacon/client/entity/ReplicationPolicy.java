@@ -383,6 +383,7 @@ public class ReplicationPolicy extends Entity {
         StringBuilder policyDefinition = new StringBuilder();
         appendNonEmpty(policyDefinition, ReplicationPolicyFields.ID.getName(), policyId);
         appendNonEmpty(policyDefinition, ReplicationPolicyFields.NAME.getName(), name);
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.DESCRIPTION.getName(), description);
         appendNonEmpty(policyDefinition, ReplicationPolicyFields.TYPE.getName(), type);
         appendNonEmpty(policyDefinition, ReplicationPolicyFields.EXECUTIONTYPE.getName(), executionType);
         appendNonEmpty(policyDefinition, ReplicationPolicyFields.SOURCEDATASET.getName(), sourceDataset);

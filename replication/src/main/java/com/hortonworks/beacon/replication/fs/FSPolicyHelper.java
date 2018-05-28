@@ -111,8 +111,7 @@ public final class FSPolicyHelper {
             map.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(), policy.getCloudEncryptionAlgorithm());
             map.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), policy.getCloudEncryptionKey());
         }
-
-        if (Boolean.valueOf(policy.getPreserveMeta())) {
+        if (policy.getCustomProperties().containsKey(BeaconConstants.META_LOCATION)) {
             map.put(BeaconConstants.META_LOCATION, policy.getCustomProperties().getProperty(BeaconConstants
                     .META_LOCATION));
         }

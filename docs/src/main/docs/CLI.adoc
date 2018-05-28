@@ -137,6 +137,11 @@ bin/beacon -policy -list
 bin/beacon -policy <policy name> -delete
 ----------------------------------------------
 
+* Policy update
+----------------------------------------------
+bin/beacon -policy <policy name> -update -config <file path>
+----------------------------------------------
+
 * List instances of the policy
 ----------------------------------------------
 bin/beacon -policy <policy name> -instancelist

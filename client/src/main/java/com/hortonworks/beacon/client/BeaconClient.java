@@ -37,6 +37,7 @@ import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
 import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.FileListResult;
 
+
 /**
  * Abstract Client API to submit and manage Beacon resources.
  */
@@ -66,6 +67,8 @@ public interface BeaconClient {
     void deletePolicy(String policyName,
             boolean isInternalSyncDelete) throws BeaconClientException;
 
+    void updatePolicy(String policyName, String filePath) throws BeaconClientException;
+
     void suspendPolicy(String policyName) throws BeaconClientException;
 
     void resumePolicy(String policyName) throws BeaconClientException;
@@ -76,7 +79,8 @@ public interface BeaconClient {
     void unpairClusters(String remoteClusterName,
             boolean isInternalunpairing) throws BeaconClientException;
 
-    void syncPolicy(String policyName, String policyDefinition) throws BeaconClientException;
+    void syncPolicy(String policyName, String policyDefinition, boolean update)
+            throws BeaconClientException;
 
     void syncPolicyStatus(String policyName, String status,
             boolean isInternalStatusSync) throws BeaconClientException;

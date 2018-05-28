@@ -153,7 +153,7 @@ public class HDFSReplication extends FSReplication {
     private Configuration getConfiguration() {
         Configuration conf = getHAConfigOrDefault();
         String queueName = properties.getProperty(FSDRProperties.QUEUE_NAME.getName());
-        if (queueName != null) {
+        if (StringUtils.isNotBlank(queueName)) {
             conf.set(BeaconConstants.MAPRED_QUEUE_NAME, queueName);
         }
         if (UserGroupInformation.isSecurityEnabled()) {

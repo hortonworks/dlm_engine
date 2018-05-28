@@ -90,4 +90,18 @@ public enum ReplicationPolicyProperties {
     public String toString() {
         return getName();
     }
+
+    public static Set<String> propsAllowedForUpdate() {
+        Set<String> allowedUpdateProps = new HashSet<>();
+        allowedUpdateProps.add(DESCRIPTION.getName());
+        allowedUpdateProps.add(STARTTIME.getName());
+        allowedUpdateProps.add(ENDTIME.getName());
+        allowedUpdateProps.add(FREQUENCY.getName());
+        //custom properties
+        allowedUpdateProps.add(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName());
+        allowedUpdateProps.add(FSDRProperties.DISTCP_MAX_MAPS.getName());
+        allowedUpdateProps.add(FSDRProperties.TDE_SAMEKEY.getName());
+        allowedUpdateProps.add(FSDRProperties.QUEUE_NAME.getName());
+        return allowedUpdateProps;
+    }
 }

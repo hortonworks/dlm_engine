@@ -28,6 +28,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileWriter;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
@@ -248,6 +250,20 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         HttpURLConnection conn = sendRequest(beaconServer + api, data.toString(), PUT);
         int responseCode = conn.getResponseCode();
         assertEquals(responseCode, Response.Status.OK.getStatusCode());
+    }
+
+    private void updatePolicy(String policyName, String beaconServer, Properties properties,
+                              Response.Status expectedResponse) throws IOException, BeaconClientException {
+
+        BeaconClient client = new BeaconWebClient(beaconServer);
+        int responseCode = Response.Status.OK.getStatusCode();
+        try {
+            File payloadFile = getTempPayloadConfigFile(properties);
+            client.updatePolicy(policyName, payloadFile.getAbsolutePath());
+        } catch (BeaconClientException ex) {
+            responseCode = ex.getStatus();
+        }
+        assertEquals(responseCode, expectedResponse.getStatusCode());
     }
 
     @Test
@@ -630,6 +646,158 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitScheduleDelete(policyName, replicationPath, replicationPath, 10);
     }
 
+    @Test
+    public void  testUpdatePolicy() throws Exception {
+        String dataSet = "/tmp/" + UUID.randomUUID();
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        srcDfsCluster.getFileSystem().mkdirs(new Path(dataSet));
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+        String policyName = "policy-update-1";
+        String type = FS;
+        int freq = 10;
+        submitAndSchedule(policyName, freq, dataSet, null, new Properties());
+        String message = getPolicyResponse(policyName, getTargetBeaconServer(), "");
+        assertPolicyEntity(dataSet, policyName, type, JobStatus.RUNNING, freq, message);
+
+        //change the properties
+        Properties properties = new Properties();
+        properties.put("description", "updated policy description");
+        properties.put("tde.sameKey", "true");
+        properties.put("frequencyInSec", "3600");
+        properties.put("distcpMapBandwidth", "25");
+        properties.put("distcpMaxMaps", "10");
+        properties.put("queueName", "test");
+        properties.put("endTime", "2050-05-28T00:11:00");
+
+        updatePolicy(policyName, getTargetBeaconServer(), properties, Response.Status.OK);
+
+        //verify the properties on target cluster
+        message = getPolicyResponse(policyName, getTargetBeaconServer(), "");
+        JSONObject jsonObject = new JSONObject(message);
+        assertEquals(jsonObject.getInt("totalResults"), 1);
+        assertEquals(jsonObject.getInt("results"), 1);
+        String policy = jsonObject.getString("policy");
+        JSONArray jsonPolicyArray = new JSONArray(policy);
+        JSONObject jsonPolicy = jsonPolicyArray.getJSONObject(0);
+        assertEquals(jsonPolicy.get("name"), policyName);
+        assertEquals(jsonPolicy.getInt("frequencyInSec"), 3600);
+        assertEquals(jsonPolicy.get("description"), "updated policy description");
+        assertEquals(jsonPolicy.get("endTime"), "2050-05-28T00:11:00");
+        JSONObject customProps = jsonPolicy.getJSONObject("customProperties");
+        assertEquals(customProps.get("distcpMapBandwidth"), "25");
+        assertEquals(customProps.get("distcpMaxMaps"), "10");
+        assertEquals(customProps.get("queueName"), "test");
+
+        //verify the properties on source cluster
+        message = getPolicyResponse(policyName, getSourceBeaconServer(), "");
+        jsonObject = new JSONObject(message);
+        assertEquals(jsonObject.getInt("totalResults"), 1);
+        assertEquals(jsonObject.getInt("results"), 1);
+        policy = jsonObject.getString("policy");
+        jsonPolicyArray = new JSONArray(policy);
+        jsonPolicy = jsonPolicyArray.getJSONObject(0);
+        assertEquals(jsonPolicy.get("name"), policyName);
+        assertEquals(jsonPolicy.getInt("frequencyInSec"), 3600);
+        assertEquals(jsonPolicy.get("description"), "updated policy description");
+        assertEquals(jsonPolicy.get("endTime"), "2050-05-28T00:11:00");
+        customProps = jsonPolicy.getJSONObject("customProperties");
+        assertEquals(customProps.get("distcpMapBandwidth"), "25");
+        assertEquals(customProps.get("distcpMaxMaps"), "10");
+        assertEquals(customProps.get("queueName"), "test");
+
+        // update operation directly on source cluster should fail.
+        updatePolicy(policyName, getSourceBeaconServer(), properties, Response.Status.BAD_REQUEST);
+
+        // endTime in the past should fail
+        Date past = DateUtil.createDate(2000, 1, 1);
+        properties.put("endTime", DateUtil.formatDate(past));
+        updatePolicy(policyName, getTargetBeaconServer(), properties, Response.Status.BAD_REQUEST);
+
+        //change of startTime for a running policy should fail
+        Date future = DateUtil.createDate(2050, 1, 1);
+        properties.put("startTime", DateUtil.formatDate(future));
+        updatePolicy(policyName, getTargetBeaconServer(), properties, Response.Status.BAD_REQUEST);
+
+        //Update to a DELETED policy should fail
+        deletePolicy(policyName);
+        properties = new Properties();
+        properties.put("description", "just updating policy description");
+        updatePolicy(policyName, getTargetBeaconServer(), properties, Response.Status.BAD_REQUEST);
+
+        //Update to a non-existing policy should fail
+        properties = new Properties();
+        properties.put("description", "just updating policy description");
+        updatePolicy("someRandomNonExistingPolicy_12345654321_asdfglkjh", getTargetBeaconServer(),
+                properties, Response.Status.BAD_REQUEST);
+
+        //Single property update should pass
+        policyName = "policy-update-2";
+        freq = 10;
+        submitAndSchedule(policyName, freq, dataSet, null, new Properties());
+        message = getPolicyResponse(policyName, getTargetBeaconServer(), "");
+        assertPolicyEntity(dataSet, policyName, type, JobStatus.RUNNING, freq, message);
+        properties = new Properties();
+        properties.put("description", "updated policy description again");
+
+        updatePolicy(policyName, getTargetBeaconServer(), properties, Response.Status.OK);
+
+        //verify the properties on target cluster
+        message = getPolicyResponse(policyName, getTargetBeaconServer(), "");
+        jsonObject = new JSONObject(message);
+        assertEquals(jsonObject.getInt("totalResults"), 1);
+        assertEquals(jsonObject.getInt("results"), 1);
+        policy = jsonObject.getString("policy");
+        jsonPolicyArray = new JSONArray(policy);
+        jsonPolicy = jsonPolicyArray.getJSONObject(0);
+        assertEquals(jsonPolicy.get("name"), policyName);
+        assertEquals(jsonPolicy.getInt("frequencyInSec"), 10);
+        assertEquals(jsonPolicy.get("description"), "updated policy description again");
+
+        //Attempt to update custom props which are not allowed to update should fail
+        properties.put("description", "updated policy description again");
+        properties.put("source.setSnapshottable", "true");
+        properties.put("tde.enabled", "true");
+
+        updatePolicy(policyName, getTargetBeaconServer(), properties, Response.Status.BAD_REQUEST);
+        deletePolicy(policyName);
+
+        // Update to policy startTime, if policy has not yet started should pass
+        Date future1 = DateUtil.createDate(2049, 1, 1);
+        Date future2 = DateUtil.createDate(2050, 1, 1);
+        Properties extraProps = new Properties();
+        extraProps.put("startTime", DateUtil.formatDate(future1));
+        submitAndSchedule(policyName, freq, dataSet, null, extraProps);
+        message = getPolicyResponse(policyName, getTargetBeaconServer(), "");
+        jsonObject = new JSONObject(message);
+        policy = jsonObject.getString("policy");
+        jsonPolicyArray = new JSONArray(policy);
+        jsonPolicy = jsonPolicyArray.getJSONObject(0);
+        assertEquals(jsonPolicy.get("name"), policyName);
+        assertEquals(jsonPolicy.get("startTime"), DateUtil.formatDate(future1));
+
+        Properties updateProps = new Properties();
+        updateProps.put("startTime", DateUtil.formatDate(future2));
+        updatePolicy(policyName, getTargetBeaconServer(), updateProps, Response.Status.OK);
+
+        message = getPolicyResponse(policyName, getTargetBeaconServer(), "");
+        jsonObject = new JSONObject(message);
+        policy = jsonObject.getString("policy");
+        jsonPolicyArray = new JSONArray(policy);
+        jsonPolicy = jsonPolicyArray.getJSONObject(0);
+        assertEquals(jsonPolicy.get("name"), policyName);
+        assertEquals(jsonPolicy.get("startTime"), DateUtil.formatDate(future2));
+
+        // Update to Policy startTime earlier than current time should fail
+        updateProps = new Properties();
+        updateProps.put("startTime", DateUtil.formatDate(past));
+        updatePolicy(policyName, getTargetBeaconServer(), updateProps, Response.Status.BAD_REQUEST);
+    }
+
     private void submitScheduleDelete(String policyName, String sourceDataSet, String targetDataSet,
                                       int sleepTime) throws Exception {
         submitAndSchedule(policyName, 10, sourceDataSet, targetDataSet, new Properties());
@@ -751,7 +919,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         ObjectMapper mapper = new ObjectMapper();
         Map<String, String> map = mapper.readValue(jsonPolicy.getString("customProperties"),
                 new TypeReference<Map<String, String>>(){});
-        assertEquals(map.size(), 7);
+        assertEquals(map.size(), 8);
 
         List<String> list = mapper.readValue(jsonPolicy.getString("tags"), new TypeReference<List<String>>(){});
         assertEquals(list.size(), 2);
@@ -1431,6 +1599,8 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(status, "false");
         String snapshotReady = jsonObject.getString("enableSourceSnapshottable");
         assertEquals(snapshotReady, "true");
+        String policyEdit = jsonObject.getString("policy_edit");
+        assertEquals(policyEdit, "true");
     }
 
     @Test
@@ -2163,5 +2333,20 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
             }
         }
         return snapshottable;
+    }
+
+    private static File getTempPayloadConfigFile(Properties properties) throws IOException {
+        StringBuilder data = new StringBuilder();
+        for (String property : properties.stringPropertyNames()) {
+            data.append(property).append("=").append(properties.getProperty(property))
+                    .append(System.lineSeparator());
+        }
+        File tmpConfigFile = File.createTempFile("beacon-", ".properties");
+        Writer writer = new FileWriter(tmpConfigFile);
+        BufferedWriter bufferedWriter = new BufferedWriter(writer);
+        bufferedWriter.write(data.toString());
+        bufferedWriter.close();
+        tmpConfigFile.deleteOnExit();
+        return tmpConfigFile;
     }
 }

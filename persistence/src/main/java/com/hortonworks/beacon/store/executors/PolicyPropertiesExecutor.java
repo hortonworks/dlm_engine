@@ -53,7 +53,8 @@ public class PolicyPropertiesExecutor extends BaseExecutor {
      * Enums for PolicyProperties named queries.
      */
     public enum PolicyPropertiesQuery {
-        GET_POLICY_PROP
+        GET_POLICY_PROP,
+        UPDATE_POLICY_PROP
     }
 
     List<PolicyPropertiesBean> getPolicyProperties() {

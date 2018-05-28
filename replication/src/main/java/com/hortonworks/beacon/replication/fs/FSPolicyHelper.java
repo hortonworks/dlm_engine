@@ -95,8 +95,9 @@ public final class FSPolicyHelper {
         map.put(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(),
                 customProp.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(), defSnapshotRetCount));
 
-        map.put(FSDRProperties.QUEUE_NAME.getName(),
-                customProp.getProperty(FSDRProperties.QUEUE_NAME.getName()));
+        if (StringUtils.isNotBlank(customProp.getProperty(FSDRProperties.QUEUE_NAME.getName()))) {
+            map.put(FSDRProperties.QUEUE_NAME.getName(), customProp.getProperty(FSDRProperties.QUEUE_NAME.getName()));
+        }
 
         map.put(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
                 customProp.getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "false"));

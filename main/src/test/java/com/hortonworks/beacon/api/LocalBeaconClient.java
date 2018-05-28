@@ -38,6 +38,7 @@ import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
 import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.FileListResult;
 
+
 /**
  * Local beacon client that calls resource's methods in the same JVM.
  */
@@ -100,6 +101,10 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
+    public void updatePolicy(String policyName, String filePath) throws BeaconClientException {
+    }
+
+    @Override
     public void suspendPolicy(String policyName) throws BeaconClientException {
 
     }
@@ -120,7 +125,8 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public void syncPolicy(String policyName, String policyDefinition) throws BeaconClientException {
+    public void syncPolicy(String policyName, String policyDefinition, boolean update)
+            throws BeaconClientException {
 
     }
 

@@ -68,7 +68,6 @@ public final class ReplicationPolicyBuilder {
             }
         }
 
-        String name = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.NAME.getName());
         String type = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TYPE.getName());
         String description = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.DESCRIPTION.getName());
         ReplicationType replType = ReplicationHelper.getReplicationType(type);
@@ -155,7 +154,7 @@ public final class ReplicationPolicyBuilder {
             Properties customProps = EntityHelper.getCustomProperties(requestProperties,
                     ReplicationPolicyProperties.getPolicyElements());
             Retry retry = new Retry(Retry.RETRY_ATTEMPTS, Retry.RETRY_DELAY);
-            return new ReplicationPolicy.Builder(name, type, sourceDataset, targetDataset,
+            return new ReplicationPolicy.Builder(policyName, type, sourceDataset, targetDataset,
                     sourceCluster,
                     targetCluster,
                     1).customProperties(customProps).retry(retry).build();
@@ -201,11 +200,33 @@ public final class ReplicationPolicyBuilder {
                 ReplicationPolicyProperties.NOTIFICATION_TYPE.getName());
         Notification notification = new Notification(to, notificationType);
 
-        return new ReplicationPolicy.Builder(name, type, sourceDataset, targetDataset,
+        return new ReplicationPolicy.Builder(policyName, type, sourceDataset, targetDataset,
                 sourceCluster,
                 targetCluster,
                 frequencyInSec).startTime(start).endTime(end).tags(tags).customProperties(properties).retry(retry)
                 .user(user).notification(notification).description(description).build();
+    }
+
+    public static ReplicationPolicy buildPolicyWithPartialData(final PropertiesIgnoreCase requestProperties,
+                                                final String policyName) throws BeaconException {
+        requestProperties.put(ReplicationPolicyProperties.NAME.getName(), policyName);
+        String description = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.DESCRIPTION.getName());
+        Date start = DateUtil.parseDate(requestProperties.getPropertyIgnoreCase(
+                ReplicationPolicyProperties.STARTTIME.getName()));
+        Date end = DateUtil.parseDate(requestProperties.getPropertyIgnoreCase(
+                ReplicationPolicyProperties.ENDTIME.getName()));
+        String freqInSecStr = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.FREQUENCY.getName());
+        Integer frequencyInSec = -1;
+        if (StringUtils.isNotBlank(freqInSecStr)) {
+            frequencyInSec = Integer.parseInt(freqInSecStr);
+        }
+        Properties properties = EntityHelper.getCustomProperties(requestProperties,
+                ReplicationPolicyProperties.getPolicyElements());
+        return new ReplicationPolicy.Builder(policyName, null, null, null,
+                null,
+                null,
+                frequencyInSec).startTime(start).endTime(end).customProperties(properties)
+                .description(description).build();
     }
 
     private static void setMetaLocation(PropertiesIgnoreCase requestProperties) {

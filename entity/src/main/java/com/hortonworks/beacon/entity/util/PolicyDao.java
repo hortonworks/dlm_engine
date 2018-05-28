@@ -40,7 +40,9 @@ import com.hortonworks.beacon.store.executors.PolicyExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceListExecutor;
 import com.hortonworks.beacon.store.executors.PolicyListExecutor;
+import com.hortonworks.beacon.store.executors.PolicyUpdateExecutor;
 import com.hortonworks.beacon.util.DateUtil;
+import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -499,5 +501,10 @@ public final class PolicyDao {
         } catch (NoSuchElementException e) {
             // No policy with same exists. Proceed to submit the policy.
         }
+    }
+    public void persistUpdatedPolicy(ReplicationPolicy updatedPolicy, PropertiesIgnoreCase updatedProps,
+                                      PropertiesIgnoreCase newProps) {
+        PolicyUpdateExecutor executor = new PolicyUpdateExecutor();
+        executor.persistUpdatedPolicy(getPolicyBean(updatedPolicy), updatedProps, newProps);
     }
 }

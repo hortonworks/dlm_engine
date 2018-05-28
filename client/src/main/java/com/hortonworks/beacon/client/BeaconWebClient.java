@@ -265,6 +265,7 @@ public class BeaconWebClient implements BeaconClient {
         POLICY_STATUS("api/beacon/policy/status/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         POLICY_GET("api/beacon/policy/getEntity/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         POLICY_DELETE("api/beacon/policy/delete/", HttpMethod.DELETE, MediaType.APPLICATION_JSON),
+        POLICY_UPDATE("api/beacon/policy/", HttpMethod.PUT, MediaType.APPLICATION_JSON),
         POLICY_SUSPEND("api/beacon/policy/suspend/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         POLICY_RESUME("api/beacon/policy/resume/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         POLICY_INSTANCE_LIST(API_PREFIX + "instance/list", HttpMethod.GET, MediaType.APPLICATION_JSON),
@@ -375,6 +376,11 @@ public class BeaconWebClient implements BeaconClient {
     }
 
     @Override
+    public void updatePolicy(String policyName, String filePath) throws BeaconClientException {
+        submitEntity(API.POLICY_UPDATE, policyName, filePath);
+    }
+
+    @Override
     public void suspendPolicy(String policyName) throws BeaconClientException {
         doEntityOperation(API.POLICY_SUSPEND, policyName);
     }
@@ -396,8 +402,9 @@ public class BeaconWebClient implements BeaconClient {
     }
 
     @Override
-    public void syncPolicy(String policyName, String policyDefinition) throws BeaconClientException {
-        syncEntity(API.POLICY_SYNC, policyName, policyDefinition);
+    public void syncPolicy(String policyName, String policyDefinition, boolean update)
+            throws BeaconClientException {
+        syncEntity(API.POLICY_SYNC, policyName, policyDefinition, update);
     }
 
     @Override
@@ -588,9 +595,11 @@ public class BeaconWebClient implements BeaconClient {
         getResponse(clientResponse, APIResult.class);
     }
 
-    private void syncEntity(API operation, String entityName, String entityDefinition) throws BeaconClientException {
-        ClientResponse clientResponse = new ResourceBuilder().path(operation.path, entityName)
-                .call(operation, entityDefinition);
+    private void syncEntity(API operation, String entityName, String entityDefinition, boolean update)
+            throws BeaconClientException {
+        ResourceBuilder resourceBuilder = new ResourceBuilder().path(operation.path, entityName);
+        resourceBuilder.addQueryParam("update", String.valueOf(update));
+        ClientResponse clientResponse = resourceBuilder.call(operation, entityDefinition);
         getResponse(clientResponse);
     }
 

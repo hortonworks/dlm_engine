@@ -127,8 +127,9 @@ public class HiveExport extends InstanceReplication {
             LOG.info("Source Current Repl Event id : {} , Target Last Repl Event id : {}", currReplEventId,
                     lastReplEventId);
             /**
-             *  Returning dump directory as null if currReplEventId and lastReplEventId are same as there will not be any extra
-             *  events to replicate. This will disable the {@link HiveImport#perform(JobContext)}
+             *  Returning dump directory as null if currReplEventId and lastReplEventId
+             *  are same as there will not be any extra events to replicate.
+             *  This will disable the {@link HiveImport#perform(JobContext)}
              */
             if (currReplEventId == lastReplEventId) {
                 return null;

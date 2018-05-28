@@ -79,8 +79,7 @@ public class ReplicationPolicy extends Entity {
         NOTIFICATIONTO("notificationReceivers"),
         SOURCE_SETSNAPSHOTTABLE("source.setSnapshottable"),
         CLOUD_ENCRYPTIONALGORITHM("cloud.encryptionAlgorithm"),
-        CLOUD_ENCRYPTIONKEY("cloud.encryptionKey"),
-        PRESERVE_META("preserve.meta");
+        CLOUD_ENCRYPTIONKEY("cloud.encryptionKey");
 
         private final String name;
 
@@ -377,10 +376,6 @@ public class ReplicationPolicy extends Entity {
 
     public String getCloudEncryptionKey() {
         return customProperties.getProperty(ReplicationPolicyFields.CLOUD_ENCRYPTIONKEY.getName());
-    }
-
-    public String getPreserveMeta() {
-        return customProperties.getProperty(ReplicationPolicyFields.PRESERVE_META.getName());
     }
 
     @Override

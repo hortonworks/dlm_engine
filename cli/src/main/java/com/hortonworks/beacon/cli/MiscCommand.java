@@ -28,6 +28,7 @@ import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
 import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.FileListResult;
 import com.hortonworks.beacon.replication.fs.PermissionMetaFileOperator;
+import com.hortonworks.beacon.util.StringFormat;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -81,7 +82,7 @@ public class MiscCommand extends CommandBase {
             String metaFileInfo = metaFileOperator.infoLogger(new Path(path), new Configuration());
             System.out.println(metaFileInfo);
         } catch (IOException e) {
-            System.out.println(String.format("Error while reading the sequence file: %s %s", path, e));
+            System.out.println(StringFormat.format("Error while reading the sequence file: {} {}", path, e));
         }
     }
 

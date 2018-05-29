@@ -31,9 +31,7 @@ import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
-import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -178,25 +176,6 @@ public class HDFSReplication extends FSReplication {
             }
         }
         return conf;
-    }
-
-    private static ReplicationMetrics getCurrentJobDetails(JobContext jobContext) throws BeaconException {
-        String instanceId = jobContext.getJobInstanceId();
-        String trackingInfo = ReplicationUtils.getInstanceTrackingInfo(instanceId);
-
-        List<ReplicationMetrics> metrics = ReplicationMetricsUtils.getListOfReplicationMetrics(trackingInfo);
-        if (metrics == null || metrics.isEmpty()) {
-            LOG.info("No replication job detail found.");
-            return null;
-        }
-
-        // List can have only 2 jobs: one main job and one recovery distcp job
-        if (metrics.size() > 1) {
-            // Recovery has kicked in, return recovery job id
-            return metrics.get(1);
-        } else {
-            return metrics.get(0);
-        }
     }
 
     private String getLatestSnapshotOnTargetAvailableOnSource() throws BeaconException {

@@ -148,10 +148,12 @@ public abstract class InstanceReplication implements BeaconJob {
         return getTrackingInfoAsJsonString(instanceId, jobType, replicationMetrics);
     }
 
-    private String getTrackingInfoAsJsonString(Progress progress,
+    private String getTrackingInfoAsJsonString(String jobId, Progress progress, ReplicationMetrics.JobType jobType,
                                                ProgressUnit progressUnit) throws BeaconException {
         ReplicationMetrics replicationMetrics = new ReplicationMetrics();
         progress.setUnit(progressUnit.getName());
+        replicationMetrics.setJobId(jobId);
+        replicationMetrics.setJobType(jobType);
         replicationMetrics.setProgress(progress);
         String trackingInfo = replicationMetrics.toJsonString();
         LOG.debug("Metrics tracking info: {}", trackingInfo);
@@ -243,8 +245,9 @@ public abstract class InstanceReplication implements BeaconJob {
             if (queryLog.size() != 0 || complete) {
                 hiveReplicationMetrics.obtainJobMetrics(jobContext, queryLog, actionType);
                 Progress progress = hiveReplicationMetrics.getJobProgress();
-                String replicationMetricsJsonString = getTrackingInfoAsJsonString(progress,
-                        (bootstrap ? ProgressUnit.TABLE : ProgressUnit.EVENTS));
+                String queryId = jobContext.getQueryId();
+                String replicationMetricsJsonString = getTrackingInfoAsJsonString(queryId, progress,
+                        ReplicationMetrics.JobType.MAIN, (bootstrap ? ProgressUnit.TABLE : ProgressUnit.EVENTS));
                 LOG.info("Hive Job Progress: {}", progress);
                 ReplicationUtils.storeTrackingInfo(jobContext, replicationMetricsJsonString);
             }
@@ -372,6 +375,25 @@ public abstract class InstanceReplication implements BeaconJob {
             properties.setProperty(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_XATTR.getName(), "true");
         } catch (CopyListing.XAttrsNotSupportedException e) {
             LOG.debug("XAttrs not supported on filesystem: {}", fs.getUri());
+        }
+    }
+
+    protected static ReplicationMetrics getCurrentJobDetails(JobContext jobContext) throws BeaconException {
+        String instanceId = jobContext.getJobInstanceId();
+        String trackingInfo = ReplicationUtils.getInstanceTrackingInfo(instanceId);
+
+        List<ReplicationMetrics> metrics = ReplicationMetricsUtils.getListOfReplicationMetrics(trackingInfo);
+        if (metrics == null || metrics.isEmpty()) {
+            LOG.info("No replication job detail found.");
+            return null;
+        }
+
+        // List can have only 2 jobs: one main job and one recovery distcp job
+        if (metrics.size() > 1) {
+            // Recovery has kicked in, return recovery job id
+            return metrics.get(1);
+        } else {
+            return metrics.get(0);
         }
     }
 

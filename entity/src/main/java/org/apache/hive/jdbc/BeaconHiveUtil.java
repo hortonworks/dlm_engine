@@ -19,20 +19,32 @@
  *    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
  *    OR LOSS OR CORRUPTION OF DATA.
  */
-
-package com.hortonworks.beacon.entity.util.hive;
+package org.apache.hive.jdbc;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 
-import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Client interface for hive server.
+ * Beacon Hive util to access protected methods.
  */
-public interface HiveServerClient {
-    Statement createStatement() throws BeaconException;
+public final class BeaconHiveUtil {
 
-    void killQuery(String queryId, String principal) throws BeaconException;
+    private BeaconHiveUtil() {
+    }
 
-    void close();
+    public static List<String> getAllUrls(String zookeeperBasedHS2Url) throws BeaconException {
+        List<String> jdbcConnectionUrlList = new ArrayList<>();
+        List<Utils.JdbcConnectionParams> jdbcConnectionParams;
+        try {
+            jdbcConnectionParams = HiveConnection.getAllUrls(zookeeperBasedHS2Url);
+            for (Utils.JdbcConnectionParams jdbcConnectionParam: jdbcConnectionParams) {
+                jdbcConnectionUrlList.add(jdbcConnectionParam.getJdbcUriString());
+            }
+        } catch (Exception e) {
+            throw new BeaconException(e);
+        }
+        return jdbcConnectionUrlList;
+    }
 }

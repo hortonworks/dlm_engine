@@ -43,11 +43,15 @@ public class ReplicationMetricsDeserializer implements JsonDeserializer<Replicat
             throws JsonParseException {
 
         final JsonObject jsonObject = jsonElement.getAsJsonObject();
-        String jobId  = jsonObject.get("jobId").getAsString();
-        String jobType = jsonObject.get("jobType").getAsString();
         ReplicationMetrics replicationMetrics = new ReplicationMetrics();
-        replicationMetrics.setJobId(jobId);
-        replicationMetrics.setJobType(ReplicationMetrics.JobType.valueOf(jobType));
+        if (jsonObject.get("jobId") != null) {
+            String jobId  = jsonObject.get("jobId").getAsString();
+            replicationMetrics.setJobId(jobId);
+        }
+        if (jsonObject.get("jobType") != null) {
+            String jobType = jsonObject.get("jobType").getAsString();
+            replicationMetrics.setJobType(ReplicationMetrics.JobType.valueOf(jobType));
+        }
         Progress progress = new Progress();
         final JsonObject progressJsonObject = jsonObject.get("progress").getAsJsonObject();
 

@@ -77,13 +77,13 @@ public final class HivePolicyHelper {
         map.put(HiveDRProperties.SOURCE_HIVE_SERVER_AUTHENTICATION.getName(),
                 sourceCluster.getHiveServerAuthentication());
         map.put(HiveDRProperties.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName(),
-                customProp.getProperty(HiveDRProperties.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName()));
+                sourceCluster.getCustomProperties().getProperty(BeaconConstants.HIVE_PRINCIPAL));
         map.put(HiveDRProperties.SOURCE_HMS_KERBEROS_PRINCIPAL.getName(),
                 sourceCluster.getCustomProperties().getProperty(
                         BeaconConstants.HMS_PRINCIPAL));
         map.put(HiveDRProperties.TARGET_CLUSTER_NAME.getName(), policy.getTargetCluster());
         map.put(HiveDRProperties.TARGET_HIVE2_KERBEROS_PRINCIPAL.getName(),
-                customProp.getProperty(HiveDRProperties.TARGET_HIVE2_KERBEROS_PRINCIPAL.getName()));
+                targetCluster.getCustomProperties().getProperty(BeaconConstants.HIVE_PRINCIPAL));
         map.put(HiveDRProperties.TARGET_HMS_KERBEROS_PRINCIPAL.getName(),
                 targetCluster.getCustomProperties().getProperty(
                         BeaconConstants.HMS_PRINCIPAL));

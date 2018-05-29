@@ -25,24 +25,23 @@ package com.hortonworks.beacon.replication.hive;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
-import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
-import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
 import com.hortonworks.beacon.entity.util.hive.HiveServerClient;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
+import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.util.HiveActionType;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hive.jdbc.HiveStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
@@ -92,9 +91,9 @@ public class HiveImport extends InstanceReplication {
         LOG.info("Performing import for database: {}", database);
         ReplCommand replCommand = new ReplCommand(database);
         String replLoad = replCommand.getReplLoad(dumpDirectory);
-        String configParams =  HiveDRUtils.setConfigParameters(properties);
+        String configParams = HiveDRUtils.setConfigParameters(properties);
         if (StringUtils.isNotBlank(configParams)) {
-            replLoad += " WITH (" + configParams +")";
+            replLoad += " WITH (" + configParams + ")";
         }
 
         LOG.info("REPL Load statement: {}", replLoad);
@@ -108,8 +107,11 @@ public class HiveImport extends InstanceReplication {
             targetStatement = hiveServerClient.createStatement();
             getHiveReplicationProgress(timer, jobContext, HiveActionType.IMPORT,
                     ReplicationUtils.getReplicationMetricsInterval(), targetStatement);
-            targetStatement.execute(replLoad);
-        } catch (SQLException  e) {
+            ((HiveStatement) targetStatement).executeAsync(replLoad);
+            storeHiveQueryId(jobContext, targetStatement);
+            targetStatement.getUpdateCount();
+            LOG.info("REPL LOAD execution finished!");
+        } catch (SQLException e) {
             throw new BeaconException(e);
         } finally {
             LOG.debug("Capturing hive import metrics after job execution");
@@ -129,35 +131,29 @@ public class HiveImport extends InstanceReplication {
     @Override
     public void recover(JobContext jobContext) throws BeaconException {
         LOG.info("Recover policy instance: [{}]", jobContext.getJobInstanceId());
-        boolean isBootStrap = Boolean.parseBoolean(jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP));
-        LOG.info("Recovering replication in bootstrap process (true|false): {}", isBootStrap);
-        if (isBootStrap) {
-            String targetCluster = properties.getProperty(HiveDRProperties.TARGET_CLUSTER_NAME.getName());
-            Cluster cluster = ClusterHelper.getActiveCluster(targetCluster);
-            HiveMetadataClient hiveMetaDataClient = HiveClientFactory.getMetadataClient(cluster);
-            try {
-                if (database.equals(HiveDRUtils.DEFAULT)) {
-                    //default database can't be dropped, so drop each table.
-                    List<String> tables = hiveMetaDataClient.getTables(database);
-                    for (String table: tables) {
-                        hiveMetaDataClient.dropTable(database, table);
-                    }
-
-                    //Drop default database user defined functions
-                    List<String> functions = hiveMetaDataClient.getFunctions(database);
-                    for (String function: functions) {
-                        LOG.info("Drop function: {}", function);
-                        hiveMetaDataClient.dropFunction(database, function);
-                    }
-                } else {
-                    LOG.info("Drop database: {}", database);
-                    hiveMetaDataClient.dropDatabase(database);
-                }
-            } finally {
-                HiveClientFactory.close(hiveMetaDataClient);
-            }
-        }
+        ReplicationMetrics currentJobMetric = getCurrentJobDetails(jobContext);
         jobContext.setPerformJobAfterRecovery(true);
+        if (currentJobMetric != null) {
+            String queryId = currentJobMetric.getJobId();
+            killHiveQuery(queryId);
+        }
+    }
+
+    private void killHiveQuery(String queryId) throws BeaconException {
+        if (StringUtils.isNotEmpty(queryId)) {
+            LOG.info("Killing Hive query id: {}", queryId);
+            HiveServerClient hiveServerClient = null;
+            try {
+                String targetConnection = HiveDRUtils.getTargetConnectionString(properties);
+                String targetPrincipal = HiveDRUtils.getTargetConnectionPrincipal(properties);
+                hiveServerClient = HiveClientFactory.getHiveServerClient(targetConnection);
+                hiveServerClient.killQuery(queryId, targetPrincipal);
+            } finally {
+                HiveClientFactory.close(hiveServerClient);
+            }
+        } else {
+            LOG.debug("No Hive query id found!");
+        }
     }
 
     @Override
@@ -176,6 +172,20 @@ public class HiveImport extends InstanceReplication {
     private void shutdownTimer() {
         if (!timer.isShutdown()) {
             timer.shutdownNow();
+        }
+    }
+
+    private void storeHiveQueryId(final JobContext jobContext, final Statement statement) {
+        try {
+            String queryId = ((HiveStatement) statement).getQueryId();
+            if (StringUtils.isNotEmpty(queryId)) {
+                LOG.info("Hive query id: {}", queryId);
+                jobContext.setQueryId(queryId);
+            } else {
+                LOG.debug("Query execution finished before queryId retrieval");
+            }
+        } catch (SQLException e) {
+            LOG.error("Error while retrieving the query id.", e);
         }
     }
 }

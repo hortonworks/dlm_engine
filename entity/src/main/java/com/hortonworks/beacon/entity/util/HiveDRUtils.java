@@ -121,6 +121,16 @@ public final class HiveDRUtils {
         }
     }
 
+    public static String getTargetConnectionPrincipal(Properties properties) throws BeaconException {
+        boolean isDataLake = Boolean.valueOf(properties.getProperty(ClusterFields.CLOUDDATALAKE.getName()));
+        LOG.info("Destination cluster is data lake: [{}]", isDataLake);
+        if (isDataLake) {
+            return properties.getProperty(HiveDRProperties.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName());
+        } else {
+            return properties.getProperty(HiveDRProperties.TARGET_HIVE2_KERBEROS_PRINCIPAL.getName());
+        }
+    }
+
     public static String setConfigParameters(Properties properties) throws BeaconException {
         StringBuilder builder = new StringBuilder();
         String queueName = properties.getProperty(HiveDRProperties.QUEUE_NAME.getName());

@@ -42,6 +42,7 @@ public class JobContext implements Serializable {
 
     private static final String CONTEXT_SEPARATOR = ";";
     private static final String EQUALS = "=";
+    private static final String HIVE_QUERY_ID = "hiveQueryId";
 
     private String jobInstanceId;
     private int offset;
@@ -120,6 +121,18 @@ public class JobContext implements Serializable {
 
     public void setPerformJobAfterRecovery(boolean performJobAfterRecovery) {
         this.performJobAfterRecovery = performJobAfterRecovery;
+    }
+
+    public void setQueryId(String queryId) {
+        this.getJobContextMap().put(HIVE_QUERY_ID, queryId);
+    }
+
+    public String getQueryId() {
+        return this.getJobContextMap().get(HIVE_QUERY_ID);
+    }
+
+    public void removeQueryId() {
+        this.getJobContextMap().remove(HIVE_QUERY_ID);
     }
 
     public static JobContext parseJobContext(String contextData) {

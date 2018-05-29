@@ -30,8 +30,10 @@ import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.KnoxTokenUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hive.jdbc.BeaconHiveUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +58,7 @@ public class HS2Client implements HiveMetadataClient, HiveServerClient {
     private static final String DROP_FUNCTION = "DROP FUNCTION IF EXISTS";
     private static final String DROP_DATABASE = "DROP DATABASE IF EXISTS";
     private static final String CASCADE = "CASCADE";
+    private static final String KILL_QUERY = "KILL QUERY ";
 
     private static final int DB_NOT_EXIST_EC = 10072;
     private static final String DB_NOT_EXIST_STATE = "42000";
@@ -97,6 +100,31 @@ public class HS2Client implements HiveMetadataClient, HiveServerClient {
             return getConnection().createStatement();
         } catch (SQLException e) {
             throw new BeaconException(e);
+        }
+    }
+
+    @Override
+    public void killQuery(String queryId, String principal) throws BeaconException {
+        if (StringUtils.isNotEmpty(queryId)) {
+            LOG.info("Killing Hive query id: {}", queryId);
+            List<String> jdbcConnectionURLList = BeaconHiveUtil.getAllUrls(connectionString);
+            for (String jdbcConnectionURL : jdbcConnectionURLList) {
+                jdbcConnectionURL = getDirectConnectionString(jdbcConnectionURL, principal);
+                Statement statement = null;
+                Connection directHS2Connection = null;
+                try {
+                    directHS2Connection = getConnection(jdbcConnectionURL);
+                    String killQuery = String.format(KILL_QUERY + "'%s'", queryId);
+                    statement = directHS2Connection.createStatement();
+                    LOG.info("Kill query: {}", killQuery);
+                    statement.execute(killQuery);
+                } catch (Exception e) {
+                    throw new BeaconException(e);
+                } finally {
+                    close(statement);
+                    close(directHS2Connection);
+                }
+            }
         }
     }
 
@@ -279,30 +307,44 @@ public class HS2Client implements HiveMetadataClient, HiveServerClient {
     }
 
     @edu.umd.cs.findbugs.annotations.SuppressFBWarnings("DMI_EMPTY_DB_PASSWORD")
-    public Connection getConnection() throws BeaconException {
-        if (connection != null) {
-            return connection;
-        }
-        if (connectionString.endsWith(BeaconConstants.HIVE_SSO_COOKIE)) {
-            String token =
-                    KnoxTokenUtils.getKnoxSSOToken(knoxGatewayURL, true);
-            connectionString +=  "=" + token;
-
+    private Connection getConnection(String connectionUrl) throws BeaconException {
+        if (connectionUrl.endsWith(BeaconConstants.HIVE_SSO_COOKIE)) {
+            String token = KnoxTokenUtils.getKnoxSSOToken(knoxGatewayURL, true);
+            connectionUrl +=  "=" + token;
         }
         String user = "";
         try {
-            if (!connectionString.contains(BeaconConstants.HIVE_SSO_COOKIE)) {
+            if (!connectionUrl.contains(BeaconConstants.HIVE_SSO_COOKIE)) {
                 UserGroupInformation currentUser = UserGroupInformation.getLoginUser();
                 if (currentUser != null) {
                     user = currentUser.getShortUserName();
                 }
             }
-            LOG.debug("Using connection string: {}", connectionString);
-            connection = DriverManager.getConnection(connectionString, user, "");
+            LOG.debug("Using connection string: {}", connectionUrl);
+            return DriverManager.getConnection(connectionUrl, user, "");
         } catch (IOException | SQLException ex) {
-            LOG.error("Exception occurred initializing Hive server: {}", ex);
+            LOG.error("Exception occurred initializing Hive server.", ex);
             throw new BeaconException("Exception occurred initializing Hive server: ", ex);
         }
+
+    }
+
+    public Connection getConnection() throws BeaconException {
+        if (connection != null) {
+            return connection;
+        }
+        connection = getConnection(connectionString);
         return connection;
+    }
+
+    private static String getDirectConnectionString(String connectionString, String principal) throws BeaconException {
+        StringBuilder tmpConnectionString = new StringBuilder();
+        tmpConnectionString.append(connectionString.split(BeaconConstants.SEMICOLON_SEPARATOR)[0]);
+        if (StringUtils.isNotEmpty(principal)) {
+            tmpConnectionString.append(BeaconConstants.SEMICOLON_SEPARATOR)
+                    .append("principal=")
+                    .append(principal);
+        }
+        return tmpConnectionString.toString();
     }
 }

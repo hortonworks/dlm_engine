@@ -455,12 +455,6 @@
     <display-name>Policy check frequency(Min.)</display-name>
   </property>
   <property>
-    <name>beacon_max_hive_events</name>
-    <value>10000</value>
-    <description>Maximum no. of hive events to be processed together.</description>
-    <display-name>Maximum no. of hive events to be processed together.</display-name>
-  </property>
-  <property>
     <name>beacon_auth_relogin_seconds</name>
     <value>3600</value>
     <description>Kerberos authentication relogin thread frequency.</description>

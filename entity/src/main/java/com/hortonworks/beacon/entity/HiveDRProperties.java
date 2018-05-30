@@ -69,9 +69,6 @@ public enum HiveDRProperties {
     // Queue name
     QUEUE_NAME("queueName", "queue name", false),
 
-    // num events
-    MAX_EVENTS("maxEvents", "number of events to process in this run", false),
-
     // number of maps
     DISTCP_MAX_MAPS("distcpMaxMaps", "Maximum number of maps used during distcp", false),
 

@@ -160,7 +160,6 @@ public class Engine {
         setMaxInstanceCount(o.getMaxInstanceCount());
         setHadoopJobLookupRetries(o.getHadoopJobLookupRetries());
         setHadoopJobLookupDelay(o.getHadoopJobLookupDelay());
-        setMaxHiveEvents(o.getMaxHiveEvents());
         setAuthReloginSeconds(o.getAuthReloginSeconds());
         setExcludeFileRegex(o.getExcludeFileRegex());
         setRefreshEncryptionZones(o.getRefreshEncryptionZones());
@@ -337,10 +336,6 @@ public class Engine {
 
     public void setHadoopJobLookupDelay(int hadoopJobLookupDelay) {
         this.hadoopJobLookupDelay = hadoopJobLookupDelay;
-    }
-
-    public int getMaxHiveEvents() {
-        return maxHiveEvents;
     }
 
     public void setMaxHiveEvents(int maxHiveEvents) {

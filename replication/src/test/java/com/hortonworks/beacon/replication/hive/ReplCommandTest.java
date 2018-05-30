@@ -78,12 +78,10 @@ public class ReplCommandTest {
         LOG.info("Executing Replication Dump");
         String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.SOURCE_DATASET.getName());
         ReplCommand replDump = new ReplCommand(database);
-        Assert.assertEquals(replDump.getReplDump(0L, 0L, 0),
+        Assert.assertEquals(replDump.getReplDump(0L),
                 "REPL DUMP `testDB`");
-        Assert.assertEquals(replDump.getReplDump(25, 0L, 0),
+        Assert.assertEquals(replDump.getReplDump(25),
                 "REPL DUMP `testDB` FROM 25");
-        Assert.assertEquals(replDump.getReplDump(25, 0L, 10),
-                "REPL DUMP `testDB` FROM 25 LIMIT 10");
     }
 
     @Test

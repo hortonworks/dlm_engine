@@ -51,22 +51,13 @@ public class ReplCommand {
         this.database = PolicyHelper.escapeDataSet(database);
     }
 
-    public String getReplDump(long fromEvent, long toEvent, int limit) {
+    public String getReplDump(long fromEvent) {
         StringBuilder replDump = new StringBuilder();
         replDump.append(REPL_DUMP).append(' ').append(database);
 
         if (fromEvent > 0L) {
             replDump.append(" FROM ").append(fromEvent);
         }
-        if (toEvent > 0L) {
-            replDump.append(" TO ").append(toEvent);
-        }
-        if (fromEvent > 0L) {
-            if (limit > 0) {
-                replDump.append(" LIMIT ").append(limit);
-            }
-        }
-
         LOG.info("Repl Dump : {}", replDump.toString());
         return replDump.toString();
     }

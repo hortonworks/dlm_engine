@@ -25,7 +25,6 @@ package com.hortonworks.beacon.replication.hive;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Cluster.ClusterFields;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.HiveDRProperties;
@@ -89,9 +88,6 @@ public final class HivePolicyHelper {
                         BeaconConstants.HMS_PRINCIPAL));
         map.put(HiveDRProperties.TARGET_HIVE_SERVER_AUTHENTICATION.getName(),
                 targetCluster.getHiveServerAuthentication());
-        map.put(HiveDRProperties.MAX_EVENTS.getName(),
-                customProp.getProperty(HiveDRProperties.MAX_EVENTS.getName(), String.valueOf(BeaconConfig.getInstance()
-                        .getEngine().getMaxHiveEvents())));
         if (customProp.containsKey(HiveDRProperties.DISTCP_MAX_MAPS.getName())) {
             map.put(BeaconConstants.DISTCP_OPTIONS+"m",
                     customProp.getProperty(HiveDRProperties.DISTCP_MAX_MAPS.getName()));

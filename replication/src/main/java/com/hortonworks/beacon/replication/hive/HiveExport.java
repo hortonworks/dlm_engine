@@ -87,7 +87,6 @@ public class HiveExport extends InstanceReplication {
 
     private String performExport(JobContext jobContext) throws BeaconException, InterruptedException {
         LOG.info("Performing export for database: {}", database);
-        int limit = Integer.parseInt(properties.getProperty(HiveDRProperties.MAX_EVENTS.getName()));
         String sourceNN = properties.getProperty(HiveDRProperties.SOURCE_NN.getName());
 
         String dumpDirectory = null;
@@ -100,7 +99,6 @@ public class HiveExport extends InstanceReplication {
             if (jobContext.shouldInterrupt().get()) {
                 throw new InterruptedException("before repl status");
             }
-            long currReplEventId = 0L;
 
             sourceHiveClient = HiveClientFactory.getHiveServerClient(sourceConnectionString);
             targetHiveClient = HiveClientFactory.getHiveServerClient(targetConnectionString);
@@ -111,7 +109,7 @@ public class HiveExport extends InstanceReplication {
             if (lastReplEventId == -1L || lastReplEventId == 0) {
                 jobContext.getJobContextMap().put(HiveDRUtils.BOOTSTRAP, "true");
             }
-            String replDump = replCommand.getReplDump(lastReplEventId, currReplEventId, limit);
+            String replDump = replCommand.getReplDump(lastReplEventId);
             if (jobContext.shouldInterrupt().get()) {
                 throw new InterruptedException("before repl dump");
             }
@@ -120,6 +118,7 @@ public class HiveExport extends InstanceReplication {
                     ReplicationUtils.getReplicationMetricsInterval(), sourceStatement);
 
             res = sourceStatement.executeQuery(replDump);
+            long currReplEventId = 0;
             if (res.next()) {
                 dumpDirectory = sourceNN + res.getString(1);
                 currReplEventId = Long.parseLong(res.getString(2));

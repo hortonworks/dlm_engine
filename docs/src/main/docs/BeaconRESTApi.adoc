@@ -459,7 +459,7 @@ The target dataset path is provided with AWS S3 bucket.
 
 
 PUT api/beacon/policy/:policy-name
------------------------------------------------------
+---------------------------------
 
 *Description:* Update a replication policy
 

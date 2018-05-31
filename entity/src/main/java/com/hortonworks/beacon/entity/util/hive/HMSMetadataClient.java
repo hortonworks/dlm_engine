@@ -152,4 +152,35 @@ public class HMSMetadataClient implements HiveMetadataClient {
             throw new BeaconException(e);
         }
     }
+
+    @Override
+    public String getDatabaseProperty(String dbName, String propertyKey) throws BeaconException {
+        try {
+            Database db = client.getDatabase(dbName);
+            if (db == null) {
+                throw new ValidationException("Database {} doesn't exists on cluster {}", dbName, clusterName);
+            }
+            return db.getParameters().get(propertyKey);
+        } catch (TException e) {
+            throw new BeaconException(e);
+        }
+    }
+
+    @Override
+    public void setDatabaseProperty(String dbName, String key, String value) throws BeaconException {
+        try {
+            Database db = client.getDatabase(dbName);
+            if (db == null) {
+                throw new ValidationException("Database {} doesn't exists on cluster {}", dbName, clusterName);
+            }
+            if (StringUtils.isNotEmpty(value)) {
+                db.getParameters().put(key, value);
+            } else {
+                db.getParameters().remove(key);
+            }
+            client.alterDatabase(dbName, db);
+        } catch (TException e) {
+            throw new BeaconException(e);
+        }
+    }
 }

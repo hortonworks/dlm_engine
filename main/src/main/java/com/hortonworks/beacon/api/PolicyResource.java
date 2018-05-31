@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.api;
 
+import com.google.common.base.Joiner;
 import com.hortonworks.beacon.BeaconClientFactory;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
@@ -29,6 +30,7 @@ import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.BeaconWebClient;
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.APIResult;
@@ -39,6 +41,8 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
+import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
+import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
 import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.EventInfo;
@@ -59,6 +63,8 @@ import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
+import com.hortonworks.beacon.util.ReplicationHelper;
+import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.util.StringFormat;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -112,6 +118,7 @@ public class PolicyResource extends AbstractResourceManager {
             if ("false".equalsIgnoreCase(validateCloudStr)) {
                 validateCloud = false;
             }
+            modifyDBReplProperty(replicationPolicy, AlterDBProperty.SET);
             return submitAndSchedulePolicy(replicationPolicy, validateCloud);
         } catch (BeaconWebException e) {
             throw e;
@@ -240,6 +247,8 @@ public class PolicyResource extends AbstractResourceManager {
         BeaconLogUtils.prefixPolicy(policyName);
         try {
             LOG.info("Request for policy delete is received. Policy-name: [{}]", policyName);
+            ReplicationPolicy replicationPolicy = policyDao.getActivePolicy(policyName);
+            modifyDBReplProperty(replicationPolicy, AlterDBProperty.UNSET);
             APIResult result = deletePolicy(policyName, isInternalSyncDelete);
             if (APIResult.Status.SUCCEEDED == result.getStatus()) {
                 LOG.info("Request for policy delete is processed successfully. Policy-name: [{}]", policyName);
@@ -315,6 +324,9 @@ public class PolicyResource extends AbstractResourceManager {
             }
             requestProperties.remove(ReplicationPolicy.ReplicationPolicyFields.ID.getName());
             requestProperties.remove(ReplicationPolicy.ReplicationPolicyFields.EXECUTIONTYPE.getName());
+            ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName,
+                    false);
+            modifyDBReplProperty(replicationPolicy, AlterDBProperty.SET);
             APIResult result = syncPolicy(policyName, requestProperties, id, executionType, update);
             if (APIResult.Status.SUCCEEDED == result.getStatus()) {
                 LOG.info("Request for policy sync is processed successfully. Policy-name: [{}]", policyName);
@@ -956,6 +968,73 @@ public class PolicyResource extends AbstractResourceManager {
                 PolicyHelper.getRemoteKnoxBaseURL(policy), update);
     }
 
+    private void modifyDBReplProperty(ReplicationPolicy policy, AlterDBProperty alterDBProperty)
+            throws BeaconException {
+        String sourceCluster = policy.getSourceCluster();
+        Cluster cluster = ClusterHelper.getLocalCluster();
+        if (cluster.getName().equalsIgnoreCase(sourceCluster)) {
+            ReplicationType replType = ReplicationHelper.getReplicationType(policy.getType());
+            if (replType == ReplicationType.HIVE) {
+                HiveMetadataClient hiveMetadataClient = null;
+                try {
+                    hiveMetadataClient = HiveClientFactory.getMetadataClient(cluster);
+                    String dbName = policy.getSourceDataset();
+                    String policyName = policy.getName();
+                    String propertyKey = "repl.source.for";
+                    String propertyValue = hiveMetadataClient.getDatabaseProperty(dbName, propertyKey);
+                    if (alterDBProperty == AlterDBProperty.SET) {
+                        setDBReplProperty(hiveMetadataClient, dbName, propertyKey, propertyValue, policyName);
+                    } else {
+                        unsetDBReplProperty(hiveMetadataClient, dbName, propertyKey, propertyValue, policyName);
+                    }
+                } finally {
+                    HiveClientFactory.close(hiveMetadataClient);
+                }
+            }
+        }
+    }
+
+    private void setDBReplProperty(HiveMetadataClient hiveMetadataClient, String dbName, String propertyKey,
+                                   String existingPropertyValue, String newPropertyValue) throws BeaconException {
+        List<String> policyNameList;
+        if (StringUtils.isNotEmpty(existingPropertyValue)) {
+            policyNameList = new ArrayList<>(Arrays.asList(existingPropertyValue.split(BeaconConstants
+                    .SEMICOLON_SEPARATOR)));
+        } else {
+            policyNameList = new ArrayList<>();
+        }
+        if (policyNameList.size() == 0 || !policyNameList.contains(newPropertyValue)) {
+            synchronized(this) {
+                if (policyNameList.size() == 0 || !policyNameList.contains(newPropertyValue)) {
+                    LOG.info("Setting policy {} to DB {} property for repl", newPropertyValue, dbName);
+                    policyNameList.add(newPropertyValue);
+                    String newPolicyNameList = Joiner.on(BeaconConstants.SEMICOLON_SEPARATOR).skipNulls()
+                            .join(policyNameList);
+                    hiveMetadataClient.setDatabaseProperty(dbName, propertyKey, newPolicyNameList);
+                }
+            }
+        }
+    }
+
+    private void unsetDBReplProperty(HiveMetadataClient hiveMetadataClient, String dbName, String propertyKey,
+                                     String existingPropertyValue, String removePropertyValue) throws BeaconException {
+        if (StringUtils.isNotEmpty(existingPropertyValue)) {
+            List<String> policyNameList = new ArrayList<>(Arrays.asList(existingPropertyValue.split(BeaconConstants
+                    .SEMICOLON_SEPARATOR)));
+            if (policyNameList.size() != 0 && policyNameList.contains(removePropertyValue)) {
+                synchronized (this) {
+                    if (policyNameList.size() != 0 && policyNameList.contains(removePropertyValue)) {
+                        LOG.info("Unsetting policy {} from DB {} property for repl", removePropertyValue, dbName);
+                        policyNameList.remove(removePropertyValue);
+                        String newPolicyNameList = Joiner.on(BeaconConstants.SEMICOLON_SEPARATOR).skipNulls()
+                                .join(policyNameList);
+                        hiveMetadataClient.setDatabaseProperty(dbName, propertyKey, newPolicyNameList);
+                    }
+                }
+            }
+        }
+    }
+
     // TODO : In future when house keeping async is added ignore any errors as this will be retried async
     private void syncPolicyInRemote(ReplicationPolicy policy, String remoteBeaconEndpoint,
                                     String remoteClusterName, String knoxBaseUrl, boolean update) {
@@ -1071,5 +1150,10 @@ public class PolicyResource extends AbstractResourceManager {
         eventInfo.updateEventsInfo(policy.getSourceCluster(), policy.getTargetCluster(),
                 policy.getSourceDataset(), syncEvent);
         return eventInfo;
+    }
+
+    private enum AlterDBProperty {
+        SET,
+        UNSET
     }
 }

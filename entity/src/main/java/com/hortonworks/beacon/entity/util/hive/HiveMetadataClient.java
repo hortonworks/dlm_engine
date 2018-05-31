@@ -47,4 +47,9 @@ public interface HiveMetadataClient {
     void dropDatabase(String dbName) throws BeaconException;
 
     void dropFunction(String dbName, String functionName) throws BeaconException;
+
+    String getDatabaseProperty(String dbName, String propertyKey) throws BeaconException;
+
+    void setDatabaseProperty(String dbName, String key, String value) throws BeaconException;
+
 }

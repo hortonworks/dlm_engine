@@ -21,6 +21,7 @@
  */
 package com.hortonworks.beacon.entity.util.hive;
 
+import com.google.common.base.Splitter;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
@@ -50,7 +51,7 @@ import java.util.List;
  * Hive server metadata client using jdbc.
  */
 public class HS2Client implements HiveMetadataClient, HiveServerClient {
-    private static final String DESC_DATABASE = "DESC DATABASE ";
+    private static final String DESC_DATABASE = "DESC DATABASE EXTENDED ";
     private static final String SHOW_DATABASES = "SHOW DATABASES";
     private static final String SHOW_TABLES = "SHOW TABLES";
     private static final String SHOW_FUNCTIONS = "SHOW FUNCTIONS";
@@ -175,6 +176,60 @@ public class HS2Client implements HiveMetadataClient, HiveServerClient {
             throw new BeaconException(e);
         } finally {
             close(res);
+            close(statement);
+        }
+    }
+
+    @Override
+    public String getDatabaseProperty(String dbName, String propertyKey) throws BeaconException {
+        Statement statement = null;
+        ResultSet res = null;
+        dbName = PolicyHelper.escapeDataSet(dbName);
+        try {
+            statement = getConnection().createStatement();
+            String query = DESC_DATABASE + dbName;
+            String dbProperties = null;
+            res = statement.executeQuery(query);
+            if (res.next()) {
+                dbProperties = res.getString(6);
+            }
+            LOG.debug("Database: {}, dbProperties: {}", dbName, dbProperties);
+            String propertyValue = "";
+            if (StringUtils.isNotBlank(dbProperties)) {
+                dbProperties = dbProperties.substring(1, dbProperties.length()-1);
+                propertyValue = Splitter.on(BeaconConstants.COMMA_SEPARATOR)
+                        .trimResults().withKeyValueSeparator(
+                            Splitter.on(BeaconConstants.EQUAL_SEPARATOR)
+                            .limit(2).trimResults())
+                         .split(dbProperties).get(propertyKey);
+            }
+            return propertyValue;
+        } catch (SQLException e) {
+            if (e.getErrorCode() == DB_NOT_EXIST_EC && e.getSQLState().equalsIgnoreCase(DB_NOT_EXIST_STATE)) {
+                throw new ValidationException(e, "Database {} doesn't exist on cluster {}", dbName, clusterName);
+            }
+            throw new BeaconException(e);
+        } finally {
+            close(res);
+            close(statement);
+        }
+    }
+
+    @Override
+    public void setDatabaseProperty(String dbName, String key, String value) throws BeaconException {
+        Statement statement = null;
+        dbName = PolicyHelper.escapeDataSet(dbName);
+        try {
+            statement = getConnection().createStatement();
+            String query = String.format("ALTER DATABASE %s SET DBPROPERTIES (\'%s\'=\'%s\')", dbName, key, value);
+            LOG.info("Alter database property query: {}", query);
+            statement.execute(query);
+        } catch (SQLException e) {
+            if (e.getErrorCode() == DB_NOT_EXIST_EC && e.getSQLState().equalsIgnoreCase(DB_NOT_EXIST_STATE)) {
+                throw new ValidationException(e, "Database {} doesn't exist on cluster {}", dbName, clusterName);
+            }
+            throw new BeaconException(e);
+        } finally {
             close(statement);
         }
     }

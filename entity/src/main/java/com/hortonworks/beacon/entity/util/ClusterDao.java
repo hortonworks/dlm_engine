@@ -228,7 +228,7 @@ public final class ClusterDao {
     }
 
     public ClusterList getFilteredClusters(String fieldStr, String orderBy, String sortOrder,
-                                                  Integer offset, Integer resultsPerPage) {
+                                                  Integer offset, Integer resultsPerPage) throws BeaconException {
         ClusterListExecutor executor = new ClusterListExecutor();
         long clusterCount = executor.getFilterClusterCount(offset, resultsPerPage);
         List<Cluster> clusters = new ArrayList<>();

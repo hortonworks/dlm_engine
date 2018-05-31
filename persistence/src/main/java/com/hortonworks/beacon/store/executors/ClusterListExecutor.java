@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.store.bean.ClusterBean;
 import com.hortonworks.beacon.util.StringFormat;
 
@@ -66,18 +67,19 @@ public class ClusterListExecutor extends BaseExecutor {
     }
 
     public List<ClusterBean> getFilterClusters(String orderBy, String sortOrder,
-                                               Integer offset, Integer resultsPerPage) {
+                                               Integer offset, Integer resultsPerPage) throws BeaconException {
         Query query = createQuery(orderBy, sortOrder, offset, resultsPerPage, BASE_QUERY);
         List<ClusterBean> resultList = query.getResultList();
         return resultList;
     }
 
-    public long getFilterClusterCount(Integer offset, Integer resultsPerPage) {
+    public long getFilterClusterCount(Integer offset, Integer resultsPerPage) throws BeaconException {
         Query query = createQuery(null, null, offset, resultsPerPage, COUNT_QUERY);
         return (long) query.getSingleResult();
     }
 
-    private Query createQuery(String orderBy, String sortBy, Integer offset, Integer limitBy, String baseQuery) {
+    private Query createQuery(String orderBy, String sortOrder, Integer offset, Integer limitBy, String baseQuery)
+            throws BeaconException {
         StringBuilder queryBuilder = new StringBuilder(baseQuery);
         if (baseQuery.equals(COUNT_QUERY)) {
             LOG.debug("Executing cluster list query: [{}]", queryBuilder.toString());
@@ -85,7 +87,7 @@ public class ClusterListExecutor extends BaseExecutor {
         }
         queryBuilder.append(" ORDER BY ");
         queryBuilder.append("b." + ClusterFilterBy.getFilterField(orderBy));
-        queryBuilder.append(" ").append(sortBy);
+        queryBuilder.append(" ").append(SortOrder.getSortOrder(sortOrder));
         Query query = getEntityManager().createQuery(queryBuilder.toString());
         query.setFirstResult(offset);
         query.setMaxResults(limitBy);

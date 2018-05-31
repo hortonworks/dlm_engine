@@ -111,7 +111,7 @@ public class CloudCredListExecutor extends BaseExecutor {
         if (!baseQuery.equals(COUNT_QUERY)) {
             queryBuilder.append(" ORDER BY ");
             queryBuilder.append("b." + CloudCredFields.getFilterType(orderBy));
-            queryBuilder.append(" " + sortOrder);
+            queryBuilder.append(" " + SortOrder.getSortOrder(sortOrder));
         }
         Query query = getEntityManager().createQuery(queryBuilder.toString());
         query.setFirstResult(offset);

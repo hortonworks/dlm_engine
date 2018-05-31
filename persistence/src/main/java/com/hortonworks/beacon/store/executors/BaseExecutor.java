@@ -24,6 +24,7 @@ package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.EntityManager;
@@ -63,5 +64,20 @@ abstract class BaseExecutor {
 
     protected EntityManager getEntityManager() {
         return RequestContext.get().getEntityManager();
+    }
+    /**
+     * Supported sort orders for list APIs.
+     */
+    public enum SortOrder {
+        ASC,
+        DESC;
+        public static String getSortOrder(String sortOrderStr) throws BeaconException {
+            try {
+                SortOrder sortOrder = valueOf(sortOrderStr.toUpperCase());
+                return sortOrder.name();
+            } catch (IllegalArgumentException e) {
+                throw new BeaconException("Invalid sortOrder type provided. Input sortOrder type: " + sortOrderStr);
+            }
+        }
     }
 }

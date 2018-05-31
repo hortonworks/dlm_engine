@@ -58,7 +58,7 @@ public class EventsResource extends AbstractResourceManager {
                                              @QueryParam("start") String startDate,
                                              @QueryParam("end") String endDate,
                                              @DefaultValue("eventTimeStamp") @QueryParam("orderBy") String orderBy,
-                                             @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
+                                             @DefaultValue("DESC") @QueryParam("sortOrder") String sortOrder,
                                              @DefaultValue("0") @QueryParam("offset") Integer offset,
                                              @QueryParam("numResults") Integer resultsPerPage) {
 
@@ -70,7 +70,7 @@ public class EventsResource extends AbstractResourceManager {
         try {
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = checkAndSetOffset(offset);
-            return getEventsWithPolicyName(policyName, startDate, endDate, orderBy, sortBy,
+            return getEventsWithPolicyName(policyName, startDate, endDate, orderBy, sortOrder,
                     offset, resultsPerPage);
         } catch (BeaconWebException e) {
             throw e;
@@ -87,7 +87,7 @@ public class EventsResource extends AbstractResourceManager {
                                        @QueryParam("start") String startStr,
                                        @QueryParam("end") String endStr,
                                        @DefaultValue("eventTimeStamp") @QueryParam("orderBy") String orderBy,
-                                       @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
+                                       @DefaultValue("DESC") @QueryParam("sortOrder") String sortOrder,
                                        @DefaultValue("0") @QueryParam("offset") Integer offset,
                                        @QueryParam("numResults") Integer resultsPerPage) {
         if (StringUtils.isBlank(eventName)) {
@@ -97,7 +97,7 @@ public class EventsResource extends AbstractResourceManager {
         try {
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = checkAndSetOffset(offset);
-            return getEventsWithName(eventName, startStr, endStr, orderBy, sortBy, offset, resultsPerPage);
+            return getEventsWithName(eventName, startStr, endStr, orderBy, sortOrder, offset, resultsPerPage);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -113,7 +113,7 @@ public class EventsResource extends AbstractResourceManager {
                                          @QueryParam("start") String startStr,
                                          @QueryParam("end") String endStr,
                                          @DefaultValue("eventTimeStamp") @QueryParam("orderBy") String orderBy,
-                                         @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
+                                         @DefaultValue("DESC") @QueryParam("sortOrder") String sortOrder,
                                          @DefaultValue("0") @QueryParam("offset") Integer offset,
                                          @QueryParam("numResults") Integer resultsPerPage) {
         if (StringUtils.isBlank(entityType)) {
@@ -123,7 +123,7 @@ public class EventsResource extends AbstractResourceManager {
         try {
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = checkAndSetOffset(offset);
-            return getEntityTypeEvents(entityType, startStr, endStr, orderBy, sortBy, offset, resultsPerPage);
+            return getEntityTypeEvents(entityType, startStr, endStr, orderBy, sortOrder, offset, resultsPerPage);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -177,14 +177,14 @@ public class EventsResource extends AbstractResourceManager {
     public EventsResult allEventsInfo(@QueryParam("start") String startStr,
                                       @QueryParam("end") String endStr,
                                       @DefaultValue("eventTimeStamp") @QueryParam("orderBy") String orderBy,
-                                      @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
+                                      @DefaultValue("DESC") @QueryParam("sortOrder") String sortOrder,
                                       @DefaultValue("0") @QueryParam("offset") Integer offset,
                                       @QueryParam("numResults") Integer resultsPerPage) {
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         try {
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = checkAndSetOffset(offset);
-            return getAllEventsInfo(startStr, endStr, orderBy, sortBy, offset, resultsPerPage);
+            return getAllEventsInfo(startStr, endStr, orderBy, sortOrder, offset, resultsPerPage);
         }  catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -216,10 +216,10 @@ public class EventsResource extends AbstractResourceManager {
 
 
     private EventsResult getEventsWithPolicyName(String policyName, String startDate, String endDate,
-                                                 String orderBy, String sortBy,
+                                                 String orderBy, String sortOrder,
                                                  Integer offset, Integer resultsPage) throws BeaconException {
         try {
-            return eventsDao.getEventsWithPolicyName(policyName, startDate, endDate, orderBy, sortBy,
+            return eventsDao.getEventsWithPolicyName(policyName, startDate, endDate, orderBy, sortOrder,
                     offset, resultsPage);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
@@ -227,7 +227,7 @@ public class EventsResource extends AbstractResourceManager {
     }
 
     private EventsResult getEventsWithName(String eventName, String startStr, String endStr,
-                                           String orderBy, String sortBy, Integer offset, Integer resultsPage)
+                                           String orderBy, String sortOrder, Integer offset, Integer resultsPage)
             throws BeaconException {
         try {
             Events event = eventsDao.validateEventName(eventName);
@@ -237,21 +237,21 @@ public class EventsResource extends AbstractResourceManager {
 
             LOG.debug("Events id: {} for event name: {}", event.getId(), eventName);
             return eventsDao.getEventsWithName(event.getId(), startStr, endStr,
-                    orderBy, sortBy,  offset, resultsPage);
+                    orderBy, sortOrder,  offset, resultsPage);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }
     }
 
     private EventsResult getEntityTypeEvents(String entityType, String startStr, String endStr,
-                                             String orderBy, String sortBy,
+                                             String orderBy, String sortOrder,
                                              Integer offset, Integer resultsPage) throws BeaconException {
         try {
             EventEntityType type = eventsDao.validateEventEntityType(entityType);
             if (type != null) {
                 LOG.debug("Find events for the entity type: {}", type.getName());
                 return eventsDao.getEntityTypeEvents(type.getName(), startStr, endStr,
-                        orderBy, sortBy, offset, resultsPage);
+                        orderBy, sortOrder, offset, resultsPage);
             } else {
                 throw new BeaconException("Event name: {} is not supported", entityType);
             }
@@ -277,10 +277,10 @@ public class EventsResource extends AbstractResourceManager {
     }
 
 
-    private EventsResult getAllEventsInfo(String startStr, String endStr, String orderBy, String sortBy,
+    private EventsResult getAllEventsInfo(String startStr, String endStr, String orderBy, String sortOrder,
                                           Integer offset, Integer resultsPage) throws BeaconException {
         try {
-            return eventsDao.getAllEventsInfo(startStr, endStr, orderBy, sortBy, offset, resultsPage);
+            return eventsDao.getAllEventsInfo(startStr, endStr, orderBy, sortOrder, offset, resultsPage);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }

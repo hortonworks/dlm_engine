@@ -46,12 +46,12 @@ abstract class AbstractResourceManager {
     protected LogRetrieval logRetrieval = new LogRetrieval();
     protected static CloudCredDao cloudCredDao = new CloudCredDao();
 
-    PolicyInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
+    PolicyInstanceList listInstance(String filters, String orderBy, String sortOrder, Integer offset,
                                             Integer resultsPerPage, boolean isArchived) throws BeaconException {
         resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
         offset = checkAndSetOffset(offset);
         try {
-            return policyDao.getFilteredJobInstance(filters, orderBy, sortBy,
+            return policyDao.getFilteredJobInstance(filters, orderBy, sortOrder,
                     offset, resultsPerPage, isArchived);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);

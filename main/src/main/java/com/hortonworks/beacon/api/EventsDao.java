@@ -29,6 +29,7 @@ import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.EventInfo;
 import com.hortonworks.beacon.events.Events;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.EventBean;
 import com.hortonworks.beacon.store.executors.EventsExecutor;
@@ -51,8 +52,8 @@ public final class EventsDao {
     private static final int DEFAULT_FREQUENCY_IN_SECOND = 300;
     private PolicyDao policyDao = new PolicyDao();
 
-    EventsResult getEventsWithPolicyName(String policyName, String startDate, String endDate,
-                                                String orderBy, String sortBy, int offset, int resultsPage) {
+    EventsResult getEventsWithPolicyName(String policyName, String startDate, String endDate, String orderBy,
+                                         String sortOrder, int offset, int resultsPage) throws BeaconException {
         EventsExecutor eventExecutor = new EventsExecutor();
         int frequency = getPolicyFrequency(policyName);
         Date endDateTime = StringUtils.isBlank(endDate) ? null : getEndDate(endDate);
@@ -60,27 +61,27 @@ public final class EventsDao {
                 ? null : getStartDate(startDate, endDateTime, frequency, resultsPage);
         long totalResults = eventExecutor.getEventsWithPolicyNameCount(policyName, startDateTime, endDateTime);
         List<EventBean> beanList = eventExecutor.getEventsWithPolicyName(policyName,
-                startDateTime, endDateTime, orderBy, sortBy, offset, resultsPage);
+                startDateTime, endDateTime, orderBy, sortOrder, offset, resultsPage);
 
         return getEventsResult(beanList, totalResults);
     }
 
-    EventsResult getEventsWithName(int eventId, String startDate, String endDate,
-                                          String orderBy, String sortBy, Integer offset, Integer resultsPage) {
+    EventsResult getEventsWithName(int eventId, String startDate, String endDate, String orderBy, String sortOrder,
+                                   Integer offset, Integer resultsPage) throws BeaconException {
         EventsExecutor eventExecutor = new EventsExecutor();
         Date endDateTime = StringUtils.isBlank(endDate) ? null : getEndDate(endDate);
         Date startDateTime = StringUtils.isBlank(startDate)
                 ? null : getStartDate(startDate, endDateTime, DEFAULT_FREQUENCY_IN_SECOND, resultsPage);
         long totalResults = eventExecutor.getEventsWithNameCount(eventId, startDateTime, endDateTime);
         List<EventBean> beanList = eventExecutor.getEventsWithName(eventId, startDateTime, endDateTime,
-                orderBy, sortBy, offset, resultsPage);
+                orderBy, sortOrder, offset, resultsPage);
 
         return getEventsResult(beanList, totalResults);
     }
 
     EventsResult getEntityTypeEvents(String eventEntityType, String startDate, String endDate,
-                                            String orderBy, String sortBy,
-                                            Integer offset, Integer resultsPage) {
+                                            String orderBy, String sortOrder,
+                                            Integer offset, Integer resultsPage) throws BeaconException {
         LOG.info("Get events for type: {}", eventEntityType);
         EventsExecutor eventExecutor = new EventsExecutor();
         Date endDateTime = StringUtils.isBlank(endDate) ? null : getEndDate(endDate);
@@ -88,7 +89,7 @@ public final class EventsDao {
                 ? null : getStartDate(startDate, endDateTime, DEFAULT_FREQUENCY_IN_SECOND, resultsPage);
         long totalResults = eventExecutor.getEntityTypeEventsCount(eventEntityType, startDateTime, endDateTime);
         List<EventBean> beanList = eventExecutor.getEntityTypeEvents(eventEntityType,
-                startDateTime, endDateTime, orderBy, sortBy, offset, resultsPage);
+                startDateTime, endDateTime, orderBy, sortOrder, offset, resultsPage);
 
         return getEventsResult(beanList, totalResults);
     }
@@ -107,14 +108,14 @@ public final class EventsDao {
         return getEventsResult(beanList);
     }
 
-    EventsResult getAllEventsInfo(String startDate, String endDate, String orderBy, String sortBy,
-                                         Integer offset, Integer resultsPage) {
+    EventsResult getAllEventsInfo(String startDate, String endDate, String orderBy, String sortOrder,
+                                         Integer offset, Integer resultsPage) throws BeaconException {
         EventsExecutor eventExecutor = new EventsExecutor();
         Date endDateTime = StringUtils.isBlank(endDate) ? null : getEndDate(endDate);
         Date startDateTime = StringUtils.isBlank(startDate)
                 ? null : getStartDate(startDate, endDateTime, DEFAULT_FREQUENCY_IN_SECOND, resultsPage);
         long totalResults = eventExecutor.getAllEventsInfoCount(startDateTime, endDateTime);
-        List<EventBean> beanList = eventExecutor.getAllEventsInfo(startDateTime, endDateTime, orderBy, sortBy,
+        List<EventBean> beanList = eventExecutor.getAllEventsInfo(startDateTime, endDateTime, orderBy, sortOrder,
                 offset, resultsPage);
 
         return getEventsResult(beanList, totalResults);

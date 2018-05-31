@@ -31,6 +31,7 @@ import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.PolicyReport;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
@@ -154,7 +155,8 @@ public final class PolicyDao {
     }
 
     public PolicyList getFilteredPolicy(String fieldStr, String filterBy, String orderBy,
-                                        String sortOrder, Integer offset, Integer resultsPerPage, int instanceCount) {
+                                        String sortOrder, Integer offset, Integer resultsPerPage, int instanceCount)
+            throws BeaconException {
         PolicyListExecutor executor = new PolicyListExecutor();
         long totalCount = executor.getFilteredPolicyCount(filterBy, orderBy, sortOrder, resultsPerPage);
         if (totalCount > 0) {
@@ -414,15 +416,15 @@ public final class PolicyDao {
         return executor.existsClustersPolicies(PolicyExecutor.PolicyQuery.GET_CLUSTER_CLOUD_POLICY);
     }
 
-    public PolicyInstanceList getFilteredJobInstance(String filters, String orderBy, String sortBy,
+    public PolicyInstanceList getFilteredJobInstance(String filters, String orderBy, String sortOrder,
                                                             Integer offset, Integer resultsPerPage,
                                                             boolean isArchived) throws Exception {
         PolicyInstanceListExecutor executor = new PolicyInstanceListExecutor();
-        long totalCount = executor.getFilteredPolicyInstanceCount(filters, orderBy, sortBy,
+        long totalCount = executor.getFilteredPolicyInstanceCount(filters, orderBy, sortOrder,
                 resultsPerPage, isArchived);
         List<PolicyInstanceList.InstanceElement> elements = new ArrayList<>();
         if (totalCount > 0) {
-            List<Object[]> resultList = executor.getFilteredJobInstance(filters, orderBy, sortBy, offset,
+            List<Object[]> resultList = executor.getFilteredJobInstance(filters, orderBy, sortOrder, offset,
                     resultsPerPage, isArchived);
             for (Object[] objects : resultList) {
                 String name = (String) objects[0];

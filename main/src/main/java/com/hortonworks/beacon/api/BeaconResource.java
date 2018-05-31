@@ -168,14 +168,14 @@ public class BeaconResource extends AbstractResourceManager {
     @Timed(absolute = true, name="api.beacon.listInstances")
     public PolicyInstanceList listInstances(@QueryParam("filterBy") String filters,
                                             @DefaultValue("startTime") @QueryParam("orderBy") String orderBy,
-                                            @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
+                                            @DefaultValue("DESC") @QueryParam("sortOrder") String sortOrder,
                                             @DefaultValue("0") @QueryParam("offset") Integer offset,
                                             @QueryParam("numResults") Integer resultsPerPage,
                                             @DefaultValue("false") @QueryParam("archived") String archived) {
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         try {
             boolean isArchived = Boolean.parseBoolean(archived);
-            return listInstance(filters, orderBy, sortBy, offset, resultsPerPage, isArchived);
+            return listInstance(filters, orderBy, sortOrder, offset, resultsPerPage, isArchived);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconWebException e) {

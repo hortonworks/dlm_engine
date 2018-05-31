@@ -23,6 +23,7 @@
 package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.RequestContext;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
 import com.hortonworks.beacon.util.StringFormat;
@@ -94,7 +95,8 @@ public class PolicyListExecutor extends BaseExecutor {
     }
 
     public List<PolicyBean> getFilteredPolicy(String filterBy, String orderBy,
-                                              String sortOrder, Integer offset, Integer resultsPerPage) {
+                                              String sortOrder, Integer offset, Integer resultsPerPage)
+            throws BeaconException {
         Map<String, List<String>> filterMap = parseFilterBy(filterBy);
         Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, offset,
                 resultsPerPage, BASE_QUERY);
@@ -110,8 +112,8 @@ public class PolicyListExecutor extends BaseExecutor {
         return beanList;
     }
 
-    private Query createFilterQuery(Map<String, List<String>> filterMap,
-                                    String orderBy, String sortBy, Integer offset, Integer limitBy, String baseQuery) {
+    private Query createFilterQuery(Map<String, List<String>> filterMap, String orderBy, String sortOrder,
+                                    Integer offset, Integer limitBy, String baseQuery) throws BeaconException {
         List<String> paramNames = new ArrayList<>();
         List<Object> paramValues = new ArrayList<>();
         int index = 1;
@@ -139,7 +141,7 @@ public class PolicyListExecutor extends BaseExecutor {
         if (!baseQuery.equalsIgnoreCase(COUNT_QUERY)){
             queryBuilder.append(" ORDER BY ");
             queryBuilder.append("b." + PolicyOrderByField.valueOf(orderBy.toUpperCase()).orderType);
-            queryBuilder.append(" ").append(sortBy);
+            queryBuilder.append(" ").append(SortOrder.getSortOrder(sortOrder));
         }
         EntityManager entityManager = RequestContext.get().getEntityManager();
         Query query = entityManager.createQuery(queryBuilder.toString());
@@ -152,7 +154,8 @@ public class PolicyListExecutor extends BaseExecutor {
         return query;
     }
 
-    public long getFilteredPolicyCount(String filterBy, String orderBy, String sortOrder, Integer resultsPerPage) {
+    public long getFilteredPolicyCount(String filterBy, String orderBy, String sortOrder, Integer resultsPerPage)
+            throws BeaconException {
         Map<String, List<String>> filterMap = parseFilterBy(filterBy);
         Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, 0, resultsPerPage, COUNT_QUERY);
         return (long) filterQuery.getSingleResult();

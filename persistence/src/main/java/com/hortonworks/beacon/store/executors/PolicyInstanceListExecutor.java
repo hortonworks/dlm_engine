@@ -24,6 +24,7 @@ package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import org.apache.commons.lang3.StringUtils;
@@ -88,10 +89,10 @@ public class PolicyInstanceListExecutor extends BaseExecutor {
         }
     }
 
-    public List<Object[]> getFilteredJobInstance(String filter, String orderBy, String sortBy,
+    public List<Object[]> getFilteredJobInstance(String filter, String orderBy, String sortOrder,
                                        Integer offset, Integer limitBy, boolean isArchived) throws Exception {
         Map<String, String> filterMap = parseFilters(filter);
-        Query filterQuery = createFilterQuery(filterMap, orderBy, sortBy, offset, limitBy, BASE_QUERY, isArchived);
+        Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, offset, limitBy, BASE_QUERY, isArchived);
         return (List<Object[]>) filterQuery.getResultList();
     }
 
@@ -115,8 +116,8 @@ public class PolicyInstanceListExecutor extends BaseExecutor {
         return filterMap;
     }
 
-    private Query createFilterQuery(Map<String, String> filterMap, String orderBy, String sortBy, Integer offset,
-                                    Integer limitBy, String baseQuery, boolean isArchived) {
+    private Query createFilterQuery(Map<String, String> filterMap, String orderBy, String sortOrder, Integer offset,
+                                    Integer limitBy, String baseQuery, boolean isArchived) throws BeaconException {
         List<String> paramNames = new ArrayList<>();
         List<Object> paramValues = new ArrayList<>();
         baseQuery = isArchived
@@ -143,7 +144,7 @@ public class PolicyInstanceListExecutor extends BaseExecutor {
         if (!baseQuery.startsWith(COUNT_QUERY)){
             queryBuilder.append(" ORDER BY ");
             queryBuilder.append("b." + Filters.getFilter(orderBy).getFilterType());
-            queryBuilder.append(" ").append(sortBy);
+            queryBuilder.append(" ").append(SortOrder.getSortOrder(sortOrder));
         }
 
         EntityManager entityManager = RequestContext.get().getEntityManager();
@@ -172,10 +173,10 @@ public class PolicyInstanceListExecutor extends BaseExecutor {
                     "Parsing implementation is not present for filter: " + fieldFilter.getFilterType());
         }
     }
-    public long getFilteredPolicyInstanceCount(String filter, String orderBy, String sortBy,
-                                               Integer limitBy, boolean isArchived) {
+    public long getFilteredPolicyInstanceCount(String filter, String orderBy, String sortOrder,
+                                               Integer limitBy, boolean isArchived) throws BeaconException {
         Map<String, String> filterMap = parseFilters(filter);
-        Query countQuery = createFilterQuery(filterMap, orderBy, sortBy, 0,
+        Query countQuery = createFilterQuery(filterMap, orderBy, sortOrder, 0,
                 limitBy, COUNT_QUERY, isArchived);
         return (long) countQuery.getSingleResult();
     }

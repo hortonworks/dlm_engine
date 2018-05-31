@@ -385,7 +385,7 @@ public class PolicyResource extends AbstractResourceManager {
     public PolicyInstanceList listPolicyInstances(@PathParam("policy-name") String policyName,
                                                   @QueryParam("filterBy") String filters,
                                                   @DefaultValue("startTime") @QueryParam("orderBy") String orderBy,
-                                                  @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
+                                                  @DefaultValue("DESC") @QueryParam("sortOrder") String sortOrder,
                                                   @DefaultValue("0") @QueryParam("offset") Integer offset,
                                                   @QueryParam("numResults") Integer resultsPerPage,
                                                   @DefaultValue("false") @QueryParam("archived") String archived) {
@@ -393,7 +393,7 @@ public class PolicyResource extends AbstractResourceManager {
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         try {
             boolean isArchived = Boolean.parseBoolean(archived);
-            return listPolicyInstance(policyName, filters, orderBy, sortBy, offset, resultsPerPage, isArchived);
+            return listPolicyInstance(policyName, filters, orderBy, sortOrder, offset, resultsPerPage, isArchived);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconWebException e) {
@@ -839,7 +839,7 @@ public class PolicyResource extends AbstractResourceManager {
         }
     }
 
-    private PolicyInstanceList listPolicyInstance(String policyName, String filters, String orderBy, String sortBy,
+    private PolicyInstanceList listPolicyInstance(String policyName, String filters, String orderBy, String sortOrder,
                                 Integer offset, Integer resultsPerPage, boolean isArchived) throws BeaconException {
         if (!isArchived) {
             ReplicationPolicy policy = policyDao.getActivePolicy(policyName);
@@ -859,7 +859,7 @@ public class PolicyResource extends AbstractResourceManager {
         }
         newFilters.append("name" + BeaconConstants.COLON_SEPARATOR).append(policyName);
         filters = newFilters.toString();
-        return listInstance(filters, orderBy, sortBy, offset, resultsPerPage, isArchived);
+        return listInstance(filters, orderBy, sortOrder, offset, resultsPerPage, isArchived);
     }
 
 

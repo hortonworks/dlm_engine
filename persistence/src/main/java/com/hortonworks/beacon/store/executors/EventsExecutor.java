@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.EventBean;
 import com.hortonworks.beacon.util.StringFormat;
@@ -48,6 +49,8 @@ public class EventsExecutor extends BaseExecutor {
             + " WHERE b.name=:policyName)";
     private static final String ID_FILTER = " WHERE a.eventId=:eventId";
     private static final String ENTITY_TYPE_FILTER = " WHERE a.eventEntityType=:eventEntityType";
+    private static final String START_DATE_CONFIG = "start_date_config";
+    private static final String END_DATE_CONFIG = "end_date_config";
 
     /**
      * Enums for Events named queries.
@@ -92,19 +95,17 @@ public class EventsExecutor extends BaseExecutor {
         return query;
     }
 
-    public long getEventsWithPolicyNameCount(String policyName, Date startDate, Date endDate) {
-        String eventQuery = getEventsQuery(COUNT_EVENT_QUERY, POLICY_NAME_FILTER, startDate, endDate, " ", " ");
-        Query query = getEntityManager().createQuery(eventQuery);
+    public long getEventsWithPolicyNameCount(String policyName, Date startDate, Date endDate) throws BeaconException {
+        Query query = getEventsQuery(COUNT_EVENT_QUERY, POLICY_NAME_FILTER, startDate, endDate, " ", " ");
         query.setParameter("policyName", policyName);
         return (long)query.getResultList().get(0);
     }
 
     public List<EventBean> getEventsWithPolicyName(String policyName, Date startDate, Date endDate,
-                                                   String orderBy, String sortBy,
-                                                   int offset, int resultsPage) {
-        String eventQuery = getEventsQuery(EVENT_BASE_QUERY, POLICY_NAME_FILTER, startDate, endDate,
-                orderBy, sortBy);
-        Query query = getEntityManager().createQuery(eventQuery);
+                                                   String orderBy, String sortOrder,
+                                                   int offset, int resultsPage) throws BeaconException {
+        Query query = getEventsQuery(EVENT_BASE_QUERY, POLICY_NAME_FILTER, startDate, endDate,
+                orderBy, sortOrder);
         query.setParameter("policyName", policyName);
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
@@ -116,20 +117,18 @@ public class EventsExecutor extends BaseExecutor {
         return eventBeanList;
     }
 
-    public long getEventsWithNameCount(int eventId, Date startDate, Date endDate) {
-        String eventQuery = getEventsQuery(COUNT_EVENT_QUERY, ID_FILTER, startDate, endDate,
+    public long getEventsWithNameCount(int eventId, Date startDate, Date endDate) throws BeaconException {
+        Query query = getEventsQuery(COUNT_EVENT_QUERY, ID_FILTER, startDate, endDate,
                 " ", " ");
-        Query query = getEntityManager().createQuery(eventQuery);
         query.setParameter("eventId", eventId);
         return (long)query.getResultList().get(0);
     }
 
     public List<EventBean> getEventsWithName(int eventId, Date startDate, Date endDate,
-                                             String orderBy, String sortBy,
-                                             int offset, int resultsPage) {
-        String eventQuery = getEventsQuery(EVENT_BASE_QUERY, ID_FILTER, startDate, endDate,
-                orderBy, sortBy);
-        Query query = getEntityManager().createQuery(eventQuery);
+                                             String orderBy, String sortOrder,
+                                             int offset, int resultsPage) throws BeaconException {
+        Query query = getEventsQuery(EVENT_BASE_QUERY, ID_FILTER, startDate, endDate,
+                orderBy, sortOrder);
         query.setParameter("eventId", eventId);
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
@@ -141,20 +140,18 @@ public class EventsExecutor extends BaseExecutor {
         return eventBeanList;
     }
 
-    public long getEntityTypeEventsCount(String eventEntityType, Date startDate, Date endDate) {
-        String eventQuery = getEventsQuery(COUNT_EVENT_QUERY, ENTITY_TYPE_FILTER, startDate, endDate,
+    public long getEntityTypeEventsCount(String eventEntityType, Date startDate, Date endDate) throws BeaconException {
+        Query query = getEventsQuery(COUNT_EVENT_QUERY, ENTITY_TYPE_FILTER, startDate, endDate,
                 " ", " ");
-        Query query = getEntityManager().createQuery(eventQuery);
         query.setParameter("eventEntityType", eventEntityType);
         return (long)query.getResultList().get(0);
     }
 
     public List<EventBean> getEntityTypeEvents(String eventEntityType, Date startDate, Date endDate,
-                                               String orderBy, String sortBy,
-                                               int offset, int resultsPage) {
-        String eventQuery = getEventsQuery(EVENT_BASE_QUERY, ENTITY_TYPE_FILTER, startDate, endDate,
-                orderBy, sortBy);
-        Query query = getEntityManager().createQuery(eventQuery);
+                                               String orderBy, String sortOrder,
+                                               int offset, int resultsPage) throws BeaconException {
+        Query query = getEventsQuery(EVENT_BASE_QUERY, ENTITY_TYPE_FILTER, startDate, endDate,
+                orderBy, sortOrder);
         query.setParameter("eventEntityType", eventEntityType);
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
@@ -195,11 +192,10 @@ public class EventsExecutor extends BaseExecutor {
     }
 
 
-    public List<EventBean> getAllEventsInfo(Date startDate, Date endDate, String orderBy, String sortBy,
-                                            int offset, int resultsPage) {
-        String eventInfoQuery = getEventsQuery(EVENT_BASE_QUERY, " ", startDate, endDate,
-                orderBy, sortBy);
-        Query query = getEntityManager().createQuery(eventInfoQuery);
+    public List<EventBean> getAllEventsInfo(Date startDate, Date endDate, String orderBy, String sortOrder,
+                                            int offset, int resultsPage) throws BeaconException {
+        Query query = getEventsQuery(EVENT_BASE_QUERY, " ", startDate, endDate,
+                orderBy, sortOrder);
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
         LOG.debug("Executing All events info query: [{}]", query.toString());
@@ -211,17 +207,16 @@ public class EventsExecutor extends BaseExecutor {
         return eventBeanList;
     }
 
-    public long getAllEventsInfoCount(Date startDate, Date endDate) {
+    public long getAllEventsInfoCount(Date startDate, Date endDate) throws BeaconException {
 
-        String eventInfoQuery = getEventsQuery(COUNT_EVENT_QUERY, " ", startDate, endDate,
+        Query query  = getEventsQuery(COUNT_EVENT_QUERY, " ", startDate, endDate,
                 " ", " ");
-        Query query = getEntityManager().createQuery(eventInfoQuery);
         LOG.debug("Executing All events info count query: [{}]", query.toString());
         return (long)query.getResultList().get(0);
     }
 
-    private String getEventsQuery(String query, String filter, Date startDate, Date endDate,
-                                  String orderBy, String sortBy) {
+    private Query getEventsQuery(String query, String filter, Date startDate, Date endDate,
+                                  String orderBy, String sortOrder) throws BeaconException {
         StringBuilder queryBuilder = new StringBuilder(query);
         boolean filterApplied = false;
         if (StringUtils.isNotBlank(filter)) {
@@ -237,31 +232,68 @@ public class EventsExecutor extends BaseExecutor {
             }
         }
 
-        if (StringUtils.isNotBlank(orderBy) && StringUtils.isNotBlank(sortBy)) {
-            queryBuilder.append(getOrderQuery(orderBy, sortBy));
+        if (StringUtils.isNotBlank(orderBy) && StringUtils.isNotBlank(sortOrder)) {
+            queryBuilder.append(getOrderQuery(EventsFieldType.getFieldType(orderBy),
+                    SortOrder.getSortOrder(sortOrder)));
         }
-        LOG.debug("Executing query: [{}]", query);
-        return queryBuilder.toString();
+        String queryStr = queryBuilder.toString();
+        Query eventQuery = getEntityManager().createQuery(queryStr);
+        if (startDate != null) {
+            eventQuery.setParameter(START_DATE_CONFIG, new Timestamp(startDate.getTime()));
+        }
+        if (endDate != null) {
+            eventQuery.setParameter(END_DATE_CONFIG, new Timestamp(endDate.getTime()));
+        }
+        LOG.debug("Executing query: [{}]", queryStr);
+        return eventQuery;
     }
 
     private String getTimeStampQuery(Date startDate, Date endDate) {
         StringBuilder timeStampBuilder = new StringBuilder();
-        Timestamp startTime = (startDate!=null) ? new Timestamp(startDate.getTime()) : null;
-        Timestamp endTime = (endDate!=null) ? new Timestamp(endDate.getTime()) : null;
-
-        if (startTime != null && endTime != null) {
-            timeStampBuilder.append(" a.eventTimeStamp BETWEEN '").append(startTime)
-                    .append("' AND '").append(endTime).append("'");
-        } else if (startTime != null) {
-            timeStampBuilder.append(" a.eventTimeStamp >= '").append(startTime).append("'");
-        } else if (endTime != null) {
-            timeStampBuilder.append(" a.eventTimeStamp <= '").append(endTime).append("'");
+        if (startDate != null && endDate != null) {
+            timeStampBuilder.append(" a.eventTimeStamp BETWEEN :").append(START_DATE_CONFIG)
+                    .append(" AND :").append(END_DATE_CONFIG);
+        } else if (startDate != null) {
+            timeStampBuilder.append(" a.eventTimeStamp >= :").append(START_DATE_CONFIG);
+        } else if (endDate != null) {
+            timeStampBuilder.append(" a.eventTimeStamp <= :").append(END_DATE_CONFIG);
         }
 
         return timeStampBuilder.toString();
     }
 
-    private String getOrderQuery(String orderBy, String sortBy) {
-        return " ORDER BY a."+orderBy+' '+sortBy;
+    private String getOrderQuery(String orderBy, String sortOrder) {
+        return " ORDER BY a."+orderBy+' '+sortOrder;
     }
+
+    /**
+     * Supported event fields for event sort queries.
+     */
+
+    public enum EventsFieldType {
+        POLICYID("policyId"),
+        INSTANCEID("instanceId"),
+        EVENTENTITYTYPE("eventEntityType"),
+        EVENTID("eventId"),
+        EVENTSEVERITY("eventSeverity"),
+        EVENTTIMESTAMP("eventTimeStamp"),
+        EVENTMESSAGE("eventMessage"),
+        EVENTINFO("eventInfo");
+
+        private String fieldName;
+
+        EventsFieldType(String fieldName) {
+            this.fieldName = fieldName;
+        }
+
+        public static String getFieldType(String eventsType) throws BeaconException {
+            try {
+                EventsFieldType eventsFieldsType = valueOf(eventsType.toUpperCase());
+                return eventsFieldsType.fieldName;
+            } catch (IllegalArgumentException e) {
+                throw new BeaconException("Invalid filter type provided. Input filter type: " + eventsType);
+            }
+        }
+    }
+
 }

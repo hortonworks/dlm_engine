@@ -24,9 +24,11 @@ package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.Retry;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -127,9 +129,14 @@ public class QuartzJob implements InterruptableJob {
             }
 
             Properties jobProperties = jobDetail.getProperties();
-            Retry retry = new Retry(
-                    Integer.parseInt(jobProperties.getProperty(FSDRProperties.RETRY_ATTEMPTS.getName())),
-                    Integer.parseInt(jobProperties.getProperty(FSDRProperties.RETRY_DELAY.getName())));
+            int retryAttempts, retryDelay;
+            if (Boolean.parseBoolean(jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP))) {
+                retryAttempts = BeaconConfig.getInstance().getEngine().getHiveBootstrapJobRetryAttempts();
+            } else {
+                retryAttempts = Integer.parseInt(jobProperties.getProperty(FSDRProperties.RETRY_ATTEMPTS.getName()));
+            }
+            retryDelay = Integer.parseInt(jobProperties.getProperty(FSDRProperties.RETRY_DELAY.getName()));
+            Retry retry = new Retry(retryAttempts, retryDelay);
             RetryReplicationJob.retry(retry, context, jobContext);
             setInstanceExecDetail(JobStatus.FAILED, ex.getMessage());
             throw new JobExecutionException(ex);

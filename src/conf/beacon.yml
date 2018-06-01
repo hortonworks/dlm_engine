@@ -54,6 +54,7 @@ engine:
     refreshSnapshotDirs: 0
     snapshotRetentionNumber: 3
     cloudCredProviderPath: jceks://hdfs//user/beacon/credential/
+    hiveBootstrapJobRetryAttempts : 3
 
 dbStore:
     driver: ${beacon.driver}

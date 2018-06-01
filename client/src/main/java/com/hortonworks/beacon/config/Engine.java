@@ -84,7 +84,7 @@ public class Engine {
 
     private String cloudCredProviderPath;
 
-
+    private int hiveBootstrapJobRetryAttempts;
 
     private boolean knoxProxyEnabled;
 
@@ -181,6 +181,7 @@ public class Engine {
         setKnoxProxyEnabled(o.isKnoxProxyEnabled());
         setKnoxProxyTokenThreshold(o.getKnoxProxyTokenThreshold());
         setPreserveMeta(o.isPreserveMeta());
+        setHiveBootstrapJobRetryAttempts(o.getHiveBootstrapJobRetryAttempts());
     }
 
     public String getHostName() {
@@ -548,5 +549,13 @@ public class Engine {
 
     public void setPreserveMeta(boolean preserveMeta) {
         this.preserveMeta = preserveMeta;
+    }
+
+    public int getHiveBootstrapJobRetryAttempts() {
+        return hiveBootstrapJobRetryAttempts;
+    }
+
+    public void setHiveBootstrapJobRetryAttempts(int hiveBootstrapJobRetryAttempts) {
+        this.hiveBootstrapJobRetryAttempts = hiveBootstrapJobRetryAttempts;
     }
 }

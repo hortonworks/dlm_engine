@@ -549,4 +549,10 @@
     <value>false</value>
     <description>Preserve ACL(s)/Permissions of files copied to cloud</description>
   </property>
+  <property>
+    <name>hive_bootstrap_job_retry_attempts</name>
+    <value>7</value>
+    <description>Hive bootstrap job retry attempts</description>
+    <display-name>Hive bootstrap job retry attempts</display-name>
+  </property>
 </configuration>

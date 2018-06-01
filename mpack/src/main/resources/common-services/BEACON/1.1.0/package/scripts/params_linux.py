@@ -135,6 +135,7 @@ beacon_snapshot_retention_number = beacon_env['beacon_snapshot_retention_number'
 beacon_bind_host = beacon_env['beacon_bind_host']
 beacon_cloud_cred_provider_path = beacon_env['beacon_cloud_cred_provider_path']
 beacon_preserve_meta = beacon_env['beacon_preserve_meta']
+hive_bootstrap_job_retry_attempts = beacon_env['hive_bootstrap_job_retry_attempts']
 
 etc_prefix_dir = "/etc/beacon"
 

@@ -52,6 +52,8 @@ final class RetryReplicationJob {
             } else {
                 JobKey jobKey = context.getJobDetail().getKey();
                 long delay = retry.getDelay() > 0 ? retry.getDelay() : Retry.RETRY_DELAY;
+                long backoff = (long) Math.pow(2, instanceRunCount - 1);
+                delay = backoff * delay;
                 Trigger trigger = QuartzTriggerBuilder.createTrigger(RandomStringUtils.randomAlphanumeric(32),
                         RETRY, jobKey, delay);
                 trigger = trigger.getTriggerBuilder().usingJobData(QuartzDataMapEnum.RETRY_MARKER.getValue(),

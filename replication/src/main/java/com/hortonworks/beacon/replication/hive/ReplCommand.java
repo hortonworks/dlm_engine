@@ -47,8 +47,12 @@ public class ReplCommand {
     private static final String NULL = "NULL";
 
     private String database;
+
     ReplCommand(String database) {
         this.database = PolicyHelper.escapeDataSet(database);
+    }
+
+    ReplCommand() {
     }
 
     public String getReplDump(long fromEvent) {

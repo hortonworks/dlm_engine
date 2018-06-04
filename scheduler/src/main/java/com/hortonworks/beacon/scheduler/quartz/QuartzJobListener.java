@@ -24,12 +24,14 @@ package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.replication.InstanceReplication;
+import com.hortonworks.beacon.replication.hive.HiveExport;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import com.hortonworks.beacon.scheduler.internal.AdminJobService;
 import com.hortonworks.beacon.scheduler.internal.SyncStatusJob;
@@ -89,6 +91,7 @@ public class QuartzJobListener extends JobListenerSupport {
             } else {
                 // context for non-start nodes gets loaded from DB.
                 jobContext = StoreHelper.transferJobContext(context);
+                setDumpDirectory(context.getJobDetail().getJobDataMap(), jobContext);
                 instanceId = jobContext.getJobInstanceId();
             }
             BeaconLogUtils.prefixId(instanceId);
@@ -118,6 +121,13 @@ public class QuartzJobListener extends JobListenerSupport {
             LOG.error("Error while processing jobToBeExecuted", e);
         } finally {
             RequestContext.get().rollbackTransaction();
+        }
+    }
+
+    private void setDumpDirectory(JobDataMap qJobDataMap, JobContext jobContext) {
+        if (qJobDataMap.containsKey(HiveDRUtils.BOOTSTRAP) && qJobDataMap.getBoolean(HiveDRUtils.BOOTSTRAP)) {
+            jobContext.getJobContextMap().put(HiveExport.DUMP_DIRECTORY,
+                    qJobDataMap.getString(HiveExport.DUMP_DIRECTORY));
         }
     }
 

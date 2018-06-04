@@ -94,6 +94,7 @@ public class HiveImport extends InstanceReplication {
         } finally {
             methodTimer.stop();
         }
+        setBootstrapStatus(jobContext);
     }
 
     private void performImport(String dumpDirectory, JobContext jobContext)
@@ -169,13 +170,13 @@ public class HiveImport extends InstanceReplication {
     @Override
     public void interrupt() throws BeaconException {
         shutdownTimer();
-        if (targetStatement != null) {
-            try {
+        try {
+            if (targetStatement != null && !targetStatement.isClosed()) {
                 LOG.debug("Interrupting Hive Import job!");
                 targetStatement.cancel();
-            } catch (SQLException e) {
-                throw new BeaconException("Unable to interrupt Hive Import job!", e);
             }
+        } catch (SQLException e) {
+            throw new BeaconException("Unable to interrupt Hive Import job!", e);
         }
     }
 
@@ -196,6 +197,24 @@ public class HiveImport extends InstanceReplication {
             }
         } catch (SQLException e) {
             LOG.error("Error while retrieving the query id.", e);
+        }
+    }
+
+    private void setBootstrapStatus(JobContext jobContext) throws BeaconException {
+        ReplCommand replCommand = new ReplCommand();
+        HiveServerClient hiveServerClient = null;
+        Statement statement = null;
+        try {
+            String targetConnection = HiveDRUtils.getTargetConnectionString(properties);
+            hiveServerClient = HiveClientFactory.getHiveServerClient(targetConnection);
+            statement = hiveServerClient.createStatement();
+            if (Boolean.valueOf(jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP))
+                    && replCommand.getReplicatedEventId(statement, properties) > 0) {
+                jobContext.getJobContextMap().put(HiveDRUtils.BOOTSTRAP, "false");
+            }
+        } finally {
+            close(statement);
+            HiveClientFactory.close(hiveServerClient);
         }
     }
 }

@@ -82,7 +82,21 @@ public class HiveExport extends InstanceReplication {
                 + Thread.currentThread().getStackTrace()[1].getMethodName();
         Timer methodTimer = requestContext.startTimer(methodName);
         try {
-            String dumpDirectory = performExport(jobContext);
+            String dumpDirectory;
+            long replEventId = getReplEventId();
+            if (replEventId <= 0) {
+                jobContext.getJobContextMap().put(HiveDRUtils.BOOTSTRAP, "true");
+                dumpDirectory = jobContext.getJobContextMap().get(HiveExport.DUMP_DIRECTORY);
+                if (StringUtils.isNotEmpty(dumpDirectory)) {
+                    LOG.info("Dump directory {} already exists for bootstrap run, skipping hive export", dumpDirectory);
+                } else {
+                    dumpDirectory = performExport(jobContext);
+                }
+            } else {
+                jobContext.getJobContextMap().put(HiveDRUtils.BOOTSTRAP, "false");
+                jobContext.getJobContextMap().remove(HiveExport.DUMP_DIRECTORY);
+                dumpDirectory = performExport(jobContext);
+            }
             if (StringUtils.isNotBlank(dumpDirectory)) {
                 jobContext.getJobContextMap().put(DUMP_DIRECTORY, dumpDirectory);
                 LOG.info("Beacon Hive export completed successfully");
@@ -101,8 +115,6 @@ public class HiveExport extends InstanceReplication {
         String dumpDirectory = null;
         ReplCommand replCommand = new ReplCommand(database);
         HiveServerClient sourceHiveClient = null;
-        HiveServerClient targetHiveClient = null;
-        Statement targetStatement = null;
         ResultSet res = null;
         try {
             if (jobContext.shouldInterrupt().get()) {
@@ -110,14 +122,9 @@ public class HiveExport extends InstanceReplication {
             }
 
             sourceHiveClient = HiveClientFactory.getHiveServerClient(sourceConnectionString);
-            targetHiveClient = HiveClientFactory.getHiveServerClient(targetConnectionString);
 
-            targetStatement = targetHiveClient.createStatement();
-            long lastReplEventId = replCommand.getReplicatedEventId(targetStatement, properties);
+            long lastReplEventId = getReplEventId();
             LOG.debug("Last replicated event id for database: {} is {}", database, lastReplEventId);
-            if (lastReplEventId == -1L || lastReplEventId == 0) {
-                jobContext.getJobContextMap().put(HiveDRUtils.BOOTSTRAP, "true");
-            }
             String replDump = replCommand.getReplDump(lastReplEventId);
             if (jobContext.shouldInterrupt().get()) {
                 throw new InterruptedException("before repl dump");
@@ -151,7 +158,6 @@ public class HiveExport extends InstanceReplication {
             timer.shutdown();
             close(res);
             close(sourceStatement);
-            close(targetStatement);
         }
         return dumpDirectory;
     }
@@ -168,19 +174,31 @@ public class HiveExport extends InstanceReplication {
     @Override
     public void interrupt() throws BeaconException {
         shutdownTimer();
-        if (sourceStatement != null) {
-            try {
+        try {
+            if (sourceStatement != null && !sourceStatement.isClosed()) {
                 LOG.debug("Interrupting Hive Export job!");
                 sourceStatement.cancel();
-            } catch (SQLException e) {
-                throw new BeaconException("Unable to interrupt Hive Export job!", e);
             }
+        } catch (SQLException e) {
+            throw new BeaconException("Unable to interrupt Hive Export job!", e);
         }
     }
 
     private void shutdownTimer() {
         if (!timer.isShutdown()) {
             timer.shutdown();
+        }
+    }
+
+    private long getReplEventId() throws BeaconException {
+        Statement statement = null;
+        try {
+            HiveServerClient hiveServerClient = HiveClientFactory.getHiveServerClient(targetConnectionString);
+            statement = hiveServerClient.createStatement();
+            ReplCommand replCommand = new ReplCommand();
+            return replCommand.getReplicatedEventId(statement, properties);
+        } finally {
+            close(statement);
         }
     }
 }

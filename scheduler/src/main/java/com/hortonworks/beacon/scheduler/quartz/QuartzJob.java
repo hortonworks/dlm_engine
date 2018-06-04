@@ -44,6 +44,7 @@ import com.hortonworks.beacon.plugin.service.PluginJobProperties;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
+import com.hortonworks.beacon.replication.hive.HiveExport;
 import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import com.hortonworks.beacon.util.ReplicationHelper;
@@ -117,6 +118,7 @@ public class QuartzJob implements InterruptableJob {
                 LOG.info("Skipping perform for instance: {}, type: {}", jobContext.getJobInstanceId(),
                     jobDetail.getType());
             }
+            setDumpDirectory(qJobDataMap);
 
             LOG.info("Job [key: {}] [type: {}] execution finished.", jobKey, jobDetail.getType());
             setInstanceExecDetail(JobStatus.SUCCESS, "Instance succeeded");
@@ -165,7 +167,22 @@ public class QuartzJob implements InterruptableJob {
             LOG.info("Time duration of method(s) executed : {}", RequestContext.get().getMethodTimers()
                     .toString());
         }
-        RequestContext.get().clear();
+    }
+
+
+
+    private void setDumpDirectory(JobDataMap qJobDataMap) {
+        if (ReplicationHelper.getReplicationType(jobDetail.getType()) == ReplicationType.HIVE) {
+            boolean isBootstrap = Boolean.valueOf(jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP));
+            if (isBootstrap) {
+                qJobDataMap.put(HiveDRUtils.BOOTSTRAP, true);
+                qJobDataMap.put(HiveExport.DUMP_DIRECTORY, jobContext.getJobContextMap()
+                        .get(HiveExport.DUMP_DIRECTORY));
+            } else if (qJobDataMap.containsKey(HiveDRUtils.BOOTSTRAP)){
+                qJobDataMap.remove(HiveDRUtils.BOOTSTRAP);
+                qJobDataMap.remove(HiveExport.DUMP_DIRECTORY);
+            }
+        }
     }
 
     private void checkInterruption(JobKey jobKey, String interruptPoint) throws InterruptedException {

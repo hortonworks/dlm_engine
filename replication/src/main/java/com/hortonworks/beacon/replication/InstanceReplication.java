@@ -76,7 +76,7 @@ import static com.hortonworks.beacon.replication.ReplicationUtils.getInstanceTra
 public abstract class InstanceReplication implements BeaconJob {
     private static final Logger LOG = LoggerFactory.getLogger(InstanceReplication.class);
 
-    protected static final String DUMP_DIRECTORY = "dumpDirectory";
+    public static final String DUMP_DIRECTORY = "dumpDirectory";
     public static final String INSTANCE_EXECUTION_STATUS = "instanceExecutionStatus";
 
     private ReplicationJobDetails details;

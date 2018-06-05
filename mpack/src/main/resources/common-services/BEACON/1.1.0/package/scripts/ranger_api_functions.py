@@ -188,6 +188,46 @@ def get_ranger_hive_default_policy(ranger_url, service_name, admin_username_pass
   except Exception, err:
     raise Fail(format("Error while getting default policy from {service_name} service. Reason = {err}"))
 
+
+@safe_retry(times=3, sleep_time=5, backoff_factor=1.5, err_class=Fail, return_on_fail=None)
+def get_ranger_hive_service_default_policy(ranger_url, service_name, admin_username_password):
+  """
+  Get Policies by service name
+  """
+  url = format("{ranger_url}/service/public/v2/api/service/{service_name}/policy")
+
+  base_64_string = base64.encodestring(admin_username_password).replace('\n', '')
+
+  request = urllib2.Request(url)
+  request.add_header('Content-Type', 'application/json')
+  request.add_header('Accept', 'application/json')
+  request.add_header('Authorization', format('Basic {base_64_string}'))
+
+  try:
+    result = openurl(request, timeout = 20)
+    response_code = result.getcode()
+    response = json.loads(result.read())
+
+    if response_code == 200 and len(response) > 0:
+      for policy in response:
+        if 'hiveservice' in policy['resources']:
+          if '*' in policy['resources']['hiveservice']['values']:
+            Logger.info(format("Default hiveservice policy exists in {service_name} in Ranger Admin"))
+            return policy
+      Logger.info(format("Default hiveservice policy doesn't exists in {service_name} in Ranger Admin"))
+      return False
+    else:
+      Logger.error(format("Unable to get default hiveservice policy from {service_name} service."))
+      return None
+  except urllib2.HTTPError, e:
+    raise Fail("HTTPError while getting default hiveservice policy from " + str(service_name) + " service. Reason = " + str(e.code))
+  except urllib2.URLError, e:
+    raise Fail("URLError while getting default hiveservice policy from " + str(service_name) + " service. Reason = " + str(e.reason))
+  except TimeoutError:
+    raise Fail("Connection timeout error while getting default hiveservice policy from " + str(service_name) + "service")
+  except Exception, err:
+    raise Fail(format("Error while getting default hiveservice policy from {service_name} service. Reason = {err}"))
+
 @safe_retry(times=3, sleep_time=5, backoff_factor=1.5, err_class=Fail, return_on_fail=None)
 def update_policy(ranger_url, policy_id, policy_data, admin_username_password):
   """

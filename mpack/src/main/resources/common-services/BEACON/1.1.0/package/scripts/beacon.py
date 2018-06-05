@@ -247,6 +247,16 @@ def beacon(type, action = None, upgrade_type=None):
                 policy_data = ranger_api_functions.update_policy_item(response_policy, beacon_user_policy_item)
                 update_policy_response = ranger_api_functions.update_policy(ranger_admin_url, policy_id, policy_data, format("{ranger_admin_user}:{ranger_admin_passwd}"))
 
+            response_policy = ranger_api_functions.get_ranger_hive_service_default_policy(ranger_admin_url, params.service_name, format("{ranger_admin_user}:{ranger_admin_passwd}"))
+            if response_policy:
+              user_present = ranger_api_functions.check_user_policy(response_policy, params.beacon_user)
+              if not user_present and beacon_user_get is not None and beacon_user_get['name'] == params.beacon_user:
+                # Updating beacon_user in policy
+                policy_id = response_policy['id']
+                beacon_user_policy_item = {'groups': [], 'conditions': [], 'users': [params.beacon_user], 'accesses': [{'isAllowed': True, 'type': 'serviceadmin'}], 'delegateAdmin': False}
+                policy_data = ranger_api_functions.update_policy_item(response_policy, beacon_user_policy_item)
+                update_policy_response = ranger_api_functions.update_policy(ranger_admin_url, policy_id, policy_data, format("{ranger_admin_user}:{ranger_admin_passwd}"))
+
       except:
         show_logs(params.beacon_log_dir, params.beacon_user)
         raise

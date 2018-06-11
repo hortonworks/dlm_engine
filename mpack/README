@@ -20,14 +20,16 @@
 -->
 
 1.  Copy the mpack.tar.gz to a  folder on ambari server host (like /tmp)
-2.  Run the following command
+2.  Remove the mpack if already present
+    ambari-server uninstall-mpack  --mpack-name=beacon-engine.mpack
+3.  Run the following command
     ambari-server install-mpack --mpack=/tmp/beacon-mpack-1.0-SNAPSHOT.tar.gz --verbose
-3.  Restart Ambari server
+4.  Restart Ambari server
     ambari-server restart
-3.  Logon to ambari from a browser and click add service
-4.  In the addservice wizard, you will see beacon as an available component
+5.  Logon to ambari from a browser and click add service
+6.  In the addservice wizard, you will see beacon as an available component
     Select it
-5.  Install the service by following through the options
+7.  Install the service by following through the options
 
 [root@hdp26 ~]# ambari-server install-mpack --mpack=/tmp/beacon-mpack-1.0-SNAPSHOT.tar.gz --verbose
 

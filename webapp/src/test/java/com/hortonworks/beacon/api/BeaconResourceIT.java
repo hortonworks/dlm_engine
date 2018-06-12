@@ -796,6 +796,26 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         updateProps = new Properties();
         updateProps.put("startTime", DateUtil.formatDate(past));
         updatePolicy(policyName, getTargetBeaconServer(), updateProps, Response.Status.BAD_REQUEST);
+
+        // Update to a suspended policy should not make it's quartz job active
+        deletePolicy(policyName);
+        updateProps.clear();
+        final String policyName1 = "submit_suspend_update_policy";
+        submitAndSchedule(policyName1, 60, dataSet, null, null);
+        waitOnCondition(50000, "instance status = SUCCESS", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instance = getFirstInstance(targetClient, policyName1);
+                return instance != null && instance.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetClient.suspendPolicy(policyName1);
+        //ensures that only single instance of the policy exists
+        updateProps.put("frequencyInSec", "10");
+        updatePolicy(policyName1, getTargetBeaconServer(), updateProps, Response.Status.OK);
+        Thread.sleep(15000);
+        callPolicyInstanceListAPI(policyName1, false);
+
     }
 
     private void submitScheduleDelete(String policyName, String sourceDataSet, String targetDataSet,

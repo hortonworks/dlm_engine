@@ -103,7 +103,7 @@ public class QuartzJob implements InterruptableJob {
             jobDetail = (ReplicationJobDetails) qJobDataMap.get(QuartzDataMapEnum.DETAILS.getValue());
             jobKey = context.getJobDetail().getKey();
             LOG.info("Job [instance: {}, offset: {}, type: {}] execution started.", jobContext.getJobInstanceId(),
-                jobContext.getOffset(), jobDetail.getType());
+                    jobContext.getOffset(), jobDetail.getType());
             jobDetail.setProperties(buildProperties(jobDetail));
 
             replicationJob = BeaconJobImplFactory.getBeaconJobImpl(jobDetail);
@@ -119,7 +119,7 @@ public class QuartzJob implements InterruptableJob {
                 replicationJob.perform(jobContext);
             } else {
                 LOG.info("Skipping perform for instance: {}, type: {}", jobContext.getJobInstanceId(),
-                    jobDetail.getType());
+                        jobDetail.getType());
             }
             setDumpDirectory(qJobDataMap);
 

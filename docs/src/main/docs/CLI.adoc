@@ -137,6 +137,16 @@ bin/beacon -policy -list
 bin/beacon -policy <policy name> -delete
 ----------------------------------------------
 
+* Policy suspend
+----------------------------------------------
+bin/beacon -policy <policy name> -suspend
+----------------------------------------------
+
+* Policy resume
+----------------------------------------------
+bin/beacon -policy <policy name> -resume
+----------------------------------------------
+
 * Policy update
 ----------------------------------------------
 bin/beacon -policy <policy name> -update -config <file path>

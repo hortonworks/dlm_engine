@@ -44,6 +44,8 @@ public class PolicyCommand extends CommandBase {
     private static final String ABORT = "abort";
     private static final String DRYRUN = "dryrun";
     private static final String INSTANCE_LIST = "instancelist";
+    private static final String SUSPEND = "suspend";
+    private static final String RESUME = "resume";
     private static final String UPDATE = "update";
     private static final String LOGS = "logs";
     private static final String ID = "id";
@@ -78,6 +80,12 @@ public class PolicyCommand extends CommandBase {
         } else if (cmd.hasOption(DELETE)) {
             checkOptionValue(policyName);
             delete();
+        } else if (cmd.hasOption(SUSPEND)) {
+            checkOptionValue(policyName);
+            suspend();
+        } else if (cmd.hasOption(RESUME)) {
+            checkOptionValue(policyName);
+            resume();
         } else if (cmd.hasOption(UPDATE)) {
             checkOptionValue(policyName);
             checkOptionValue(cmd, CONFIG);
@@ -153,6 +161,8 @@ public class PolicyCommand extends CommandBase {
         System.out.println("Policy get: beacon -policy <policy name> -get");
         System.out.println("Policy status: beacon -policy <policy name> -status");
         System.out.println("Policy delete: beacon -policy <policy name> -delete");
+        System.out.println("Policy suspend: beacon -policy <policy name> -suspend");
+        System.out.println("Policy resume: beacon -policy <policy name> -resume");
         System.out.println("Policy update: beacon -policy <policy name> -update -config <config file path>");
         System.out.println("Policy instance list: beacon -policy <policy name> -instancelist");
         System.out.println("Policy abort instance: beacon -policy <policy name> -abort");
@@ -162,6 +172,16 @@ public class PolicyCommand extends CommandBase {
     private void delete() throws BeaconClientException {
         client.deletePolicy(policyName, false);
         printResult("Delete of policy " + policyName);
+    }
+
+    private void suspend() throws BeaconClientException {
+        client.suspendPolicy(policyName);
+        printResult("Suspend of policy " + policyName);
+    }
+
+    private void resume() throws BeaconClientException {
+        client.resumePolicy(policyName);
+        printResult("Resume of policy " + policyName);
     }
 
     private void printStatus() throws BeaconClientException {
@@ -213,6 +233,8 @@ public class PolicyCommand extends CommandBase {
         options.addOption(new Option(STATUS, "Prints policy's status"));
         options.addOption(new Option(GET, "Prints policy definition"));
         options.addOption(new Option(DELETE, "Deletes policy"));
+        options.addOption(new Option(SUSPEND, "Suspends policy"));
+        options.addOption(new Option(RESUME, "Resumes policy"));
         options.addOption(new Option(UPDATE, "Updates policy"));
         options.addOption(new Option(HELP, "Prints command usage"));
         options.addOption(new Option(INSTANCE_LIST, "Lists the instances for the policy"));

@@ -911,6 +911,9 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(jsonPolicy.getInt("frequencyInSec"), freq);
         assertEquals(jsonPolicy.getString("sourceCluster"), SOURCE_CLUSTER);
         assertEquals(jsonPolicy.getString("targetCluster"), TARGET_CLUSTER);
+        assertEquals((jsonPolicy.getString("creationTime") != null), true);
+        assertEquals((jsonPolicy.getString("startTime") != null), true);
+        assertEquals((jsonPolicy.getString("endTime") != null), true);
         assertEquals(jsonPolicy.getString("user"), System.getProperty("user.name"));
         assertEquals(jsonPolicy.getInt("retryAttempts"), 3);
         assertEquals(jsonPolicy.getInt("retryDelay"), 120);

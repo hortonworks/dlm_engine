@@ -161,6 +161,9 @@ public final class ReplicationPolicyBuilder {
         }
         Date start = DateUtil.parseDate(requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.STARTTIME.getName()));
+        if (start == null) {
+            start = new Date();
+        }
         Date end = DateUtil.parseDate(requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.ENDTIME.getName()));
         String tags = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TAGS.getName());

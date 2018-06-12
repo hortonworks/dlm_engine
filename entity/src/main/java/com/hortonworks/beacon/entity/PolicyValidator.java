@@ -34,6 +34,8 @@ import org.apache.hadoop.fs.Path;
 
 import java.util.Date;
 
+import static com.hortonworks.beacon.constants.BeaconConstants.ONE_MIN;
+
 /**
  * Validation helper function to validate Beacon ReplicationPolicy definition.
  */
@@ -66,13 +68,13 @@ public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
     }
 
     private void validateScheduleDate(Date startTime, Date endTime) throws ValidationException {
-        if (startTime != null && startTime.before(new Date())) {
+        if (startTime.before(new Date(System.currentTimeMillis() - ONE_MIN))) {
             throw new ValidationException("Start time cannot be earlier than current time.");
         }
-        if (startTime != null && endTime != null && endTime.before(startTime)) {
+        if (endTime != null && endTime.before(startTime)) {
             throw new ValidationException("End time cannot be earlier than start time.");
         }
-        if (startTime == null && endTime != null && endTime.before(new Date())) {
+        if (endTime != null && endTime.before(new Date())) {
             throw new ValidationException("End time cannot be earlier than current time.");
         }
     }

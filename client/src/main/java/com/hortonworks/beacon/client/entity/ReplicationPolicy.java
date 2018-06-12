@@ -244,7 +244,9 @@ public class ReplicationPolicy extends Entity {
     }
 
     public void setStartTime(Date startTime) {
-        if (startTime != null) {
+        if (startTime == null) {
+            this.startTime = null;
+        } else {
             this.startTime = new Date(startTime.getTime());
         }
     }

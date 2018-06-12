@@ -54,14 +54,6 @@ public class QuartzTriggerBuilderTest {
         Assert.assertEquals(trigger.getKey().getGroup(), BeaconQuartzScheduler.START_NODE_GROUP);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class)
-    public void testCreateTriggerFixedEndTimeException() throws Exception {
-        // End time earlier than current time (start time will be current time)
-        Date endTime = new Date(System.currentTimeMillis() - 60 * 1000); // 1 minute earlier
-        QuartzTriggerBuilder.createTrigger(POLICY_ID, BeaconQuartzScheduler.START_NODE_GROUP,
-                null, endTime, FREQUENCY_IN_SEC);
-    }
-
     @Test
     public void testCreateTriggerFixedEndTime() throws Exception {
         Date endTime = new Date(System.currentTimeMillis() + 60 * 1000); // 1 minute later
@@ -71,14 +63,6 @@ public class QuartzTriggerBuilderTest {
         Assert.assertEquals(trigger.getEndTime(), endTime);
         Assert.assertEquals(trigger.getKey().getName(), POLICY_ID);
         Assert.assertEquals(trigger.getKey().getGroup(), BeaconQuartzScheduler.START_NODE_GROUP);
-    }
-
-    @Test(expectedExceptions = IllegalArgumentException.class)
-    public void testCreateTriggerFutureStartNeverEndingException() throws Exception {
-        // Start time earlier than current time
-        Date startTime = new Date(System.currentTimeMillis() - 60 * 1000); // 1 minute earlier
-        QuartzTriggerBuilder.createTrigger(POLICY_ID, BeaconQuartzScheduler.START_NODE_GROUP,
-                startTime, null, FREQUENCY_IN_SEC);
     }
 
     @Test
@@ -91,15 +75,6 @@ public class QuartzTriggerBuilderTest {
         Assert.assertNull(trigger.getEndTime(), "should be null for never ending job.");
         Assert.assertEquals(trigger.getKey().getName(), POLICY_ID);
         Assert.assertEquals(trigger.getKey().getGroup(), BeaconQuartzScheduler.START_NODE_GROUP);
-    }
-
-    @Test(expectedExceptions = IllegalArgumentException.class)
-    public void testCreateTriggerFutureStartEndException() throws Exception {
-        long millis = System.currentTimeMillis();
-        Date startTime = new Date(millis + 60 * 1000); // 1 minute later
-        Date endTime = new Date(millis - 60 * 1000); // 1 minute earlier
-        QuartzTriggerBuilder.createTrigger(POLICY_ID, BeaconQuartzScheduler.START_NODE_GROUP,
-                startTime, endTime, FREQUENCY_IN_SEC);
     }
 
     @Test

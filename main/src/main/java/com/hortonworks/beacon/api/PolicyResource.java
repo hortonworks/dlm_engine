@@ -455,7 +455,6 @@ public class PolicyResource extends AbstractResourceManager {
     }
 
     private void submitInternal(ReplicationPolicy policy, boolean syncWithPeer) throws BeaconException {
-        validate(policy);
         policyDao.retireCompletedPolicy(policy.getName());
         policyDao.persistPolicy(policy);
         // Sync the policy with remote cluster
@@ -517,6 +516,7 @@ public class PolicyResource extends AbstractResourceManager {
         policyDao.persistUpdatedPolicy(modifiedExistingPolicy, updatedProps, newProps);
 
         if (syncWithPeer) {
+            modifiedExistingPolicy.setStartTime(updatedPolicy.getStartTime());
             syncPolicyInRemote(modifiedExistingPolicy, true);
         }
         LOG.info("Request for update policy is processed successfully. Policy-name: [{}]", policy.getName());
@@ -618,6 +618,7 @@ public class PolicyResource extends AbstractResourceManager {
             String executionType = ReplicationUtils.getReplicationPolicyType(replicationPolicy);
             replicationPolicy.setExecutionType(executionType);
             ValidationUtil.validationOnSubmission(replicationPolicy, validateCloud);
+            validate(replicationPolicy);
             submit(replicationPolicy, true);
             schedule(replicationPolicy);
             LOG.info("Request for policy submitAndSchedule is processed successfully. Policy-name: [{}]", policyName);

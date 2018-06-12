@@ -182,30 +182,42 @@ public final class ValidationUtil {
 
     public static void validatePolicyFields(ReplicationPolicy existingPolicy, PropertiesIgnoreCase properties)
             throws BeaconException {
-        String startTime = properties.getPropertyIgnoreCase(ReplicationPolicyProperties.STARTTIME.getName());
-        if (StringUtils.isNotBlank(startTime)) {
-            Date oldStart = existingPolicy.getStartTime();
-            if (oldStart == null || oldStart.before(new Date())) {
-                throw new BeaconException("Start time can not be modified as the policy has already started");
-            }
-            Date newStart = DateUtil.parseDate(startTime);
-            if (newStart.before(new Date())) {
-                throw new BeaconException("Start time can not be earlier than current time");
-            }
-        }
         String policyStatus = existingPolicy.getStatus();
         if (!(JobStatus.RUNNING.toString().equalsIgnoreCase(policyStatus)
                 || JobStatus.SUBMITTED.toString().equalsIgnoreCase(policyStatus)
                 || JobStatus.SUSPENDED.toString().equalsIgnoreCase(policyStatus))) {
             throw new BeaconException("Policy with a status [{}] can not be updated.", policyStatus);
         }
-        String endTime = properties.getPropertyIgnoreCase(ReplicationPolicyProperties.ENDTIME.getName());
-        if (StringUtils.isNotBlank(endTime)) {
-            Date newEnd = DateUtil.parseDate(endTime);
-            Date currentDay = Calendar.getInstance().getTime();
-            if (newEnd.before(currentDay)) {
+        String startTime = properties.getPropertyIgnoreCase(ReplicationPolicyProperties.STARTTIME.getName());
+        Date oldStart = existingPolicy.getStartTime();
+        Date newStart = null;
+        if (StringUtils.isNotBlank(startTime)) {
+            if (oldStart.before(new Date())) {
+                throw new BeaconException("Start time can not be modified as the policy has already started");
+            }
+            newStart = DateUtil.parseDate(startTime);
+            if (newStart.before(new Date())) {
+                throw new BeaconException("Start time can not be earlier than current time");
+            }
+        } else {
+            newStart = oldStart;
+        }
+        String endTimeStr = properties.getPropertyIgnoreCase(ReplicationPolicyProperties.ENDTIME.getName());
+        Date newEnd = null;
+        if (StringUtils.isNotBlank(endTimeStr)) {
+            newEnd = DateUtil.parseDate(endTimeStr);
+            if (newEnd.before(new Date())) {
                 throw new BeaconException("End time cannot be earlier than current time");
             }
+            if (newEnd.before(newStart)) {
+                throw new IllegalArgumentException("End time can not be earlier than start time.");
+            }
+        } else {
+            newEnd = existingPolicy.getEndTime();
+        }
+        //When startTime is being set but endTime is not.
+        if (newEnd == existingPolicy.getEndTime() && newEnd.before(newStart)) {
+            throw new IllegalArgumentException("Start time can not be later than end time.");
         }
 
         String frequencyInSecStr =  properties.getPropertyIgnoreCase(ReplicationPolicyProperties.FREQUENCY.getName());

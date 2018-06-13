@@ -333,7 +333,7 @@ public class TestCopyMapper {
 
     testCopyingExistingFiles(fs, copyMapper, context);
     //assert that num dir_copy hasn't changed
-      Assert.assertEquals(numDirs, stubContext.getReporter()
+    Assert.assertEquals(2*numDirs, stubContext.getReporter()
               .getCounter(CopyMapper.Counter.DIR_COPY).getValue());
 
     for (Text value : stubContext.getWriter().values()) {
@@ -1177,7 +1177,6 @@ public class TestCopyMapper {
     // test with verbose logging
     deleteState();
     createSourceData();
-
     stubContext = new StubContext(getConfiguration(), null, 0);
     context = stubContext.getContext();
     copyMapper.setup(context);

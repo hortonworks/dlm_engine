@@ -30,6 +30,7 @@
     <properties>
         <file.encoding>UTF-8</file.encoding>
         <downloadSources>true</downloadSources>
+        <distcp.tests.skip>true</distcp.tests.skip>
     </properties>
 
     <dependencies>
@@ -140,13 +141,16 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.17</version>
                 <configuration>
-                    <skip>true</skip>
+                    <skip>${distcp.tests.skip}</skip>
                     <forkMode>always</forkMode>
                     <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
                     <argLine>-Xmx1024m</argLine>
                     <includes>
                         <include>**/Test*.java</include>
                     </includes>
+                    <excludes>
+                        <exclude>**/TestDistCpSyncReverseBase.java</exclude>
+                    </excludes>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
                     <systemProperties>
                         <property>

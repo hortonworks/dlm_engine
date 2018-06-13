@@ -263,14 +263,6 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
                               + "target=" + target + ", size=" + (targetStatus == null ?
                               0 : targetStatus.getLen())));
           }
-
-        if (verboseLog) {
-          context.write(null,
-              new Text("FILE_SKIPPED: source=" + sourceFileStatus.getPath()
-              + ", size=" + sourceFileStatus.getLen() + " --> "
-              + "target=" + target + ", size=" + (targetStatus == null ?
-                  0 : targetStatus.getLen())));
-        }
       } else {
         copyFileWithRetry(description, sourceCurrStatus, target, targetStatus, context,
             action, fileAttributes);
@@ -323,13 +315,11 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
   private void createTargetDirsWithRetry(String description,
                    Path target, Context context) throws IOException {
     try {
-      boolean dirCreated = (boolean) new RetriableDirectoryCreateCommand(description).execute(target, context);
-      if (dirCreated) {
-          incrementCounter(context, Counter.DIR_COPY, 1);
-      }
+      new RetriableDirectoryCreateCommand(description).execute(target, context);
     } catch (Exception e) {
       throw new IOException("mkdir failed for " + target, e);
     }
+    incrementCounter(context, Counter.DIR_COPY, 1);
   }
 
   private static void updateSkipCounters(Context context,

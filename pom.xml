@@ -962,7 +962,7 @@
         <jettison.version>1.3</jettison.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <testng.version>6.9.8</testng.version>
-        <guava.version>16.0.1</guava.version>
+        <guava.version>12.0.1</guava.version>
         <httpcomponents.client.version>4.4</httpcomponents.client.version>
         <httpcomponents.core.version>4.4</httpcomponents.core.version>
         <skip.check>false</skip.check>

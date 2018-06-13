@@ -1,0 +1,137 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  HORTONWORKS DATAPLANE SERVICE AND ITS CONSTITUENT SERVICES
+
+  (c) 2016-2018 Hortonworks, Inc. All rights reserved.
+
+  This code is provided to you pursuant to your written agreement with Hortonworks, which may be the terms of the
+  Affero General Public License version 3 (AGPLv3), or pursuant to a written agreement with a third party authorized
+  to distribute this code.  If you do not have a written agreement with Hortonworks or with an authorized and
+  properly licensed third party, you do not have any rights to this code.
+
+  If this code is provided to you under the terms of the AGPLv3:
+  (A) HORTONWORKS PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY KIND;
+  (B) HORTONWORKS DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT
+    LIMITED TO IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE;
+  (C) HORTONWORKS IS NOT LIABLE TO YOU, AND WILL NOT DEFEND, INDEMNIFY, OR HOLD YOU HARMLESS FOR ANY CLAIMS ARISING
+    FROM OR RELATED TO THE CODE; AND
+  (D) WITH RESPECT TO YOUR EXERCISE OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, HORTONWORKS IS NOT LIABLE FOR ANY
+    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
+    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
+    OR LOSS OR CORRUPTION OF DATA.
+-->
+<configuration>
+  <property>
+    <name>beacon.sso.knox.authentication.enabled</name>
+    <value>false</value>
+    <description>Enable Knox SSO</description>
+    <value-attributes>
+      <type>boolean</type>
+    </value-attributes>
+  </property>
+  <property>
+    <name>beacon.sso.knox.browser.useragent</name>
+    <value>Mozilla,Chrome</value>
+    <description>Comma seperated browser agent</description>
+  </property>
+  <property>
+    <name>beacon.sso.knox.providerurl</name>
+    <value></value>
+    <description>Example: https://KNOX_HOST:KNOX_PORT/gateway/knoxsso/api/v1/websso</description>
+    <value-attributes>
+      <empty-value-valid>true</empty-value-valid>
+    </value-attributes>
+    <depends-on>
+      <property>
+        <type>gateway-site</type>
+        <name>gateway.port</name>
+      </property>
+    </depends-on>
+  </property>
+  <property>
+    <name>beacon.sso.knox.publicKey</name>
+    <value></value>
+    <description></description>
+    <value-attributes>
+      <type>multiLine</type>
+      <empty-value-valid>true</empty-value-valid>
+    </value-attributes>
+  </property>
+  <property>
+    <name>beacon.sso.knox.cookiename</name>
+    <value>hadoop-jwt</value>
+    <description>Parameter name for SSO cookie</description>
+  </property>
+  <property>
+    <name>beacon.sso.knox.query.param.originalurl</name>
+    <value>originalUrl</value>
+    <description>Query name for appending original url in SSO url</description>
+  </property>
+  <property>
+    <name>beacon.sso.knox.default.browser-useragents</name>
+    <value>Mozilla,Opera,Chrome</value>
+    <description>Default comma seperated browser agent</description>
+  </property>
+  <property>
+    <name>beacon.basic.authentication.enabled</name>
+    <value>true</value>
+    <description>Enable Beacon Basic Authentication</description>
+    <value-attributes>
+      <type>boolean</type>
+    </value-attributes>
+  </property>
+  <property>
+    <name>beacon.authorization.enabled</name>
+    <value>false</value>
+    <description>Enable Beacon Basic Authorization</description>
+    <value-attributes>
+      <type>boolean</type>
+    </value-attributes>
+  </property>
+  <property>
+    <name>beacon.authorization.policy.file</name>
+    <value>policy-store.txt</value>
+    <description>Beacon Authorization Policy File</description>
+  </property>
+  <property>
+    <name>beacon.username</name>
+    <value>beacon</value>
+    <description>Beacon user</description>
+  </property>
+  <property>
+    <name>beacon.password</name>
+    <property-type>PASSWORD</property-type>
+    <value>beacon</value>
+    <description>Beacon user password</description>
+    <value-attributes>
+      <type>password</type>
+      <overridable>false</overridable>
+      <keystore>true</keystore>
+    </value-attributes>
+  </property>
+  <property>
+    <name>beacon.ranger.user</name>
+    <value>beacon_ranger</value>
+    <description>Ranger beacon user</description>
+  </property>
+  <property>
+    <name>beacon.ranger.password</name>
+    <property-type>PASSWORD</property-type>
+    <value>beacon12</value>
+    <description>Ranger beacon user password</description>
+    <value-attributes>
+      <type>password</type>
+      <overridable>false</overridable>
+      <keystore>true</keystore>
+    </value-attributes>
+  </property>
+  <property>
+    <name>beacon.ranger.plugin.create.denypolicy</name>
+    <value>true</value>
+    <description></description>
+    <value-attributes>
+      <type>boolean</type>
+    </value-attributes>
+  </property>
+</configuration>

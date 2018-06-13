@@ -1,0 +1,211 @@
+////
+ HORTONWORKS DATAPLANE SERVICE AND ITS CONSTITUENT SERVICES
+
+ (c) 2016-2018 Hortonworks, Inc. All rights reserved.
+
+ This code is provided to you pursuant to your written agreement with Hortonworks, which may be the terms of the
+ Affero General Public License version 3 (AGPLv3), or pursuant to a written agreement with a third party authorized
+ to distribute this code.  If you do not have a written agreement with Hortonworks or with an authorized and
+ properly licensed third party, you do not have any rights to this code.
+
+ If this code is provided to you under the terms of the AGPLv3:
+ (A) HORTONWORKS PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY KIND;
+ (B) HORTONWORKS DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT
+    LIMITED TO IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE;
+ (C) HORTONWORKS IS NOT LIABLE TO YOU, AND WILL NOT DEFEND, INDEMNIFY, OR HOLD YOU HARMLESS FOR ANY CLAIMS ARISING
+    FROM OR RELATED TO THE CODE; AND
+ (D) WITH RESPECT TO YOUR EXERCISE OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, HORTONWORKS IS NOT LIABLE FOR ANY
+    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
+    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
+    OR LOSS OR CORRUPTION OF DATA.
+////
+
+Beacon Commandline Guide
+========================
+
+Admin commands
+--------------
+
+* Command help
+----------------------------------------------
+bin/beacon -help
+----------------------------------------------
+
+* Get beacon server status
+----------------------------------------------
+bin/beacon -status
+----------------------------------------------
+
+* Get beacon server version
+----------------------------------------------
+bin/beacon -version
+----------------------------------------------
+
+Cluster commands
+-----------------
+
+* Cluster commands help
+----------------------------------------------
+bin/beacon -cluster -help
+----------------------------------------------
+
+* Cluster submit
+----------------------------------------------
+bin/beacon -cluster <cluster name> -submit -config <file path>
+----------------------------------------------
+
+* Cluster get
+----------------------------------------------
+bin/beacon -cluster <cluster name> -get
+----------------------------------------------
+
+* Cluster status
+----------------------------------------------
+bin/beacon -cluster <cluster name> -status
+----------------------------------------------
+
+* Cluster pairing
+----------------------------------------------
+bin/beacon -cluster <remote cluster name> -pair
+----------------------------------------------
+
+* Cluster unpairing
+----------------------------------------------
+bin/beacon -cluster <remote cluster name> -unpair
+----------------------------------------------
+
+* Cluster list
+----------------------------------------------
+bin/beacon -cluster -list
+----------------------------------------------
+
+* Cluster delete
+----------------------------------------------
+bin/beacon -cluster <cluster name> -delete
+----------------------------------------------
+
+* Cluster update
+----------------------------------------------
+bin/beacon -cluster <cluster name> -update -config <file path>
+----------------------------------------------
+
+Policy commands
+----------------
+
+* Policy commands help
+----------------------------------------------
+bin/beacon -policy -help
+----------------------------------------------
+
+* Policy submit
+----------------------------------------------
+bin/beacon -policy <policy name> -submit -config <file path>
+----------------------------------------------
+
+* Policy schedule
+----------------------------------------------
+bin/beacon -policy <policy name> -schedule
+----------------------------------------------
+
+* Policy submit and schedule
+----------------------------------------------
+bin/beacon -policy <policy name>  -submitAndSchedule -config <file path>
+----------------------------------------------
+
+* Policy dryrun
+----------------------------------------------
+bin/beacon -policy <policy name> -dryrun -config <file path>
+----------------------------------------------
+
+* Policy get
+----------------------------------------------
+bin/beacon -policy <policy name> -get
+----------------------------------------------
+
+* Policy status
+----------------------------------------------
+bin/beacon -policy <policy name> -status
+----------------------------------------------
+
+* Policy list
+----------------------------------------------
+bin/beacon -policy -list
+----------------------------------------------
+
+* Policy delete
+----------------------------------------------
+bin/beacon -policy <policy name> -delete
+----------------------------------------------
+
+* List instances of the policy
+----------------------------------------------
+bin/beacon -policy <policy name> -instancelist
+----------------------------------------------
+
+* Abort current instance of the policy
+----------------------------------------------
+bin/beacon -policy <policy name> -abort
+----------------------------------------------
+
+* Get server logs for the policy by policy name or policy id
+----------------------------------------------
+bin/beacon -policy <policy name> -logs
+bin/beacon -policy -logs -id <policy id>
+----------------------------------------------
+
+CloudCred commands
+------------------
+
+* CloudCred commands help
+----------------------------------------------
+bin/beacon -cloudcred -help
+----------------------------------------------
+
+* CloudCred submit
+----------------------------------------------
+bin/beacon -cloudcred  -submit -config <file path>
+----------------------------------------------
+
+* CloudCred update
+----------------------------------------------
+bin/beacon -cloudcred <cloudcred id>  -update -config <file path>
+----------------------------------------------
+
+* CloudCred list
+----------------------------------------------
+bin/beacon -cloudcred -list
+----------------------------------------------
+
+* CloudCred delete
+----------------------------------------------
+bin/beacon -cloudcred <cloudcred id> -delete
+----------------------------------------------
+
+* CloudCred get
+----------------------------------------------
+bin/beacon -cloudcred <cloudcred id> -get
+----------------------------------------------
+
+* CloudCred validate the cloud path
+----------------------------------------------
+bin/beacon -cloudcred <cloudcred id> -validate -path <cloud path>
+----------------------------------------------
+
+Miscellaneous Commands
+-----------------------
+* List HDFS directory
+----------------------------------------------
+bin/beacon -listfs <path>
+----------------------------------------------
+
+* List databases in Hive
+----------------------------------------------
+bin/beacon -listdb
+----------------------------------------------
+
+* Get privileges for the user who ran the command
+----------------------------------------------
+bin/beacon -user
+----------------------------------------------
+
+

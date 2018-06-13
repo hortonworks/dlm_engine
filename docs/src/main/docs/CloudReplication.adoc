@@ -1,0 +1,167 @@
+////
+ HORTONWORKS DATAPLANE SERVICE AND ITS CONSTITUENT SERVICES
+
+ (c) 2016-2018 Hortonworks, Inc. All rights reserved.
+
+ This code is provided to you pursuant to your written agreement with Hortonworks, which may be the terms of the
+ Affero General Public License version 3 (AGPLv3), or pursuant to a written agreement with a third party authorized
+ to distribute this code.  If you do not have a written agreement with Hortonworks or with an authorized and
+ properly licensed third party, you do not have any rights to this code.
+
+ If this code is provided to you under the terms of the AGPLv3:
+ (A) HORTONWORKS PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY KIND;
+ (B) HORTONWORKS DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT
+    LIMITED TO IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE;
+ (C) HORTONWORKS IS NOT LIABLE TO YOU, AND WILL NOT DEFEND, INDEMNIFY, OR HOLD YOU HARMLESS FOR ANY CLAIMS ARISING
+    FROM OR RELATED TO THE CODE; AND
+ (D) WITH RESPECT TO YOUR EXERCISE OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, HORTONWORKS IS NOT LIABLE FOR ANY
+    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
+    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
+    OR LOSS OR CORRUPTION OF DATA.
+////
+
+= Cloud Replication
+
+Beacon supports replication of HDFS/Hive data between underlying HDFS and cloud storage. The only cloud provider supported now is AWS S3.
+
+:toc:
+
+== Supported Cloud Providers
+=== AWS
+* Supported authentication types:
+** Access key and secret key based
+** Instance profile on VM instances
+* Supported cloud storages:
+** S3
+* Supported https://docs.aws.amazon.com/AmazonS3/latest/dev/serv-side-encryption.html[cloud storage encryption types]
+** https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html[SSE-S3]
+** https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html[SSE-KMS]
+
+== Cloud Credentials
+Every cloud replication requires setting up cloud credentials entity in Beacon. A cloud credential contains the credentials used
+to access the cloud storage. When this credential entity is created in beacon service, an ID is generated which should be
+ used in replication policy for all cloud based replications.
+
+Example cloud credential properties:
+
+* Access key based cloud credential properties:
+[source, properties]
+name=access-key-cred
+provider=AWS
+authtype=AWS_ACCESSKEY
+aws.access.key=<access key>
+aws.secret.key=<secret key>
+
+* Instance profile based credential propertis,
+[source, properties]
+name=instance-profile-cred
+provider=AWS
+authtype=AWS_INSTANCEPROFILE
+
+Refer to link:BeaconRESTApi.adoc[REST API Documentation] for more details.
+
+== HDFS Cloud Replication
+Beacon supports replication of HDFS data from cluster to cloud storage and vice versa. The replication policy runs on
+the cluster and either pushes or pulls the data from cloud storage.
+
+==== Cluster setup
+The cluster can be an on-prem or IAAS cluster with data on local HDFS. The cluster requires HDFS, YARN, Ranger, Knox and Beacon services.
+
+==== Replication policy for HDFS to cloud storage replication
+* Submit the cloud credential entity, see <<Cloud Credentials>>
+* Submit the replication policy to the above cluster. The properties in the replication policy are:
+[source, properties]
+type=FS
+sourceCluster=<cluster name>
+sourceDataset=<source HDFS path>
+targetDataset=<target cloud storage path like s3://<bucket name>/<folder>>
+cloudCred=<cloud credential ID>
+cloud.encryptionAlgorithm=<optional cloud storage encryption type - AWS_SSES3|AWS_SSEKMS, if the target has to be encrypted>
+cloud.encryptionKey=<cloud storage encryption key if encryptionAlgorithm is AWS_SSEKMS>
+frequencyInSec=<frequency>
+
+The cloud encryption details provided above will be used by beacon to block replication of encrypted data to un-encrypted target.
+
+* If cloud.encryptionAlgorithm is set, target data will be encrypted with cloud.encryptionAlgorithm (this will override any bucket level encryption configured).
+* If cloud.encryptionAlgorithm is not set, target data will be encrypted with bucket level encryption configured.
+
+
+==== Replication policy for cloud storage to HDFS replication
+* Submit the cloud credential entity, see <<Cloud Credentials>>
+* Submit the replication policy to the above cluster. The properties in the replication policy are:
+[source, properties]
+type=FS
+sourceDataset=<source cloud storage path like s3://<bucket name>/<folder>>
+cloudCred=<cloud credential ID>
+targetCluster=<cluster name>
+targetDataset=<target HDFS path>
+cloud.encryptionAlgorithm=<optional cloud storage encryption type - AWS_SSES3|AWS_SSEKMS, if the source is encrypted>
+cloud.encryptionKey=<cloud storage encryption key if encryptionAlgorithm is AWS_SSEKMS>
+frequencyInSec=<frequency>
+
+The cloud encryption details provided above will be used by beacon to block replication of encrypted data to un-encrypted target.
+
+== Hive Cloud Replication
+Hive stores its metadata in hive metastore, but the underlying data is stored in HDFS or cloud storage. So, in a hadoop
+cluster with hive service, hive warehouse directory can be configured with either HDFS or cloud storage.
+
+Beacon supports replication of hive DB from cluster with underlying HDFS to another cluster with cloud storage.
+It uses push based replication where the replication job runs on the cluster with HDFS. Hive replication from cloud storage to HDFS is not supported.
+
+Hive replication from HDFS based cluster to cloud storage based cluster requires the following:
+
+==== Cluster setup
+===== Source Cluster
+The cluster with hive warehouse directory on local HDFS. This can be an on-prem cluster, or an
+IAAS cluster with data on local HDFS. The required services are HDFS, YARN, HIVE, Ranger, Knox and Beacon.
+
+===== Target Cluster
+The cluster with data on cloud storage. The cluster minimally requires Hive Metastore, Ranger, Knox and Beacon Services.
+
+1. Hive Data Locations -
+Hive metastore requires these specific configurations to point hive data on cloud storage. Note that both
+hive.metastore.warehouse.dir and hive.repl.replica.functions.root.dir should be configured in the same bucket.
+[source, properties]
+hive.metastore.warehouse.dir=<cloud storage>
+hive.repl.replica.functions.root.dir=<cloud storage>
+hive.warehouse.subdir.inherit.perms=false
+
+
+2. Cloud access credentials - When Hive metastore is configured with hive warehouse directory on cloud storage, hive will also require the credentials to
+access the cloud storage. This can be setup with one of the following configurations,
+
+* https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_cloud-data-access/content/s3-auth-per-bukcet.html[Access key and secret key]
+* https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_cloud-data-access/content/s3-credential-providers.html[Access key and secret key in credential file]
+* https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_cloud-data-access/content/s3-temp-session.html[Session token]
+* For IAAS clusters, setup instance profiles
+
+3. Cloud encryption configurations - If the bucket is encrypted, setup the https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_cloud-data-access/content/per-bucket-encryption.html[bucket encryption details]
+
+Note that all these configurations can be set in hive-site.xml
+
+==== Cluster Entity
+===== Source Cluster
+No changes
+
+===== Target Cluster
+The following minimum properties with the values from target cluster are required in target cluster properties:
+[source, properties]
+beaconEndpoint=
+hive.metastore.uris=
+hive.metastore.warehouse.dir=
+hive.warehouse.subdir.inherit.perms=false
+hive.repl.replica.functions.root.dir=
+hive.metastore.kerberos.principal=<only for secure clusters>
+hive.cloud.encryptionAlgorithm=<encryption algorithm for hive warehouse bucket - AES256|SSE-KMS>
+hive.cloud.encryptionKey=<cloud storage encryption key when the algorithm is SSE-KMS>
+
+==== Replication Policy
+* Submit the cloud credential entity on source cluster, see <<Cloud Credentials>>
+* Submit the replication policy on source cluster with the following minimal properties:
+[source, properties]
+type=HIVE
+sourceCluster=<source cluster name>
+sourceDataset=<source hive DB name>
+targetCluster=<target cluster name>
+cloudCred=<cloud credential entityid which contains credentials for cloud storage>
+frequencyInSec=<frequency>

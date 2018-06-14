@@ -32,6 +32,8 @@ import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
 import com.hortonworks.beacon.entity.util.hive.HiveServerClient;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
+import com.hortonworks.beacon.metrics.Progress;
+import com.hortonworks.beacon.metrics.ProgressUnit;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
@@ -45,6 +47,8 @@ import org.slf4j.LoggerFactory;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+
+import static com.hortonworks.beacon.constants.BeaconConstants.HIVE_USER_QUERY_ID;
 
 /**
  * Import Hive Replication implementation.
@@ -118,8 +122,8 @@ public class HiveImport extends InstanceReplication {
             targetStatement = hiveServerClient.createStatement();
             getHiveReplicationProgress(timer, jobContext, HiveActionType.IMPORT,
                     ReplicationUtils.getReplicationMetricsInterval(), targetStatement);
+            storeHiveQueryId(jobContext, properties.getProperty(HIVE_USER_QUERY_ID));
             ((HiveStatement) targetStatement).executeAsync(replLoad);
-            storeHiveQueryId(jobContext, targetStatement);
             targetStatement.getUpdateCount();
             LOG.info("REPL LOAD execution finished!");
         } catch (SQLException e) {
@@ -186,17 +190,15 @@ public class HiveImport extends InstanceReplication {
         }
     }
 
-    private void storeHiveQueryId(final JobContext jobContext, final Statement statement) {
+    private void storeHiveQueryId(final JobContext jobContext, final String queryId) {
+        jobContext.setQueryId(queryId);
+        boolean bootstrap = Boolean.valueOf(jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP));
         try {
-            String queryId = ((HiveStatement) statement).getQueryId();
-            if (StringUtils.isNotEmpty(queryId)) {
-                LOG.info("Hive query id: {}", queryId);
-                jobContext.setQueryId(queryId);
-            } else {
-                LOG.debug("Query execution finished before queryId retrieval");
-            }
-        } catch (SQLException e) {
-            LOG.error("Error while retrieving the query id.", e);
+            String details = getTrackingInfoAsJsonString(queryId, new Progress(),
+                    ReplicationMetrics.JobType.MAIN, (bootstrap ? ProgressUnit.TABLE : ProgressUnit.EVENTS));
+            ReplicationUtils.storeTrackingInfo(jobContext, details);
+        } catch (BeaconException e) {
+            LOG.error("Unable to persist query id: {}", queryId);
         }
     }
 

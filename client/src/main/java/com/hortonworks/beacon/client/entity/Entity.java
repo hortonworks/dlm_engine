@@ -37,7 +37,8 @@ public abstract class Entity {
      * Enumeration of all possible status of an entity.
      */
     public enum EntityStatus {
-        SUBMITTED, SUSPENDED, RUNNING, COMPLETED
+        SUBMITTED, SUSPENDED, RUNNING, COMPLETED, SUCCEEDED, SUCCEEDEDWITHSKIPPED, FAILEDWITHSKIPPED,
+        SUSPENDEDFORINTERVENTION
     }
 
     public EntityType getEntityType() {

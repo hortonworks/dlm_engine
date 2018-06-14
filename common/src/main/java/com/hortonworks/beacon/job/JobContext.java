@@ -50,6 +50,7 @@ public class JobContext implements Serializable {
     private Map<String, String> jobContextMap;
     private boolean recovery;
     private boolean performJobAfterRecovery;
+    private boolean suspend;
 
     /**
      * JSON keys for instance job context.
@@ -117,6 +118,14 @@ public class JobContext implements Serializable {
 
     public boolean isPerformJobAfterRecovery() {
         return performJobAfterRecovery;
+    }
+
+    public boolean isSuspend() {
+        return suspend;
+    }
+
+    public void setSuspend(boolean suspend) {
+        this.suspend = suspend;
     }
 
     public void setPerformJobAfterRecovery(boolean performJobAfterRecovery) {

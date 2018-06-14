@@ -34,6 +34,7 @@ import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.exceptions.BeaconSuspendException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.BeaconJobImplFactory;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
@@ -64,6 +65,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static com.hortonworks.beacon.constants.BeaconConstants.ERROR_CODE;
 
 /**
  * Beacon job for Quartz.
@@ -122,6 +125,13 @@ public class QuartzJob implements InterruptableJob {
 
             LOG.info("Job [key: {}] [type: {}] execution finished.", jobKey, jobDetail.getType());
             setInstanceExecDetail(JobStatus.SUCCESS, "Instance succeeded");
+        } catch (BeaconSuspendException e) {
+            LOG.info("Handling unrecoverable failure, suspending policy", e);
+            jobContext.setSuspend(true);
+            if (e.getErrorCode() != null) {
+                jobContext.getJobContextMap().put(ERROR_CODE, String.valueOf(e.getErrorCode()));
+            }
+            throw new JobExecutionException(e);
         } catch (InterruptedException e) {
             LOG.info("Handling interrupt", e);
             processInterrupt(jobKey, e.getMessage());

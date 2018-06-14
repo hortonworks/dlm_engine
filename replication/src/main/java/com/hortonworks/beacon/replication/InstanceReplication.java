@@ -148,8 +148,8 @@ public abstract class InstanceReplication implements BeaconJob {
         return getTrackingInfoAsJsonString(instanceId, jobType, replicationMetrics);
     }
 
-    private String getTrackingInfoAsJsonString(String jobId, Progress progress, ReplicationMetrics.JobType jobType,
-                                               ProgressUnit progressUnit) throws BeaconException {
+    protected String getTrackingInfoAsJsonString(String jobId, Progress progress, ReplicationMetrics.JobType jobType,
+                                                 ProgressUnit progressUnit) throws BeaconException {
         ReplicationMetrics replicationMetrics = new ReplicationMetrics();
         progress.setUnit(progressUnit.getName());
         replicationMetrics.setJobId(jobId);

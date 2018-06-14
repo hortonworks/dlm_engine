@@ -50,8 +50,11 @@ import java.net.URLEncoder;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.hortonworks.beacon.constants.BeaconConstants.HIVE_USER_QUERY_ID;
 
 
 /**
@@ -133,6 +136,9 @@ public final class HiveDRUtils {
 
     public static String setConfigParameters(Properties properties) throws BeaconException {
         StringBuilder builder = new StringBuilder();
+        String queryId = generateQueryId(properties);
+        properties.setProperty(HIVE_USER_QUERY_ID, queryId);
+        appendConfig(builder, HIVE_USER_QUERY_ID, queryId);
         String queueName = properties.getProperty(HiveDRProperties.QUEUE_NAME.getName());
         if (StringUtils.isNotBlank(queueName)) {
             appendConfig(builder, BeaconConstants.MAPRED_QUEUE_NAME, queueName);
@@ -310,6 +316,10 @@ public final class HiveDRUtils {
         // Value will be added when connection is created using this URL
         jdbcURL.append(';').append(BeaconConstants.HIVE_SSO_COOKIE);
         return jdbcURL.toString();
+    }
+
+    public static String generateQueryId(Properties properties) {
+        return properties.get(HiveDRProperties.JOB_NAME.getName()) + BeaconConstants.UNDERSCORE + UUID.randomUUID();
     }
 
 }

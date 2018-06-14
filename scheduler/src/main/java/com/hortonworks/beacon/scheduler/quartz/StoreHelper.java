@@ -325,6 +325,11 @@ final class StoreHelper {
 
         if (statusRecent.get(0).equalsIgnoreCase(JobStatus.SUCCESS.name())) {
             return JobStatus.SUCCEEDED.name();
+        } else if (statusRecent.get(0).equalsIgnoreCase(JobStatus.FAILED_ADMIN.name())) {
+            return JobStatus.SUSPENDEDFORINTERVENTION.name();
+        } else if (statusRecent.get(0).equalsIgnoreCase(JobStatus.SKIPPED.name())
+                && statusRecent.get(1).equalsIgnoreCase(JobStatus.FAILED_ADMIN.name())) {
+            return JobStatus.SUSPENDEDFORINTERVENTION.name();
         } else if (statusRecent.get(0).equalsIgnoreCase(JobStatus.FAILED.name())
                 || statusRecent.get(0).equalsIgnoreCase(JobStatus.KILLED.name())) {
             return JobStatus.FAILED.name();

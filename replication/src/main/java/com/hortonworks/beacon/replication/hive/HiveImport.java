@@ -31,6 +31,7 @@ import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
 import com.hortonworks.beacon.entity.util.hive.HiveServerClient;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.exceptions.BeaconSuspendException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.metrics.Progress;
 import com.hortonworks.beacon.metrics.ProgressUnit;
@@ -127,7 +128,9 @@ public class HiveImport extends InstanceReplication {
             targetStatement.getUpdateCount();
             LOG.info("REPL LOAD execution finished!");
         } catch (SQLException e) {
-            throw new BeaconException(e);
+            if (e.getErrorCode() >= 20000 && e.getErrorCode() <= 29999) {
+                throw new BeaconSuspendException(e, e.getErrorCode());
+            }
         } finally {
             LOG.debug("Capturing hive import metrics after job execution");
             jobContext.getJobContextMap().put(BeaconConstants.END_TIME,

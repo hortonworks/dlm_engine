@@ -1653,6 +1653,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Thread.sleep(3*frequency*1000);
         response = getPolicyResponse(policyName, getTargetBeaconServer(), "?archived=false");
         verifyPolicyCompletionStatus(response, JobStatus.SUCCEEDEDWITHSKIPPED.name());
+        verifyPolicyStatus(policyName, JobStatus.SUCCEEDEDWITHSKIPPED, getTargetBeaconServer());
 
         // Submit one more policy with same name and abort the instance while it is running.
         tgtDfsCluster.getFileSystem().delete(new Path(replicationPath, policyName), true);

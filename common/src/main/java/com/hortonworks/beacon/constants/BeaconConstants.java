@@ -91,4 +91,5 @@ public final class BeaconConstants {
     public static final String SNAPSHOT_DIR_PREFIX = ".snapshot";
     public static final String SNAPSHOT_PREFIX = "beacon-snapshot-";
     public static final String HIVE_USER_QUERY_ID = "hive.user.query.id";
+    public static final String ERROR_CODE = "ERROR_CODE";
 }

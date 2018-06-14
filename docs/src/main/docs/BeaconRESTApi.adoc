@@ -147,7 +147,7 @@ Supported functionality include:
 On the source cluster only read operations on policy entity is allowed.
 Read or write Instance related operations are not allowed on source for Policy.
 It is recommended to perform any kind of operation on target cluster to get up to date information instead of stale information.
-The different completion status are _SUCCEEDED_, _FAILED_, _SUCCEEDEDWITHSKIPPED_, _FAILEDWITHSKIPPED_.
+The different completion status are _SUCCEEDED_, _FAILED_, _SUCCEEDEDWITHSKIPPED_, _FAILEDWITHSKIPPED_, _SUSPENDEDFORINTERVENTION_.
 
 If the destination of a FS replication policy is HCFS only then write operations are allowed on source cluster.
 User will get This operation is not allowed on source cluster: <sourceClusterName>. Try it on target cluster <targetClusterName> error.
@@ -606,6 +606,8 @@ Instances execute on the target cluster and instance data will be available only
 	}]
 }
 
+*Note:* Different status values for a policy instance: _RUNNING_, _FAILED_, _SUCCESS_, _KILLED_, _SKIPPED_, _FAILED_ADMIN_.
+
 GET api/beacon/policy/status/:policy-name
 -----------------------------------------
 
@@ -624,7 +626,7 @@ GET api/beacon/policy/status/:policy-name
   "status": "RUNNING"
 }
 
-*Note:* Different status values for a policy: _SUBMITTED_, _RUNNING_, _SUSPENDED_, _SUCCEEDED_, _FAILED_, _SUCCEEDEDWITHSKIPPED_, _FAILEDWITHSKIPPED_.
+*Note:* Different status values for a policy: _SUBMITTED_, _RUNNING_, _SUSPENDED_, _SUCCEEDED_, _FAILED_, _SUCCEEDEDWITHSKIPPED_, _FAILEDWITHSKIPPED_, _SUSPENDEDFORINTERVENTION_.
 
 * If request fails:
 [source, json]

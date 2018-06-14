@@ -19,40 +19,25 @@
  *    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
  *    OR LOSS OR CORRUPTION OF DATA.
  */
-
-package com.hortonworks.beacon.job;
-
-import java.util.Arrays;
-import java.util.List;
+package com.hortonworks.beacon.exceptions;
 
 /**
- * Status for Beacon policy and policy instances.
+ * Exception thrown for suspending further action.
  */
-public enum JobStatus {
-    RUNNING,
-    FAILED,
-    SUCCESS,
-    SUBMITTED,
-    DELETED,
-    SUSPENDED,
-    KILLED,
-    SKIPPED,
-    FAILED_ADMIN,
+public class BeaconSuspendException extends BeaconException {
 
-    // Final status for policy
-    SUCCEEDED,
-    SUCCEEDEDWITHSKIPPED,
-    FAILEDWITHSKIPPED,
-    SUSPENDEDFORINTERVENTION;
+    private Integer errorCode;
 
+    public BeaconSuspendException(Throwable t) {
+        super(t);
+    }
 
-    public static List<String> getCompletionStatus() {
-        return Arrays.asList(
-                JobStatus.SUCCEEDED.name(),
-                JobStatus.FAILED.name(),
-                JobStatus.SUCCEEDEDWITHSKIPPED.name(),
-                JobStatus.FAILEDWITHSKIPPED.name(),
-                JobStatus.SUSPENDEDFORINTERVENTION.name()
-        );
+    public BeaconSuspendException(Throwable t, int errorCode) {
+        super(t);
+        this.errorCode = errorCode;
+    }
+
+    public Integer getErrorCode() {
+        return errorCode;
     }
 }

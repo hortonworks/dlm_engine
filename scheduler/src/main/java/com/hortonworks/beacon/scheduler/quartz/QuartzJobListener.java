@@ -37,6 +37,7 @@ import com.hortonworks.beacon.scheduler.internal.AdminJobService;
 import com.hortonworks.beacon.scheduler.internal.SyncStatusJob;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
+import com.hortonworks.beacon.util.StringFormat;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -55,6 +56,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.hortonworks.beacon.constants.BeaconConstants.ERROR_CODE;
 import static com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler.START_NODE_GROUP;
 
 /**
@@ -213,6 +215,31 @@ public class QuartzJobListener extends JobListenerSupport {
                 RequestContext.get().commitTransaction();
                 return;
             }
+
+            boolean isSuspend = jobContext.isSuspend();
+            if (isSuspend) {
+                String customMessage = "Job failed with non recoverable status, manual intervention is "
+                        + "required to proceed further.";
+                String errorCode = jobContext.getJobContextMap().get(ERROR_CODE);
+                String message;
+                if (StringUtils.isNotEmpty(errorCode)) {
+                    message = StringFormat.format("{} Error code: {}, message: {}", customMessage, errorCode,
+                            jobException.getMessage());
+                } else {
+                    message = StringFormat.format("{} message: {}", customMessage, jobException.getMessage());
+                }
+                StoreHelper.updatePolicyInstanceCompleted(jobContext, JobStatus.FAILED_ADMIN.name(),
+                        message);
+                StoreHelper.updateInstanceJobCompleted(jobContext, JobStatus.FAILED_ADMIN.name(), message);
+                StoreHelper.updateRemainingInstanceJobs(jobContext, JobStatus.FAILED_ADMIN.name());
+                String policyId = context.getJobDetail().getKey().getName();
+                StoreHelper.updatePolicyStatus(policyId);
+                // TODO : Sync policy status.
+                BeaconQuartzScheduler.get().suspendPolicy(policyId);
+                RequestContext.get().commitTransaction();
+                return;
+            }
+
             InstanceExecutionDetails detail = extractExecutionDetail(jobContext);
             boolean jobFailed = isJobFailed(jobException, detail.getJobStatus());
             boolean isRetry = getFlag(QuartzDataMapEnum.IS_RETRY.getValue(), jobDataMap);

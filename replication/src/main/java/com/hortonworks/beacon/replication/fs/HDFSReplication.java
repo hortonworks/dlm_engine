@@ -92,6 +92,9 @@ public class HDFSReplication extends FSReplication {
                 isSnapshot = FSSnapshotUtils.isDirectorySnapshottable(properties.getProperty(FSDRProperties
                                 .SOURCE_CLUSTER_NAME.getName()), properties.getProperty(FSDRProperties
                                 .TARGET_CLUSTER_NAME.getName()), sourceStagingUri, targetStagingUri);
+                if (isSnapshot) {
+                    checkDataConsistency(jobContext);
+                }
             }
             initializeCustomProperties();
         } catch (Exception e) {
@@ -275,14 +278,8 @@ public class HDFSReplication extends FSReplication {
         if (currentJobMetric == null) {
             //Case, when previous instance was failed/killed.
             jobContext.setPerformJobAfterRecovery(true);
-            if (!isSnapshot) {
-                LOG.info("Policy instance: [{}] is not snapshottable, return", jobContext.getJobInstanceId());
-                return;
-            }
-            handleRecovery(jobContext);
             return;
         }
-
         LOG.info("Recover job [{}] and job type [{}]", currentJobMetric.getJobId(), currentJobMetric.getJobType());
 
         RunningJob runningJob = getJobWithRetries(currentJobMetric.getJobId());
@@ -321,7 +318,7 @@ public class HDFSReplication extends FSReplication {
                     return;
                 }
                 // Job failed for snapshot based replication. Try recovering.
-                handleRecovery(jobContext);
+                revertToLastValidSnapshot(jobContext);
             }
         } else {
             if (!isSnapshot) {
@@ -333,7 +330,14 @@ public class HDFSReplication extends FSReplication {
         }
     }
 
-    private void handleRecovery(JobContext jobContext) throws BeaconException {
+    private void checkDataConsistency(JobContext jobContext) throws BeaconException {
+        ReplicationMetrics currentJobMetric = getCurrentJobDetails(jobContext);
+        if (currentJobMetric == null && isSnapshot) {
+            revertToLastValidSnapshot(jobContext);
+        }
+    }
+
+    private void revertToLastValidSnapshot(JobContext jobContext) throws BeaconException {
         String fromSnapshot = getLatestSnapshotOnTargetAvailableOnSource();
         if (StringUtils.isBlank(fromSnapshot)) {
             LOG.info("ReplicatedSnapshotName is null. No recovery needed for policy instance: [{}], return",
@@ -351,11 +355,11 @@ public class HDFSReplication extends FSReplication {
                     new Path(targetStagingUri), fromSnapshot, toSnapshot);
             List diffList = diffReport.getDiffList();
             if (diffList == null || diffList.isEmpty()) {
-                LOG.info("No recovery needed for policy instance: [{}], return", jobContext.getJobInstanceId());
+                LOG.info("No revert needed for policy instance: [{}], return", jobContext.getJobInstanceId());
                 FSSnapshotUtils.checkAndDeleteSnapshot(targetFs, targetStagingUri, toSnapshot);
                 return;
             }
-            LOG.info("Recovery needed for policy instance: [{}]. Start recovery!", jobContext.getJobInstanceId());
+            LOG.info("Revert needed for policy instance: [{}]. Start recovery!", jobContext.getJobInstanceId());
             job = performCopy(jobContext, fromSnapshot, toSnapshot, ReplicationMetrics.JobType.RECOVERY);
             FSSnapshotUtils.checkAndDeleteSnapshot(targetFs, targetStagingUri, toSnapshot);
             // Re-create the same snapshot for replication purpose.

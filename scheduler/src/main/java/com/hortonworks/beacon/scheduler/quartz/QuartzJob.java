@@ -111,8 +111,10 @@ public class QuartzJob implements InterruptableJob {
             checkInterruption(jobKey, "before init");
             replicationJob.init(jobContext);
 
-            checkInterruption(jobKey, "before recover");
-            replicationJob.recover(jobContext);
+            if (jobContext.isRecovery()) {
+                checkInterruption(jobKey, "before recover");
+                replicationJob.recover(jobContext);
+            }
 
             checkInterruption(jobKey, "before perform");
             if (jobContext.isPerformJobAfterRecovery()) {

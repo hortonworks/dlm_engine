@@ -36,6 +36,8 @@ import org.testng.annotations.Test;
 
 import java.util.Properties;
 
+import static com.hortonworks.beacon.constants.BeaconConstants.HIVE_USER_QUERY_ID;
+
 /**
  * Replication Command Test.
  */
@@ -102,10 +104,13 @@ public class ReplCommandTest {
                 "REPL LOAD `testDB` FROM '" +DUMP_DIRECTORY+"'");
         String configParams = HiveDRUtils.setConfigParameters(hiveJobDetails.getProperties());
         String user = UserGroupInformation.getLoginUser().getShortUserName();
-        Assert.assertEquals(replLoad.getReplLoad(DUMP_DIRECTORY) + " WITH ("+configParams+")",
-                "REPL LOAD `testDB` FROM '" +DUMP_DIRECTORY+"' WITH ("
-                        + "'mapreduce.job.queuename'='default','hive.exec.parallel'='true',"
-                        + "'hive.distcp.privileged.doAs'='" + user + "')");
+        String actual = replLoad.getReplLoad(DUMP_DIRECTORY) + " WITH ("+configParams+")";
+        String expected = "REPL LOAD `testDB` FROM '" +DUMP_DIRECTORY+"' WITH ("
+                +"'" + HIVE_USER_QUERY_ID + "'='"
+                + hiveJobDetails.getProperties().getProperty(HIVE_USER_QUERY_ID) +"',"
+                + "'mapreduce.job.queuename'='default','hive.exec.parallel'='true',"
+                + "'hive.distcp.privileged.doAs'='" + user + "')";
+        Assert.assertEquals(actual, expected);
     }
 
     @Test

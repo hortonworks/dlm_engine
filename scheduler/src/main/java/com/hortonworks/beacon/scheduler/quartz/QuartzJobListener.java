@@ -237,6 +237,7 @@ public class QuartzJobListener extends JobListenerSupport {
                 // TODO : Sync policy status.
                 BeaconQuartzScheduler.get().suspendPolicy(policyId);
                 RequestContext.get().commitTransaction();
+                jobDataMap.put(QuartzDataMapEnum.IS_FAILURE.getValue(), true);
                 return;
             }
 

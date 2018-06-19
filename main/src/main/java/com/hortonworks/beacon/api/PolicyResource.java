@@ -701,7 +701,8 @@ public class PolicyResource extends AbstractResourceManager {
                 ClusterHelper.validateIfClustersPaired(policy.getSourceCluster(), policy.getTargetCluster());
             }
             String policyStatus = policy.getStatus();
-            if (policyStatus.equalsIgnoreCase(Entity.EntityStatus.SUSPENDED.name())) {
+            if (policyStatus.equalsIgnoreCase(Entity.EntityStatus.SUSPENDED.name())
+                    || policyStatus.equalsIgnoreCase(Entity.EntityStatus.SUSPENDEDFORINTERVENTION.name())) {
                 BeaconScheduler scheduler = getScheduler();
                 scheduler.resumePolicy(policy.getPolicyId());
                 String status = Entity.EntityStatus.RUNNING.name();

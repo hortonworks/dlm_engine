@@ -107,8 +107,8 @@ public final class QuartzScheduler {
         List<? extends Trigger> triggers = scheduler.getTriggersOfJob(jobKey);
         TriggerKey oldTriggerKey = triggers.get(0).getKey();
         boolean isOldJobSuspended = Trigger.TriggerState.PAUSED.equals(scheduler.getTriggerState(oldTriggerKey));
-        LOG.info("Job [Oldkey: {}] having [TriggerKey: {}] is being re-scheduled as new [TriggerKey: {}], " +
-                        "isOldJobSuspended [{}]", name, oldTriggerKey, newTrigger.getKey(), isOldJobSuspended);
+        LOG.info("Job [Oldkey: {}] having [TriggerKey: {}] is being re-scheduled as new [TriggerKey: {}], "
+                + "isOldJobSuspended [{}]", name, oldTriggerKey, newTrigger.getKey(), isOldJobSuspended);
         Date fireTime = scheduler.rescheduleJob(oldTriggerKey, newTrigger);
 
         if (isOldJobSuspended) {

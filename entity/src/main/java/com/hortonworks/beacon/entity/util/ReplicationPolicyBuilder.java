@@ -139,8 +139,6 @@ public final class ReplicationPolicyBuilder {
             throw new BeaconException("Either sourceCluster or targetCluster should be same as local cluster name: {}",
                 localClusterName);
         }
-
-
         if (StringUtils.isBlank(targetDataset)) {
             // Get only dir path if full absolute path is passed for source dataset
             try {

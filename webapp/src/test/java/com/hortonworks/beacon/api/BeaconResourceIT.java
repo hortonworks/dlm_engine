@@ -678,37 +678,11 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
         //verify the properties on target cluster
         message = getPolicyResponse(policyName, getTargetBeaconServer(), "");
-        JSONObject jsonObject = new JSONObject(message);
-        assertEquals(jsonObject.getInt("totalResults"), 1);
-        assertEquals(jsonObject.getInt("results"), 1);
-        String policy = jsonObject.getString("policy");
-        JSONArray jsonPolicyArray = new JSONArray(policy);
-        JSONObject jsonPolicy = jsonPolicyArray.getJSONObject(0);
-        assertEquals(jsonPolicy.get("name"), policyName);
-        assertEquals(jsonPolicy.getInt("frequencyInSec"), 3600);
-        assertEquals(jsonPolicy.get("description"), "updated policy description");
-        assertEquals(jsonPolicy.get("endTime"), "2050-05-28T00:11:00");
-        JSONObject customProps = jsonPolicy.getJSONObject("customProperties");
-        assertEquals(customProps.get("distcpMapBandwidth"), "25");
-        assertEquals(customProps.get("distcpMaxMaps"), "10");
-        assertEquals(customProps.get("queueName"), "test");
+        verifyPolicyInfo(policyName, message);
 
         //verify the properties on source cluster
         message = getPolicyResponse(policyName, getSourceBeaconServer(), "");
-        jsonObject = new JSONObject(message);
-        assertEquals(jsonObject.getInt("totalResults"), 1);
-        assertEquals(jsonObject.getInt("results"), 1);
-        policy = jsonObject.getString("policy");
-        jsonPolicyArray = new JSONArray(policy);
-        jsonPolicy = jsonPolicyArray.getJSONObject(0);
-        assertEquals(jsonPolicy.get("name"), policyName);
-        assertEquals(jsonPolicy.getInt("frequencyInSec"), 3600);
-        assertEquals(jsonPolicy.get("description"), "updated policy description");
-        assertEquals(jsonPolicy.get("endTime"), "2050-05-28T00:11:00");
-        customProps = jsonPolicy.getJSONObject("customProperties");
-        assertEquals(customProps.get("distcpMapBandwidth"), "25");
-        assertEquals(customProps.get("distcpMaxMaps"), "10");
-        assertEquals(customProps.get("queueName"), "test");
+        verifyPolicyInfo(policyName, message);
 
         // update operation directly on source cluster should fail.
         updatePolicy(policyName, getSourceBeaconServer(), properties, Response.Status.BAD_REQUEST);
@@ -748,12 +722,12 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
         //verify the properties on target cluster
         message = getPolicyResponse(policyName, getTargetBeaconServer(), "");
-        jsonObject = new JSONObject(message);
+        JSONObject jsonObject = new JSONObject(message);
         assertEquals(jsonObject.getInt("totalResults"), 1);
         assertEquals(jsonObject.getInt("results"), 1);
-        policy = jsonObject.getString("policy");
-        jsonPolicyArray = new JSONArray(policy);
-        jsonPolicy = jsonPolicyArray.getJSONObject(0);
+        String policy = jsonObject.getString("policy");
+        JSONArray jsonPolicyArray = new JSONArray(policy);
+        JSONObject jsonPolicy = jsonPolicyArray.getJSONObject(0);
         assertEquals(jsonPolicy.get("name"), policyName);
         assertEquals(jsonPolicy.getInt("frequencyInSec"), 10);
         assertEquals(jsonPolicy.get("description"), "updated policy description again");
@@ -816,6 +790,23 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Thread.sleep(15000);
         callPolicyInstanceListAPI(policyName1, false);
 
+    }
+
+    private void verifyPolicyInfo(String policyName, String message) throws JSONException {
+        JSONObject jsonObject = new JSONObject(message);
+        assertEquals(jsonObject.getInt("totalResults"), 1);
+        assertEquals(jsonObject.getInt("results"), 1);
+        String policy = jsonObject.getString("policy");
+        JSONArray jsonPolicyArray = new JSONArray(policy);
+        JSONObject jsonPolicy = jsonPolicyArray.getJSONObject(0);
+        assertEquals(jsonPolicy.get("name"), policyName);
+        assertEquals(jsonPolicy.getInt("frequencyInSec"), 3600);
+        assertEquals(jsonPolicy.get("description"), "updated policy description");
+        assertEquals(jsonPolicy.get("endTime"), "2050-05-28T00:11:00");
+        JSONObject customProps = jsonPolicy.getJSONObject("customProperties");
+        assertEquals(customProps.get("distcpMapBandwidth"), "25");
+        assertEquals(customProps.get("distcpMaxMaps"), "10");
+        assertEquals(customProps.get("queueName"), "test");
     }
 
     private void submitScheduleDelete(String policyName, String sourceDataSet, String targetDataSet,

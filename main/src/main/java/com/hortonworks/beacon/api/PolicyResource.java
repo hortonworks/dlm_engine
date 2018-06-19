@@ -39,6 +39,7 @@ import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.StatusResult;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
@@ -63,6 +64,7 @@ import com.hortonworks.beacon.scheduler.internal.SyncStatusJob;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
+import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
@@ -473,12 +475,31 @@ public class PolicyResource extends AbstractResourceManager {
             throws BeaconException {
         try {
             ReplicationPolicy policy = policyDao.getActivePolicy(policyName);
+            boolean requireReschedule = requireJobReschedule(policy, properties);
             updateSubmittedPolicy(policy, properties, true);
-            rescheduleJob(policy, properties);
+            if (requireReschedule) {
+                rescheduleJob(policy, properties);
+            }
             return new APIResult(APIResult.Status.SUCCEEDED, "Update policy successful ({})", policyName);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         }
+    }
+
+    private static boolean requireJobReschedule(ReplicationPolicy policy, PropertiesIgnoreCase props) {
+        String startTimeStr = props.getPropertyIgnoreCase(ReplicationPolicyProperties.STARTTIME.getName());
+        if (startTimeStr != null && !DateUtil.parseDate(startTimeStr).equals(policy.getStartTime())) {
+            return true;
+        }
+        String endTimeStr = props.getPropertyIgnoreCase(ReplicationPolicyProperties.ENDTIME.getName());
+        if (endTimeStr != null && !DateUtil.parseDate(endTimeStr).equals(policy.getEndTime())) {
+            return true;
+        }
+        String freqStr = props.getPropertyIgnoreCase(ReplicationPolicyProperties.FREQUENCY.getName());
+        if (freqStr != null && !(Integer.parseInt(freqStr) == policy.getFrequencyInSec())) {
+            return true;
+        }
+        return false;
     }
 
     private APIResult updateSubmittedPolicy(ReplicationPolicy policy, PropertiesIgnoreCase properties,

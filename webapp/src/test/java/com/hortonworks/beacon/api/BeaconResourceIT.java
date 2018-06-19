@@ -792,6 +792,83 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     }
 
+    @Test
+    public void testPolicyUpdateRequireJobReschedule() throws Exception {
+        String dataSet = "/tmp/" + UUID.randomUUID();
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        srcDfsCluster.getFileSystem().mkdirs(new Path(dataSet));
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+        final String policyName = "policy-update-job-reschedule";
+        String type = FS;
+        int freq = 5 * 60;
+        String endTimeVal = "2050-05-28T00:11:00";
+        Properties properties = new Properties();
+        properties.put("endTime", endTimeVal);
+
+        submitAndSchedule(policyName, freq, dataSet, null, properties);
+        String message = getPolicyResponse(policyName, getTargetBeaconServer(), "");
+        assertPolicyEntity(dataSet, policyName, type, JobStatus.RUNNING, freq, message);
+        waitOnCondition(50000, "instance status = SUCCESS", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instance = getFirstInstance(targetClient, policyName);
+                return instance != null && instance.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+
+        //change the properties
+        Properties updateProps = new Properties();
+        updateProps.put("description", "updated policy description");
+        updateProps.put("tde.sameKey", "true");
+        updateProps.put("distcpMapBandwidth", "25");
+        updateProps.put("distcpMaxMaps", "10");
+        updateProps.put("queueName", "test");
+
+        /* Update to just description, and/or tde.sameKey, and/or distcpMapBandwidth, and/or queueName, shouldn't
+         reschedule the job. */
+        updatePolicy(policyName, getTargetBeaconServer(), updateProps, Response.Status.OK);
+        Thread.sleep(15000);
+        callPolicyInstanceListAPI(policyName, false);
+        // Update to same endTime shouldn't reschedule the job.
+        updateProps.clear();
+        updateProps.put("endTime", endTimeVal);
+        updatePolicy(policyName, getTargetBeaconServer(), updateProps, Response.Status.OK);
+        Thread.sleep(15000);
+        callPolicyInstanceListAPI(policyName, false);
+        // Update to same frequency shouldn't change the Job status
+        updateProps.clear();
+        properties.put("frequencyInSec", String.valueOf(freq));
+        updatePolicy(policyName, getTargetBeaconServer(), updateProps, Response.Status.OK);
+        Thread.sleep(15000);
+        callPolicyInstanceListAPI(policyName, false);
+        // Update to differnt endTime should reschedule the job immediately
+        updateProps.put("endTime", "2051-05-28T00:11:00");
+        updatePolicy(policyName, getTargetBeaconServer(), updateProps, Response.Status.OK);
+        Thread.sleep(15000);
+        waitOnCondition(50000, "instance status = SUCCESS", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                return verifyLastInstanceStatus(targetClient, policyName, JobStatus.SUCCESS, 2);
+            }
+        });
+        // Update to differnt frequency should reschedule the job immediately
+        updateProps.put("frequencyInSec", String.valueOf(freq + 1));
+        updatePolicy(policyName, getTargetBeaconServer(), updateProps, Response.Status.OK);
+        Thread.sleep(15000);
+        waitOnCondition(50000, "instance status = SUCCESS", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                return verifyLastInstanceStatus(targetClient, policyName, JobStatus.SUCCESS, 3);
+            }
+        });
+    }
+
+
     private void verifyPolicyInfo(String policyName, String message) throws JSONException {
         JSONObject jsonObject = new JSONObject(message);
         assertEquals(jsonObject.getInt("totalResults"), 1);
@@ -1572,6 +1649,17 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
             return myinstances.getElements()[myinstances.getElements().length - 1];
         }
         return null;
+    }
+
+    private boolean verifyLastInstanceStatus(BeaconClient client, String policyName, JobStatus jobStatus,
+                                             int totalInstanceCount) throws BeaconClientException {
+        PolicyInstanceList myinstances = client.listPolicyInstances(policyName);
+        if (myinstances.getElements().length == totalInstanceCount) {
+            PolicyInstanceList.InstanceElement lastInstance = myinstances.getElements()[0];
+            return lastInstance.status.equals(jobStatus.name());
+        } else {
+            return false;
+        }
     }
 
     private void waitOnCondition(int timeout, String message, Condition condition) throws Exception {

@@ -49,7 +49,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-import static com.hortonworks.beacon.constants.BeaconConstants.HIVE_USER_QUERY_ID;
+import static com.hortonworks.beacon.constants.BeaconConstants.HIVE_QUERY_ID;
 
 /**
  * Import Hive Replication implementation.
@@ -123,7 +123,7 @@ public class HiveImport extends InstanceReplication {
             targetStatement = hiveServerClient.createStatement();
             getHiveReplicationProgress(timer, jobContext, HiveActionType.IMPORT,
                     ReplicationUtils.getReplicationMetricsInterval(), targetStatement);
-            storeHiveQueryId(jobContext, properties.getProperty(HIVE_USER_QUERY_ID));
+            storeHiveQueryId(jobContext, properties.getProperty(HIVE_QUERY_ID));
             ((HiveStatement) targetStatement).executeAsync(replLoad);
             storeHiveQueryId(jobContext, targetStatement);
             targetStatement.getUpdateCount();

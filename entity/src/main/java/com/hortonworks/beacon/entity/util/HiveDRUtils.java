@@ -54,7 +54,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.hortonworks.beacon.constants.BeaconConstants.HIVE_USER_QUERY_ID;
+import static com.hortonworks.beacon.constants.BeaconConstants.HIVE_QUERY_ID;
 
 
 /**
@@ -137,8 +137,8 @@ public final class HiveDRUtils {
     public static String setConfigParameters(Properties properties) throws BeaconException {
         StringBuilder builder = new StringBuilder();
         String queryId = generateQueryId(properties);
-        properties.setProperty(HIVE_USER_QUERY_ID, queryId);
-        appendConfig(builder, HIVE_USER_QUERY_ID, queryId);
+        properties.setProperty(HIVE_QUERY_ID, queryId);
+        appendConfig(builder, HIVE_QUERY_ID, queryId);
         String queueName = properties.getProperty(HiveDRProperties.QUEUE_NAME.getName());
         if (StringUtils.isNotBlank(queueName)) {
             appendConfig(builder, BeaconConstants.MAPRED_QUEUE_NAME, queueName);

@@ -69,13 +69,19 @@ import java.util.List;
                 + "set b.lastInstanceStatus = :lastInstanceStatus "
                 + "where b.id = :id AND b.retirementTime IS NULL"),
         @NamedQuery(name = "DELETE_RETIRED_POLICY", query = "delete from PolicyBean b "
-                + "where b.retirementTime < :retirementTime"),
+                + "where b.id in ( :policyIds )"),
         @NamedQuery(name = "UPDATE_FINAL_STATUS", query = "update PolicyBean b set b.status = :status, "
                 + "b.lastModifiedTime = :lastModifiedTime where b.id = :id"),
         @NamedQuery(name = "UPDATE_POLICY_RETIREMENT", query = "update PolicyBean b "
                 + "set b.retirementTime = :retirementTime where b.id = :id"),
         @NamedQuery(name = "GET_POLICY_RECOVERY", query = "select OBJECT(b) from PolicyBean b "
-                + "where b.status = 'SUBMITTED'")
+                + "where b.status = 'SUBMITTED'"),
+        @NamedQuery(name = "GET_POLICY_IDS_TO_BE_ARCHIVED", query = "select b.id from PolicyBean b "
+                + " where b.retirementTime < :retirementTime"),
+        /**
+         *  Queries only used for testing.
+         */
+        @NamedQuery(name = "GET_ALL_POLICY", query = "select OBJECT(b) from PolicyBean b ")
     })
 public class PolicyBean {
 

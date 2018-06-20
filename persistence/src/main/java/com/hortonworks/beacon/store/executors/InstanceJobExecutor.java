@@ -31,6 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Beacon store executor for instance jobs.
@@ -52,7 +54,9 @@ public class InstanceJobExecutor extends BaseExecutor {
         UPDATE_JOB_FAIL_RETIRE,
         UPDATE_JOB_RETRY_COUNT,
         DELETE_INSTANCE_JOB,
-        DELETE_RETIRED_JOBS
+        DELETE_RETIRED_JOBS,
+        DELETE_INSTANCE_JOB_BATCH,
+        GET_ALL_INSTANCE_JOBS
     }
 
     public InstanceJobExecutor(InstanceJobBean bean) {
@@ -67,6 +71,23 @@ public class InstanceJobExecutor extends BaseExecutor {
         Query query = getQuery(namedQuery);
         int update = query.executeUpdate();
         LOG.debug("Records updated for InstanceJobBean table namedQuery [{}], count [{}]", namedQuery, update);
+    }
+
+    public List<InstanceJobBean> executeSelect(InstanceJobQuery namedQuery) {
+        Query selectQuery = getQuery(namedQuery);
+        List resultList = selectQuery.getResultList();
+        List<InstanceJobBean> beanList = new ArrayList<>();
+        for (Object result : resultList) {
+            beanList.add((InstanceJobBean) result);
+        }
+        return beanList;
+    }
+
+    public void executeBatchDelete(List<String> instanceIds, InstanceJobQuery namedQuery) {
+        Query query = getEntityManager().createNamedQuery(namedQuery.name());
+        query.setParameter("instanceIds", instanceIds);
+        int update = query.executeUpdate();
+        LOG.debug("Records deleted from InstanceJobBean table namedQuery [{}], count [{}]", namedQuery, update);
     }
 
     private Query getQuery(InstanceJobQuery namedQuery) {
@@ -119,6 +140,8 @@ public class InstanceJobExecutor extends BaseExecutor {
                 break;
             case DELETE_RETIRED_JOBS:
                 query.setParameter("retirementTime", new Timestamp(bean.getRetirementTime().getTime()));
+                break;
+            case GET_ALL_INSTANCE_JOBS:
                 break;
             default:
                 throw new IllegalArgumentException(

@@ -65,7 +65,9 @@ public class PolicyExecutor extends BaseExecutor {
         DELETE_RETIRED_POLICY,
         UPDATE_FINAL_STATUS,
         UPDATE_POLICY_RETIREMENT,
-        GET_POLICY_RECOVERY
+        GET_POLICY_RECOVERY,
+        GET_POLICY_IDS_TO_BE_ARCHIVED,
+        GET_ALL_POLICY
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(PolicyExecutor.class);
@@ -133,7 +135,6 @@ public class PolicyExecutor extends BaseExecutor {
                 query.setParameter("id", bean.getId());
                 break;
             case DELETE_RETIRED_POLICY:
-                query.setParameter("retirementTime", new Timestamp(bean.getRetirementTime().getTime()));
                 break;
             case GET_POLICIES_FOR_TYPE:
                 query.setParameter("policyType", bean.getType());
@@ -158,6 +159,11 @@ public class PolicyExecutor extends BaseExecutor {
                 query.setParameter("retirementTime", bean.getRetirementTime());
                 break;
             case GET_POLICY_RECOVERY:
+                break;
+            case GET_ALL_POLICY:
+                break;
+            case GET_POLICY_IDS_TO_BE_ARCHIVED:
+                query.setParameter("retirementTime", new Timestamp(bean.getRetirementTime().getTime()));
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -240,6 +246,25 @@ public class PolicyExecutor extends BaseExecutor {
             updatePolicyProp((PolicyBean) result);
         }
         return policyBeanList;
+    }
+
+    public List<String> getPoliciesToBeArchived(PolicyQuery namedQuery) {
+        Query query = getQuery(namedQuery);
+        List resultList = query.getResultList();
+        List<String> policiesToBeArchived = new ArrayList<>();
+        for (Object res : resultList) {
+            policiesToBeArchived.add((String) res);
+        }
+        LOG.debug("Records retrieved for PolicyBean table namedQuery [{}], count [{}]",
+                namedQuery, policiesToBeArchived.size());
+        return policiesToBeArchived;
+    }
+
+    public void executeBatchDelete(PolicyQuery namedQuery, String... policyIds) {
+        Query query = getQuery(namedQuery);
+        query.setParameter("policyIds", policyIds);
+        int deleted = query.executeUpdate();
+        LOG.debug("Records deleted from PolicyBean table namedQuery [{}], count [{}]", namedQuery, deleted);
     }
 
     public boolean existsClustersPolicies(PolicyQuery namedQuery) {

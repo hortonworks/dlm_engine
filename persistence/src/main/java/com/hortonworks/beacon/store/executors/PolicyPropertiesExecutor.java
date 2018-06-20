@@ -29,9 +29,7 @@ import javax.persistence.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -70,11 +68,11 @@ public class PolicyPropertiesExecutor extends BaseExecutor {
         return beans;
     }
 
-    public void deleteRetiredPolicyProps(Date retirementTime) {
+    public void deleteRetiredPolicyProps(String... policyIds) {
         String query = "delete from PolicyPropertiesBean pp where "
-                + "pp.policyId IN (select b.id from PolicyBean b where b.retirementTime < :retirementTime)";
+                + "pp.policyId IN ( :policyIds )";
         Query nativeQuery = getEntityManager().createQuery(query);
-        nativeQuery.setParameter("retirementTime", new Timestamp(retirementTime.getTime()));
+        nativeQuery.setParameter("policyIds", policyIds);
         int executeUpdate = nativeQuery.executeUpdate();
         LOG.debug("Records deleted for PolicyPropertiesBean, count [{}]", executeUpdate);
     }

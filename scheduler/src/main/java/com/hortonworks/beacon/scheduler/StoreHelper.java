@@ -20,7 +20,7 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.scheduler.quartz;
+package com.hortonworks.beacon.scheduler;
 
 import com.hortonworks.beacon.ExecutionType;
 import com.hortonworks.beacon.client.entity.Cluster;
@@ -32,6 +32,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.scheduler.internal.SyncStatusJob;
+import com.hortonworks.beacon.scheduler.quartz.QuartzDataMapEnum;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
@@ -56,14 +57,14 @@ import java.util.List;
 /**
  * Helper class for all the DB interaction from scheduler.
  */
-final class StoreHelper {
+public final class StoreHelper {
 
     private static final Logger LOG = LoggerFactory.getLogger(StoreHelper.class);
 
     private StoreHelper() {
     }
 
-    static String insertPolicyInstance(String policyId, int count, String status) {
+    public static String insertPolicyInstance(String policyId, int count, String status) {
         PolicyInstanceBean bean = new PolicyInstanceBean();
         String instanceId = policyId + "@" + count;
         bean.setInstanceId(instanceId);
@@ -77,7 +78,7 @@ final class StoreHelper {
         return instanceId;
     }
 
-    static void updatePolicyInstanceCompleted(JobContext jobContext, String status, String message) {
+    public static void updatePolicyInstanceCompleted(JobContext jobContext, String status, String message) {
         PolicyInstanceBean bean = new PolicyInstanceBean();
         bean.setStatus(status);
         bean.setMessage(truncateMessage(message));
@@ -89,7 +90,8 @@ final class StoreHelper {
         generateInstanceEvents(status, bean);
     }
 
-    static void updatePolicyInstanceFailRetire(JobContext jobContext, String status, String message, Date retireDate) {
+    public static void updatePolicyInstanceFailRetire(JobContext jobContext, String status,
+                                                      String message, Date retireDate) {
         PolicyInstanceBean bean = new PolicyInstanceBean();
         bean.setStatus(status);
         bean.setMessage(truncateMessage(message));
@@ -102,7 +104,7 @@ final class StoreHelper {
         generateInstanceEvents(status, bean);
     }
 
-    static void updatePolicyLastInstanceStatus(String policyId, String instanceStatus) {
+    public static void updatePolicyLastInstanceStatus(String policyId, String instanceStatus) {
         PolicyBean bean = new PolicyBean();
         bean.setId(policyId);
         bean.setLastInstanceStatus(instanceStatus);
@@ -110,12 +112,12 @@ final class StoreHelper {
         executor.executeUpdate(PolicyQuery.UPDATE_POLICY_LAST_INS_STATUS);
     }
 
-    static String getLastInstanceStatus(String profileId) throws BeaconStoreException {
+    public static String getLastInstanceStatus(String profileId) throws BeaconStoreException {
         PolicyBean policyBean = getPolicyById(profileId);
         return policyBean.getLastInstanceStatus();
     }
 
-    static void updateInstanceJobCompleted(JobContext jobContext, String status, String message) {
+    public static void updateInstanceJobCompleted(JobContext jobContext, String status, String message) {
         InstanceJobBean bean = new InstanceJobBean(jobContext.getJobInstanceId(), jobContext.getOffset());
         bean.setStatus(status);
         bean.setMessage(truncateMessage(message));
@@ -125,7 +127,8 @@ final class StoreHelper {
         executor.executeUpdate(InstanceJobExecutor.InstanceJobQuery.UPDATE_JOB_COMPLETE);
     }
 
-    static void updateInstanceJobFailRetire(JobContext jobContext, String status, String message, Date retireDate) {
+    public static void updateInstanceJobFailRetire(JobContext jobContext, String status,
+                                                   String message, Date retireDate) {
         InstanceJobBean bean = new InstanceJobBean(jobContext.getJobInstanceId(), jobContext.getOffset());
         bean.setStatus(status);
         bean.setMessage(truncateMessage(message));
@@ -136,14 +139,14 @@ final class StoreHelper {
         executor.executeUpdate(InstanceJobExecutor.InstanceJobQuery.UPDATE_JOB_COMPLETE);
     }
 
-    static void updateInstanceCurrentOffset(JobContext jobContext) {
+    public static void updateInstanceCurrentOffset(JobContext jobContext) {
         PolicyInstanceBean bean = new PolicyInstanceBean(jobContext.getJobInstanceId());
         bean.setCurrentOffset(jobContext.getOffset());
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
         executor.executeUpdate(PolicyInstanceExecutor.PolicyInstanceQuery.UPDATE_CURRENT_OFFSET);
     }
 
-    static void updateInstanceJobStatusStartTime(JobContext jobContext, JobStatus status) {
+    public static void updateInstanceJobStatusStartTime(JobContext jobContext, JobStatus status) {
         String instanceId = jobContext.getJobInstanceId();
         int offset = jobContext.getOffset();
         InstanceJobBean bean = new InstanceJobBean(instanceId, offset);
@@ -153,7 +156,7 @@ final class StoreHelper {
         executor.executeUpdate(InstanceJobExecutor.InstanceJobQuery.UPDATE_STATUS_START);
     }
 
-    static JobContext transferJobContext(JobExecutionContext qContext) throws SchedulerException {
+    public static JobContext transferJobContext(JobExecutionContext qContext) throws SchedulerException {
         JobKey jobKey = qContext.getJobDetail().getKey();
         String currentOffset = jobKey.getGroup();
         Integer prevOffset = Integer.parseInt(currentOffset) - 1;
@@ -177,7 +180,7 @@ final class StoreHelper {
         return policyId + "@" + counter;
     }
 
-    static void updateRemainingInstanceJobs(JobContext jobContext, String status) {
+    public static void updateRemainingInstanceJobs(JobContext jobContext, String status) {
         InstanceJobBean bean = new InstanceJobBean();
         bean.setInstanceId(jobContext.getJobInstanceId());
         bean.setStatus(status);
@@ -185,7 +188,7 @@ final class StoreHelper {
         executor.executeUpdate(InstanceJobExecutor.InstanceJobQuery.INSTANCE_JOB_UPDATE_STATUS);
     }
 
-    static void retireRemainingInstanceJobs(JobContext jobContext, String status, Date retireDate) {
+    public static void retireRemainingInstanceJobs(JobContext jobContext, String status, Date retireDate) {
         InstanceJobBean bean = new InstanceJobBean();
         bean.setInstanceId(jobContext.getJobInstanceId());
         bean.setStatus(status);
@@ -202,7 +205,7 @@ final class StoreHelper {
      * @param policyId   policy id
      * @return key for the next job
      */
-    static JobKey getNextJobFromStore(String instanceId, int offset, String policyId) {
+    public static JobKey getNextJobFromStore(String instanceId, int offset, String policyId) {
         InstanceJobBean bean = new InstanceJobBean(instanceId, offset + 1);
         InstanceJobExecutor executor = new InstanceJobExecutor(bean);
         InstanceJobBean instanceJob = executor.getInstanceJob(InstanceJobExecutor.InstanceJobQuery.GET_INSTANCE_JOB);
@@ -211,7 +214,7 @@ final class StoreHelper {
                 : null;
     }
 
-    static void insertJobInstance(String instanceId, int jobCount) {
+    public static void insertJobInstance(String instanceId, int jobCount) {
         int offsetCounter = 0;
         while (offsetCounter < jobCount) {
             InstanceJobBean bean = new InstanceJobBean(instanceId, offsetCounter);
@@ -261,7 +264,7 @@ final class StoreHelper {
         }
     }
 
-    static int getJobOffset(String policyId, String lastInstanceStatus) {
+    public static int getJobOffset(String policyId, String lastInstanceStatus) {
         PolicyInstanceBean bean = new PolicyInstanceBean();
         bean.setPolicyId(policyId);
         bean.setStatus(lastInstanceStatus);
@@ -277,35 +280,35 @@ final class StoreHelper {
         }
     }
 
-    static int getJobRunCount(JobContext jobContext) {
+    public static int getJobRunCount(JobContext jobContext) {
         InstanceJobBean bean = new InstanceJobBean(jobContext.getJobInstanceId(), jobContext.getOffset());
         InstanceJobExecutor executor = new InstanceJobExecutor(bean);
         InstanceJobBean instanceJob = executor.getInstanceJob(InstanceJobQuery.GET_INSTANCE_JOB);
         return instanceJob.getRunCount();
     }
 
-    static void updateJobRunCount(JobContext jobContext, int runCount) {
+    public static void updateJobRunCount(JobContext jobContext, int runCount) {
         InstanceJobBean bean = new InstanceJobBean(jobContext.getJobInstanceId(), jobContext.getOffset());
         bean.setRunCount(runCount);
         InstanceJobExecutor executor = new InstanceJobExecutor(bean);
         executor.executeUpdate(InstanceJobQuery.UPDATE_JOB_RETRY_COUNT);
     }
 
-    static int getInstanceRunCount(JobContext jobContext) {
+    public static int getInstanceRunCount(JobContext jobContext) {
         PolicyInstanceBean bean = new PolicyInstanceBean(jobContext.getJobInstanceId());
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
         List<PolicyInstanceBean> instances = executor.executeSelectQuery(PolicyInstanceQuery.GET_INSTANCE_BY_ID);
         return instances.get(0).getRunCount();
     }
 
-    static void updateInstanceRunCount(JobContext jobContext, int runCount) {
+    public static void updateInstanceRunCount(JobContext jobContext, int runCount) {
         PolicyInstanceBean bean = new PolicyInstanceBean(jobContext.getJobInstanceId());
         bean.setRunCount(runCount);
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
         executor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_RETRY_COUNT);
     }
 
-    static String updatePolicyStatus(String policyId) throws BeaconStoreException {
+    public static String updatePolicyStatus(String policyId) throws BeaconStoreException {
         String finalStatus = getPolicyFinalStatus(policyId);
         PolicyBean bean = new PolicyBean();
         bean.setId(policyId);
@@ -345,7 +348,7 @@ final class StoreHelper {
         }
     }
 
-    static SyncStatusJob getSyncStatusJob(String policyId, String status) throws BeaconException {
+    public static SyncStatusJob getSyncStatusJob(String policyId, String status) throws BeaconException {
         PolicyBean policyBean = getPolicyById(policyId);
         ExecutionType executionType = ExecutionType.valueOf(policyBean.getExecutionType());
         if (executionType == ExecutionType.FS_HCFS || executionType == ExecutionType.FS_HCFS_SNAPSHOT) {
@@ -357,14 +360,14 @@ final class StoreHelper {
                 status);
     }
 
-    static PolicyBean getPolicyById(String policyId) throws BeaconStoreException {
+    public static PolicyBean getPolicyById(String policyId) throws BeaconStoreException {
         PolicyBean bean = new PolicyBean();
         bean.setId(policyId);
         PolicyExecutor executor = new PolicyExecutor(bean);
         return executor.getPolicy(PolicyQuery.GET_POLICY_BY_ID);
     }
 
-    static boolean isEndTimeReached(String policyId) throws BeaconStoreException {
+    public static boolean isEndTimeReached(String policyId) throws BeaconStoreException {
         PolicyBean policyBean = getPolicyById(policyId);
         Date endTime = policyBean.getEndTime();
         Date when = new Date(System.currentTimeMillis() + policyBean.getFrequencyInSec() * 1000);

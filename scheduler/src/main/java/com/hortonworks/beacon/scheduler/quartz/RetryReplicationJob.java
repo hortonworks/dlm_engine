@@ -25,6 +25,7 @@ package com.hortonworks.beacon.scheduler.quartz;
 import com.hortonworks.beacon.client.entity.Retry;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.job.JobContext;
+import com.hortonworks.beacon.scheduler.StoreHelper;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;

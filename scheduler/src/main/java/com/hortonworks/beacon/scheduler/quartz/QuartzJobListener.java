@@ -33,6 +33,7 @@ import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.hive.HiveExport;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
+import com.hortonworks.beacon.scheduler.StoreHelper;
 import com.hortonworks.beacon.scheduler.internal.AdminJobService;
 import com.hortonworks.beacon.scheduler.internal.SyncStatusJob;
 import com.hortonworks.beacon.service.Services;

@@ -29,6 +29,7 @@ import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
+import com.hortonworks.beacon.scheduler.StoreHelper;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import org.quartz.JobDataMap;

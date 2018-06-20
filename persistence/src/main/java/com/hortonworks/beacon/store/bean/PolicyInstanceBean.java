@@ -33,7 +33,7 @@ import javax.persistence.Table;
 import java.util.Date;
 
 /**
- * Beacon for policy instances.
+ * Represent the runtime instance of {@link PolicyBean}.
  */
 @SuppressFBWarnings(value = {"NP_BOOLEAN_RETURN_NULL", "UWF_UNWRITTEN_FIELD"})
 @Entity
@@ -84,7 +84,15 @@ import java.util.Date;
                 + "where b.policyId = :policyId group by b.status order by startTime DESC"),
         @NamedQuery(name = "GET_INSTANCE_REPORT", query = "select b.status, max(b.endTime) as endTime "
                 + "from PolicyInstanceBean b "
-                + "where b.policyId = :policyId AND b.status <> 'RUNNING' group by b.status order by endTime")
+                + "where b.policyId = :policyId AND b.status <> 'RUNNING' group by b.status order by endTime"),
+        @NamedQuery(name = "DELETE_POLICY_INSTANCE_BATCH", query = "delete from PolicyInstanceBean b "
+                + "where b.instanceId in ( :instanceIds )"),
+        @NamedQuery(name = "GET_POLICY_INSTANCE_IDS", query = "select b.instanceId from PolicyInstanceBean b "
+                + "where b.policyId = :policyId "),
+        /**
+         *  Queries only used for testing.
+         */
+        @NamedQuery(name = "GET_ALL_POLICY_INSTANCES", query = "select OBJECT(b) from PolicyInstanceBean b "),
         }
 )
 public class PolicyInstanceBean {

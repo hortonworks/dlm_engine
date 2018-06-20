@@ -153,8 +153,10 @@ public final class ReplicationUtils {
                 ReplicationMetrics oldMetrics = GSON.fromJson(oldTrackingInfo, ReplicationMetrics.class);
                 ReplicationMetrics newMetrics = GSON.fromJson(details, ReplicationMetrics.class);
                 boolean sameQuery = oldMetrics.getJobId().equalsIgnoreCase(newMetrics.getJobId());
-                return sameQuery && (oldMetrics.getProgress().getJobProgress()
-                        < newMetrics.getProgress().getJobProgress());
+                if (sameQuery) {
+                    return (oldMetrics.getProgress().getJobProgress()
+                            < newMetrics.getProgress().getJobProgress());
+                }
             }
         } catch (Throwable t) {
             return true;

@@ -125,6 +125,7 @@ public class HiveImport extends InstanceReplication {
                     ReplicationUtils.getReplicationMetricsInterval(), targetStatement);
             storeHiveQueryId(jobContext, properties.getProperty(HIVE_USER_QUERY_ID));
             ((HiveStatement) targetStatement).executeAsync(replLoad);
+            storeHiveQueryId(jobContext, targetStatement);
             targetStatement.getUpdateCount();
             LOG.info("REPL LOAD execution finished!");
         } catch (SQLException e) {
@@ -202,6 +203,22 @@ public class HiveImport extends InstanceReplication {
             ReplicationUtils.storeTrackingInfo(jobContext, details);
         } catch (BeaconException e) {
             LOG.error("Unable to persist query id: {}", queryId);
+        }
+    }
+
+    private void storeHiveQueryId(final JobContext jobContext, final Statement statement) {
+        try {
+            String queryId = ((HiveStatement) statement).getQueryId();
+            String previousQueryId = jobContext.getQueryId();
+            LOG.info("Hive statement query id: {}, previous query id: {}", queryId, previousQueryId);
+            if (StringUtils.isNotEmpty(queryId) && !previousQueryId.equals(queryId)) {
+                LOG.info("Hive query id: {}", queryId);
+                jobContext.setQueryId(queryId);
+            } else {
+                LOG.debug("Query execution finished before queryId retrieval");
+            }
+        } catch (SQLException e) {
+            LOG.error("Error while retrieving the query id.", e);
         }
     }
 

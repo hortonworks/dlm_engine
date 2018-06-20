@@ -215,7 +215,7 @@ public class HiveImport extends InstanceReplication {
                 LOG.info("Hive query id: {}", queryId);
                 jobContext.setQueryId(queryId);
             } else {
-                LOG.debug("Query execution finished before queryId retrieval");
+                LOG.debug("Query execution finished before queryId retrieval or matches with the provided one.");
             }
         } catch (SQLException e) {
             LOG.error("Error while retrieving the query id.", e);

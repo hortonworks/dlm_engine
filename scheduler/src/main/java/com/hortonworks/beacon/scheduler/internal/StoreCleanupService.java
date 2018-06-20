@@ -42,6 +42,7 @@ import com.hortonworks.beacon.store.executors.PolicyPropertiesExecutor;
 import com.hortonworks.beacon.util.DateUtil;
 
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -49,11 +50,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Cleanup retired policy, policy-instance and instance-job data from Store.
+ * Clean instance-jobs, policy-instances and policies in order for all retired policy from the store periodically.
+ * Policy is marked retired when delete api is called.
  */
 public final class StoreCleanupService implements Callable<Void>, BeaconService {
 
     private static final Logger LOG = LoggerFactory.getLogger(StoreCleanupService.class);
+
+    private static final int BATCH_SIZE = 100;
 
     private static final StoreCleanupService INSTANCE = new StoreCleanupService();
 
@@ -72,11 +76,11 @@ public final class StoreCleanupService implements Callable<Void>, BeaconService 
         cleanupDate = new Date(System.currentTimeMillis() - BeaconConstants.DAY_IN_MS * retiredOlderThan);
         try {
             LOG.info("StoreCleanupService execution started with cleanupDate: [{}].", DateUtil.formatDate(cleanupDate));
-            RequestContext.get().startTransaction();
-            cleanupInstanceJobs();
-            cleanupPolicyInstances();
-            cleanupPolicy();
-            RequestContext.get().commitTransaction();
+            List<String> allPolicyIdsToBeArchived = getAllPolicyIdsToBeArchived();
+            if (allPolicyIdsToBeArchived.size() == 0) {
+                return null;
+            }
+            cleanupInstanceJobsPolicyInstancesAndPolicies(allPolicyIdsToBeArchived);
             LOG.info("StoreCleanupService execution completed successfully.");
             return null;
         } finally {
@@ -85,28 +89,52 @@ public final class StoreCleanupService implements Callable<Void>, BeaconService 
         }
     }
 
-    private void cleanupPolicy() {
-        PolicyPropertiesExecutor propsExecutor = new PolicyPropertiesExecutor();
-        propsExecutor.deleteRetiredPolicyProps(cleanupDate);
+    private void cleanupInstanceJobsPolicyInstancesAndPolicies(List<String> allPolicyIdsToBeArchived) {
+        for (String policyId :  allPolicyIdsToBeArchived) {
+            while (true) {
+                RequestContext.get().startTransaction();
+                PolicyInstanceBean policyInstanceBean = new PolicyInstanceBean();
+                policyInstanceBean.setPolicyId(policyId);
+                PolicyInstanceExecutor policyInstanceExecutor = new PolicyInstanceExecutor(policyInstanceBean);
+                List<String> instanceIds = policyInstanceExecutor
+                        .getLimitedInstanceIds(PolicyInstanceQuery.GET_POLICY_INSTANCE_IDS, BATCH_SIZE);
+                if (instanceIds.size() == 0) {
+                    RequestContext.get().commitTransaction();
+                    break;
+                }
+                cleanupInstanceJobs(instanceIds);
+                cleanupPolicyInstances(instanceIds);
+                RequestContext.get().commitTransaction();
+            }
+            cleanupPolicy(policyId);
+        }
+    }
 
+    private List<String> getAllPolicyIdsToBeArchived() {
         PolicyBean bean = new PolicyBean();
         bean.setRetirementTime(cleanupDate);
         PolicyExecutor executor = new PolicyExecutor(bean);
-        executor.executeUpdate(PolicyQuery.DELETE_RETIRED_POLICY);
+        List<String> policiesToBeArchived = executor.getPoliciesToBeArchived(PolicyQuery.GET_POLICY_IDS_TO_BE_ARCHIVED);
+        return policiesToBeArchived;
     }
 
-    private void cleanupPolicyInstances() {
-        PolicyInstanceBean bean = new PolicyInstanceBean();
-        bean.setRetirementTime(cleanupDate);
-        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
-        executor.executeUpdate(PolicyInstanceQuery.DELETE_RETIRED_INSTANCE);
+    private void cleanupPolicy(String policyId) {
+        RequestContext.get().startTransaction();
+        PolicyPropertiesExecutor propsExecutor = new PolicyPropertiesExecutor();
+        propsExecutor.deleteRetiredPolicyProps(policyId);
+        PolicyExecutor policyExecutor = new PolicyExecutor(new PolicyBean());
+        policyExecutor.executeBatchDelete(PolicyQuery.DELETE_RETIRED_POLICY, policyId);
+        RequestContext.get().commitTransaction();
     }
 
-    private void cleanupInstanceJobs() {
-        InstanceJobBean bean = new InstanceJobBean();
-        bean.setRetirementTime(cleanupDate);
-        InstanceJobExecutor jobExecutor = new InstanceJobExecutor(bean);
-        jobExecutor.executeUpdate(InstanceJobQuery.DELETE_RETIRED_JOBS);
+    private void cleanupPolicyInstances(List<String> instanceIds) {
+        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(new PolicyInstanceBean());
+        executor.executeBatchDelete(instanceIds, PolicyInstanceQuery.DELETE_POLICY_INSTANCE_BATCH);
+    }
+
+    private void cleanupInstanceJobs(List<String> instanceIds) {
+        InstanceJobExecutor instanceJobExecutor = new InstanceJobExecutor(new InstanceJobBean());
+        instanceJobExecutor.executeBatchDelete(instanceIds, InstanceJobQuery.DELETE_INSTANCE_JOB_BATCH);
     }
 
     @Override

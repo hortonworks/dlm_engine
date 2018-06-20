@@ -815,11 +815,9 @@ public class PolicyResource extends AbstractResourceManager {
                 if (!JobStatus.SUBMITTED.name().equalsIgnoreCase(status)) {
                     List<PolicyInstanceBean> instances = policyDao.getPolicyInstance(
                             policy.getPolicyId());
-                    policyDao.markInstanceJobDeleted(instances, retirementTime);
                     // For a failed running instance retry is scheduled, in mean time user issues the
                     // policy deletion operation, so move the instance to DELETED state from RUNNING.
                     policyDao.updateInstanceStatus(policy.getPolicyId());
-                    policyDao.markPolicyInstanceDeleted(policy.getPolicyId(), retirementTime);
                     policyDao.deletePolicy(policy.getName(), retirementTime);
                     schedulerJobDelete = getScheduler().deletePolicy(policy.getPolicyId());
                 } else {

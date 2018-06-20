@@ -64,7 +64,10 @@ public class PolicyInstanceExecutor extends BaseExecutor {
         UPDATE_INSTANCE_RERUN,
         GET_INSTANCE_STATUS_RECENT,
         UPDATE_INSTANCE_STATUS_RETIRE,
-        GET_INSTANCE_REPORT
+        GET_INSTANCE_REPORT,
+        GET_POLICY_INSTANCE_IDS,
+        DELETE_POLICY_INSTANCE_BATCH,
+        GET_ALL_POLICY_INSTANCES
     }
 
     private PolicyInstanceBean bean;
@@ -161,6 +164,11 @@ public class PolicyInstanceExecutor extends BaseExecutor {
             case GET_INSTANCE_REPORT:
                 query.setParameter("policyId", bean.getPolicyId());
                 break;
+            case GET_POLICY_INSTANCE_IDS:
+                query.setParameter("policyId", bean.getPolicyId());
+                break;
+            case GET_ALL_POLICY_INSTANCES:
+                break;
             default:
                 throw new IllegalArgumentException(
                     StringFormat.format("Policy does not exist with name: {}", namedQuery.name()));
@@ -194,6 +202,26 @@ public class PolicyInstanceExecutor extends BaseExecutor {
             beanList.add((PolicyInstanceBean) result);
         }
         return beanList;
+    }
+
+    public List<String> getLimitedInstanceIds(PolicyInstanceQuery namedQuery, int limit) {
+        Query selectQuery = getQuery(namedQuery);
+        selectQuery.setMaxResults(limit);
+        List resultList = selectQuery.getResultList();
+        List<String> instancesList = new ArrayList<>();
+        for (Object result : resultList) {
+            instancesList.add((String) result);
+        }
+        LOG.debug("Records retrieved from PolicyInstanceBean table namedQuery [{}], count [{}]",
+                namedQuery, instancesList.size());
+        return instancesList;
+    }
+
+    public void executeBatchDelete(List<String> instanceIds, PolicyInstanceQuery namedQuery) {
+        Query query = getEntityManager().createNamedQuery(namedQuery.name());
+        query.setParameter("instanceIds", instanceIds);
+        int deleted = query.executeUpdate();
+        LOG.debug("Records deleted from PolicyInstanceBean table namedQuery [{}], count [{}]", namedQuery, deleted);
     }
 
     public List<PolicyInstanceBean> getInstanceRecent(PolicyInstanceQuery namedQuery, int results) {

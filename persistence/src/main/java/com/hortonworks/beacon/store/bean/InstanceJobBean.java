@@ -34,7 +34,9 @@ import javax.persistence.Table;
 import java.util.Date;
 
 /**
- * Policy instance job bean.
+ * Represent the different phase of execution of {@link PolicyInstanceBean}
+ * All jobs are chained during the creation of {@link PolicyBean} and executed one by one.
+ * Each job is represented by {@link InstanceJobBean#offset}
  */
 @SuppressFBWarnings(value = {"NP_BOOLEAN_RETURN_NULL", "UWF_UNWRITTEN_FIELD"})
 @Entity
@@ -61,7 +63,13 @@ import java.util.Date;
                 + "set b.retirementTime = :retirementTime "
                 + "where b.instanceId = :instanceId AND b.retirementTime IS NULL"),
         @NamedQuery(name = "DELETE_RETIRED_JOBS", query = "delete from InstanceJobBean b "
-                + "where b.retirementTime < :retirementTime")
+                + "where b.retirementTime < :retirementTime"),
+        @NamedQuery(name = "DELETE_INSTANCE_JOB_BATCH", query = "delete from InstanceJobBean b "
+                + "where  b.instanceId in ( :instanceIds ) "),
+        /**
+         *  Queries only used for testing.
+         */
+        @NamedQuery(name = "GET_ALL_INSTANCE_JOBS", query = "select OBJECT(b) from InstanceJobBean b ")
     })
 public class InstanceJobBean {
 

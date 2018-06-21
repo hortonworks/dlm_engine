@@ -33,6 +33,7 @@ import com.hortonworks.beacon.util.KnoxTokenUtils;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -67,9 +68,10 @@ public final class ClusterBuilder {
         boolean isLocal = StringUtils.isNotBlank(localCluster) && Boolean.parseBoolean(localCluster);
         String peers = requestProperties.getPropertyIgnoreCase(ClusterProperties.PEERS.getName());
         String tags = requestProperties.getPropertyIgnoreCase(ClusterProperties.TAGS.getName());
-        if (requestProperties.containsKey(BeaconConstants.DFS_NAMESERVICES)) {
-            String haFailOverKey = BeaconConstants.DFS_CLIENT_FAILOVER_PROXY_PROVIDER + BeaconConstants.DOT_SEPARATOR
-                    + requestProperties.getProperty(BeaconConstants.DFS_NAMESERVICES);
+        List<String> dfsNSList = ClusterHelper.getHDFSNameservicesList(requestProperties);
+        for (String dfsNS : dfsNSList) {
+            String haFailOverKey = BeaconConstants.DFS_CLIENT_FAILOVER_PROXY_PROVIDER
+                    + BeaconConstants.DOT_SEPARATOR + dfsNS;
             if (!requestProperties.containsKey(haFailOverKey)) {
                 requestProperties.put(haFailOverKey, BeaconConstants.DFS_CLIENT_DEFAULT_FAILOVER_STRATEGY);
             }

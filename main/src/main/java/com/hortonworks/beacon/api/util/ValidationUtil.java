@@ -58,6 +58,7 @@ import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.util.StringFormat;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -75,6 +76,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.AccessDeniedException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -101,20 +103,23 @@ public final class ValidationUtil {
     }
 
     public static void validateClusterPairing(Cluster localCluster, Cluster remoteCluster) throws ValidationException {
-        Properties localCustomProperties = localCluster.getCustomProperties();
-        Properties remoteCustomProperties = remoteCluster.getCustomProperties();
-        if (ClusterHelper.isHDFSEnabled(localCustomProperties)
-                != ClusterHelper.isHDFSEnabled(remoteCustomProperties)) {
+        Properties localCustomProps = localCluster.getCustomProperties();
+        Properties remoteCustomProps = remoteCluster.getCustomProperties();
+        if (ClusterHelper.isHDFSEnabled(localCluster)
+                != ClusterHelper.isHDFSEnabled(remoteCluster)) {
             LOG.error("HDFS is not enabled in either {} or {} cluster", localCluster.getName(),
                     remoteCluster.getName());
         }
 
-        if ((ClusterHelper.isHDFSEnabled(localCustomProperties) && ClusterHelper.isHighlyAvailableHDFS(
-                localCustomProperties))
-                != (ClusterHelper.isHDFSEnabled(remoteCustomProperties) && ClusterHelper.isHighlyAvailableHDFS(
-                        remoteCustomProperties))) {
+        boolean isLocalHAEnbaled = ClusterHelper.isHDFSEnabled(localCluster) && ClusterHelper.isHighlyAvailableHDFS(
+                localCustomProps);
+        boolean isRemoteHAEnabled = ClusterHelper.isHDFSEnabled(remoteCluster)
+                && ClusterHelper.isHighlyAvailableHDFS(remoteCustomProps);
+        if (isLocalHAEnbaled ^ isRemoteHAEnabled) {
             LOG.warn("NameNode HA is not enabled in either {} or {} cluster", localCluster.getName(),
                 remoteCluster.getName());
+        } else if (isLocalHAEnbaled) {
+            validateNameserviceConfig(localCustomProps, remoteCustomProps);
         }
         if (ClusterHelper.isHiveEnabled(localCluster)
                 && !(Boolean.valueOf(remoteCluster.getCustomProperties().getProperty(
@@ -148,6 +153,18 @@ public final class ValidationUtil {
                 && StringUtils.isBlank(remoteClusterKnoxProxyURL))) {
             LOG.error("Knox proxy is not enabled in either {} or {} cluster", localCluster.getName(),
                     remoteCluster.getName());
+        }
+    }
+
+    private static void validateNameserviceConfig(Properties localCustomProps, Properties remoteCustomProps)
+            throws ValidationException{
+        // Check that the nameservices on both the clusters aren't the same.
+        List<String> localClusterNSs = ClusterHelper.getHDFSNameservicesList(localCustomProps);
+        List<String> remoteClusterNSs = ClusterHelper.getHDFSNameservicesList(remoteCustomProps);
+        Collection commonNSEntries = CollectionUtils.intersection(localClusterNSs, remoteClusterNSs);
+        if (!commonNSEntries.isEmpty()) {
+            throw new ValidationException("Local cluster nameservices {} and remote cluster nameservices {} "
+                    + "can't have common nameservice.", localClusterNSs, remoteClusterNSs);
         }
     }
 

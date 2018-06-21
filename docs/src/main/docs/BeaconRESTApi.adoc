@@ -232,6 +232,7 @@ rangerEndPoint=http://localhost:6080
 rangerHDFSServiceName=target_hadoop
 rangerHIVEServiceName=target_hive
 dfs.nameservices=primary
+dfs.internal.nameservices=primary
 dfs.ha.namenodes.primary=nn1,nn2
 dfs.namenode.rpc-address.primary.nn1=http://nnhost1:8020
 dfs.namenode.rpc-address.primary.nn2=http://nnhost2:8020

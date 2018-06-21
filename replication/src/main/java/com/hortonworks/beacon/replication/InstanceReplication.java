@@ -336,17 +336,13 @@ public abstract class InstanceReplication implements BeaconJob {
                 haConfigKeyList.add(property.getKey().toString());
             }
         }
-        String sourceHaNameservices = sourceProperties.getProperty(BeaconConstants.DFS_NAMESERVICES);
-        String targetHaNameservices = targetProperties.getProperty(BeaconConstants.DFS_NAMESERVICES);
+        String sourceHaNameservices = ClusterHelper.getHDFSNameservices(sourceProperties);
+        String targetHaNameservices = ClusterHelper.getHDFSNameservices(targetProperties);
         haConfigsMap.put(BeaconConstants.DFS_NAMESERVICES,
                 sourceHaNameservices + BeaconConstants.COMMA_SEPARATOR + targetHaNameservices);
         haConfigKeyList.add(BeaconConstants.DFS_NAMESERVICES);
         haConfigsMap.put(BeaconConstants.DFS_INTERNAL_NAMESERVICES, targetHaNameservices);
         haConfigKeyList.add(BeaconConstants.DFS_INTERNAL_NAMESERVICES);
-        String haFailOverKey = BeaconConstants.DFS_CLIENT_FAILOVER_PROXY_PROVIDER + BeaconConstants.DOT_SEPARATOR
-                + sourceHaNameservices;
-        haConfigsMap.put(haFailOverKey, sourceProperties.getProperty(haFailOverKey));
-        haConfigKeyList.add(haFailOverKey);
         LOG.info("Hadoop Configuration for Distcp: [{}]", haConfigsMap.toString());
         String haConfigKeys = StringUtils.join(haConfigKeyList, BeaconConstants.COMMA_SEPARATOR);
         haConfigsMap.put(BeaconConstants.HA_CONFIG_KEYS, haConfigKeys);

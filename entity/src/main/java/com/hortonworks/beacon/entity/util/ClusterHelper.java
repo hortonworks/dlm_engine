@@ -112,11 +112,13 @@ public final class ClusterHelper {
     }
 
     public static List<String> getHDFSNameservicesList(Properties properties) {
-        String nsEntries = getHDFSNameservices(properties);
-        String[] nsIDs = nsEntries.split(BeaconConstants.COMMA_SEPARATOR);
         List<String> nsList = new ArrayList<>();
-        for (String nsID: nsIDs) {
-            nsList.add(nsID.trim());
+        String nsEntries = getHDFSNameservices(properties);
+        if (StringUtils.isNotBlank(nsEntries)) {
+            String[] nsIDs = nsEntries.split(BeaconConstants.COMMA_SEPARATOR);
+            for (String nsID: nsIDs) {
+                nsList.add(nsID.trim());
+            }
         }
         return nsList;
     }

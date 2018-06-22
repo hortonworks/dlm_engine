@@ -105,6 +105,22 @@ public final class ClusterHelper {
         return conf;
     }
 
+    public static String getHDFSNameservices(Properties properties) {
+        String nsEntries = properties.getProperty(BeaconConstants.DFS_INTERNAL_NAMESERVICES,
+                properties.getProperty(BeaconConstants.DFS_NAMESERVICES));
+        return nsEntries;
+    }
+
+    public static List<String> getHDFSNameservicesList(Properties properties) {
+        String nsEntries = getHDFSNameservices(properties);
+        String[] nsIDs = nsEntries.split(BeaconConstants.COMMA_SEPARATOR);
+        List<String> nsList = new ArrayList<>();
+        for (String nsID: nsIDs) {
+            nsList.add(nsID.trim());
+        }
+        return nsList;
+    }
+
     public static boolean areClustersPaired(final String sourceCluster, final String remoteCluster)
             throws BeaconException {
         Cluster cluster = getActiveCluster(sourceCluster);

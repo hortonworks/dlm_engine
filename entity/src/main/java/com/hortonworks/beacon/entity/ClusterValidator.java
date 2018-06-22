@@ -42,6 +42,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
@@ -180,24 +181,27 @@ public class ClusterValidator extends EntityValidator<Cluster> {
 
     private static void validateHAConfig(Properties properties) throws BeaconException {
         LOG.debug("Validating HA Config");
-        String dfsNameServices = properties.getProperty(BeaconConstants.DFS_NAMESERVICES);
-        String haNamenodesPrimaryKey = BeaconConstants.DFS_HA_NAMENODES + BeaconConstants.DOT_SEPARATOR
-                + dfsNameServices;
-        String  haNameNodesPrimaryValue;
-        if (properties.containsKey(haNamenodesPrimaryKey)) {
-            haNameNodesPrimaryValue = properties.getProperty(haNamenodesPrimaryKey);
-        } else {
-            throw new BeaconException("Missing parameter: {}", haNamenodesPrimaryKey);
-        }
-        String []haNameNodes = haNameNodesPrimaryValue.split(BeaconConstants.COMMA_SEPARATOR);
-        String haNameNodeAddressPrefix = BeaconConstants.DFS_NN_RPC_PREFIX + BeaconConstants.DOT_SEPARATOR
-                + dfsNameServices;
-        for(String haNameNodeName: haNameNodes) {
-            String haNameNodeAddress = haNameNodeAddressPrefix + BeaconConstants.DOT_SEPARATOR
-                    + haNameNodeName;
-            if (!properties.containsKey(haNameNodeAddress)) {
-                throw new BeaconException("Missing parameter: {}", haNameNodeAddress);
+        List<String> dfsNameServices = ClusterHelper.getHDFSNameservicesList(properties);
+        for (String dfsNameService : dfsNameServices) {
+            String haNamenodesKey = BeaconConstants.DFS_HA_NAMENODES + BeaconConstants.DOT_SEPARATOR
+                    + dfsNameService;
+            String haNameNodesValue;
+            if (properties.containsKey(haNamenodesKey)) {
+                haNameNodesValue = properties.getProperty(haNamenodesKey);
+            } else {
+                throw new BeaconException("Missing parameter: {}", haNamenodesKey);
+            }
+            String[] haNameNodes = haNameNodesValue.split(BeaconConstants.COMMA_SEPARATOR);
+            String haNameNodeAddressPrefix = BeaconConstants.DFS_NN_RPC_PREFIX + BeaconConstants.DOT_SEPARATOR
+                    + dfsNameService;
+            for (String haNameNodeName : haNameNodes) {
+                String haNameNodeAddress = haNameNodeAddressPrefix + BeaconConstants.DOT_SEPARATOR
+                        + haNameNodeName;
+                if (!properties.containsKey(haNameNodeAddress)) {
+                    throw new BeaconException("Missing parameter: {}", haNameNodeAddress);
+                }
             }
         }
     }
+
 }

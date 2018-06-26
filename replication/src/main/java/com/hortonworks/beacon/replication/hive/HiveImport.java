@@ -123,6 +123,12 @@ public class HiveImport extends InstanceReplication {
             targetStatement = hiveServerClient.createStatement();
             getHiveReplicationProgress(timer, jobContext, HiveActionType.IMPORT,
                     ReplicationUtils.getReplicationMetricsInterval(), targetStatement);
+            if (Boolean.valueOf(jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP))
+                    && replCommand.getReplicatedEventId(targetStatement, properties) > 0) {
+                jobContext.getJobContextMap().put(HiveDRUtils.BOOTSTRAP, "false");
+                LOG.info("Bootstrap replication has already completed, skipping hive import.");
+                return;
+            }
             storeHiveQueryId(jobContext, properties.getProperty(HIVE_QUERY_ID));
             ((HiveStatement) targetStatement).executeAsync(replLoad);
             storeHiveQueryId(jobContext, targetStatement);

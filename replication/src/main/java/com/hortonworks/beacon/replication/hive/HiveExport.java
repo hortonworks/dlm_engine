@@ -26,6 +26,7 @@ import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.Timer;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
 import com.hortonworks.beacon.entity.util.hive.HiveServerClient;
@@ -34,11 +35,15 @@ import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
+import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.HiveActionType;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -88,11 +93,20 @@ public class HiveExport extends InstanceReplication {
                 jobContext.getJobContextMap().put(HiveDRUtils.BOOTSTRAP, "true");
                 dumpDirectory = jobContext.getJobContextMap().get(HiveExport.DUMP_DIRECTORY);
                 if (StringUtils.isNotEmpty(dumpDirectory)) {
-                    LOG.info("Dump directory {} already exists for bootstrap run, skipping hive export", dumpDirectory);
+                    boolean dumpDirectoryExists = isDumpDirectoryExists(dumpDirectory);
+                    if (!dumpDirectoryExists) {
+                        LOG.info("Stored Bootstrap dump directory doesn't exists, re exporting it.");
+                        dumpDirectory = performExport(jobContext);
+                    } else {
+                        LOG.info("Dump directory {} already exists for bootstrap run, skipping hive export",
+                                dumpDirectory);
+                    }
                 } else {
+                    LOG.info("Bootstrap dump directory doesn't exists, exporting it.");
                     dumpDirectory = performExport(jobContext);
                 }
             } else {
+                LOG.info("Incremental dump started");
                 jobContext.getJobContextMap().put(HiveDRUtils.BOOTSTRAP, "false");
                 jobContext.getJobContextMap().remove(HiveExport.DUMP_DIRECTORY);
                 dumpDirectory = performExport(jobContext);
@@ -105,6 +119,18 @@ public class HiveExport extends InstanceReplication {
             }
         } finally {
             methodTimer.stop();
+        }
+    }
+
+    private boolean isDumpDirectoryExists(String dumpDirectory) throws BeaconException {
+        String fsEndPoint = properties.getProperty(HiveDRProperties.SOURCE_NN.getName());
+        String sourceClusterName = properties.getProperty(HiveDRProperties.SOURCE_CLUSTER_NAME.getName());
+        FileSystem fileSystem = FSUtils.getFileSystem(fsEndPoint, ClusterHelper.getHAConfigurationOrDefault(
+                sourceClusterName));
+        try {
+            return fileSystem.exists(new Path(dumpDirectory));
+        } catch (IOException e) {
+            throw new BeaconException(e);
         }
     }
 

@@ -132,6 +132,7 @@ public class HiveImport extends InstanceReplication {
             if (e.getErrorCode() >= 20000 && e.getErrorCode() <= 29999) {
                 throw new BeaconSuspendException(e, e.getErrorCode());
             }
+            throw new BeaconException(e);
         } finally {
             LOG.debug("Capturing hive import metrics after job execution");
             jobContext.getJobContextMap().put(BeaconConstants.END_TIME,

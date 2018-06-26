@@ -70,6 +70,7 @@ public final class HivePolicyHelper {
         map.put(HiveDRProperties.JOB_FREQUENCY.getName(), String.valueOf(policy.getFrequencyInSec()));
         map.put(HiveDRProperties.START_TIME.getName(), DateUtil.formatDate(policy.getStartTime()));
         map.put(HiveDRProperties.END_TIME.getName(), DateUtil.formatDate(policy.getEndTime()));
+        map.put(HiveDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
         map.put(HiveDRProperties.SOURCE_DATASET.getName(), policy.getSourceDataset());
         map.put(HiveDRProperties.TARGET_DATASET.getName(), policy.getTargetDataset());
         map.put(HiveDRProperties.SOURCE_CLUSTER_NAME.getName(), policy.getSourceCluster());

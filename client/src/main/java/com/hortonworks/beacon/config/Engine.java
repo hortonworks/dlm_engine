@@ -70,8 +70,6 @@ public class Engine {
     private int hadoopJobLookupRetries;
     private int hadoopJobLookupDelay;
 
-    private int maxHiveEvents;
-
     private String excludeFileRegex;
 
     private String version;
@@ -336,10 +334,6 @@ public class Engine {
 
     public void setHadoopJobLookupDelay(int hadoopJobLookupDelay) {
         this.hadoopJobLookupDelay = hadoopJobLookupDelay;
-    }
-
-    public void setMaxHiveEvents(int maxHiveEvents) {
-        this.maxHiveEvents = maxHiveEvents;
     }
 
     public int getAuthReloginSeconds() {

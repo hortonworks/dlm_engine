@@ -128,10 +128,6 @@ public class HiveReplicationMetrics {
             float importProgress = Math.round(((float) completed/total) * 0.9 * 100.0);
             LOG.debug("Import progress: total: {}, completed: {}, progress: {}", total, completed, importProgress);
             progress += importProgress;
-            if (total == 0) {
-                progress = 100.0f;
-                jobContext.getJobContextMap().put(ReplicationJobMetrics.COMPLETED.getName(), String.valueOf(completed));
-            }
         }
         progress = Math.round(progress * 100.0f)/100.0f;
         LOG.debug("Action Type: {}, Progress: {}", actionType.getType(), progress);

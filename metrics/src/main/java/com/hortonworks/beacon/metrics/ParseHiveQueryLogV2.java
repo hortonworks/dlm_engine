@@ -78,7 +78,7 @@ public final class ParseHiveQueryLogV2 {
         long total = 0, completed = 0;
         List<String> queryLogList = getQueryLogsToProcess(str);
 
-        for (String queryLog : queryLogList) {
+            for (String queryLog : queryLogList) {
             String log = splitReplLogMessage(queryLog);
             if (log == null) {
                 continue;
@@ -129,6 +129,7 @@ public final class ParseHiveQueryLogV2 {
                             replType = HiveReplType.valueOf(loadMetrics.getLoadType());
                             completed = replType == HiveReplType.BOOTSTRAP ? loadMetrics.getNumTables()
                                     : loadMetrics.getNumEvents();
+                            total = completed;
                             break;
                         default:
                             LOG.debug("Metrics event type {} won't be processed", hiveReplEventType);

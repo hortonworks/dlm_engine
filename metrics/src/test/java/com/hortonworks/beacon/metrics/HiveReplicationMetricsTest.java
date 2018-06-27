@@ -49,7 +49,7 @@ public class HiveReplicationMetricsTest {
         bootstrapDump = getBootStrapDump();
         bootstrapLoad = getBootStrapLoad();
         incrementalDump = getIncrementalDump();
-        incrementalLoad = getIncrementalLoad();
+        incrementalLoad = getIncrementalLoad(true);
     }
 
     @Test
@@ -107,7 +107,17 @@ public class HiveReplicationMetricsTest {
         progress = hiveReplicationMetrics.getJobProgress();
 
         Assert.assertEquals(progress.getImportTotal(), 10);
+        Assert.assertEquals(progress.getImportCompleted(), 9);
+        Assert.assertEquals(progress.getJobProgress(), 91.0f);
+
+        hiveReplicationMetrics.obtainJobMetrics(jobContext, getIncrementalLoad(false),
+                HiveActionType.IMPORT);
+
+        progress = hiveReplicationMetrics.getJobProgress();
+
+        Assert.assertEquals(progress.getImportTotal(), 10);
         Assert.assertEquals(progress.getImportCompleted(), 10);
+        Assert.assertEquals(progress.getJobProgress(), 100.0f);
     }
 
 
@@ -187,34 +197,40 @@ public class HiveReplicationMetricsTest {
         return dump;
     }
 
-    private List<String> getIncrementalLoad() {
-        List<String> load = new ArrayList<>();
-        load.add("INFO  : REPL::START: {\"dbName\":\"repl\",\"dumpDir\":\"/tmp/dump/next\","
-                + "\"loadType\":\"INCREMENTAL\",\"numEvents\":10,\"loadStartTime\":1504271667}");
-        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"31\","
-                + "\"eventType\":\"EVENT_ADD_PARTITION\",\"eventsLoadProgress\":\"1/10\",\"loadTime\":1504271667}");
-        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"32\","
-                + "\"eventType\":\"EVENT_ALTER_PARTITION\",\"eventsLoadProgress\":\"2/10\",\"dumpTime\":1504271667}");
-        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"33\","
-                + "\"eventType\":\"EVENT_ALTER_TABLE\",\"eventsLoadProgress\":\"3/10\",\"loadTime\":1504271667}");
-        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"34\",\"eventType\":\"EVENT_INSERT\","
-                + "\"eventsLoadProgress\":\"4/10\",\"loadTime\":1504271668}");
-        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"35\","
-                + "\"eventType\":\"EVENT_ALTER_TABLE\",\"eventsLoadProgress\":\"5/10\",\"loadTime\":1504271668}");
-        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"36\","
-                + "\"eventType\":\"EVENT_TRUNCATE_PARTITION\",\"eventsLoadProgress\":\"6/10\","
-                + "\"loadTime\":1504271668}");
-        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"37\","
-                + "\"eventType\":\"EVENT_ALTER_PARTITION\",\"eventsLoadProgress\":\"7/10\",\"loadTime\":1504271668}");
-        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"38\","
-                + "\"eventType\":\"EVENT_CREATE_TABLE\",\"eventsLoadProgress\":\"8/10\",\"loadTime\":1504271669}");
-        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"39\","
-                + "\"eventType\":\"EVENT_ALTER_TABLE\",\"eventsLoadProgress\":\"9/10\",\"loadTime\":1504271669}");
-        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"40\","
-                + "\"eventType\":\"EVENT_DROP_FUNCTION\",\"eventsLoadProgress\":\"10/10\",\"loadTime\":1504271669}");
-        load.add("INFO  : REPL::END: {\"dbName\":\"repl\",\"loadType\":\"INCREMENTAL\",\"numEvents\":10,"
-                + "\"loadEndTime\":1504271669,\"dumpDir\":\" / tmp / dump / next\",\"lastReplId\":\"40\"}");
+    private List<String> getIncrementalLoad(boolean first) {
 
+        List<String> load = new ArrayList<>();
+        if (first) {
+            load.add("INFO  : REPL::START: {\"dbName\":\"repl\",\"dumpDir\":\"/tmp/dump/next\","
+                    + "\"loadType\":\"INCREMENTAL\",\"numEvents\":10,\"loadStartTime\":1504271667}");
+            load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"31\","
+                    + "\"eventType\":\"EVENT_ADD_PARTITION\",\"eventsLoadProgress\":\"1/10\",\"loadTime\":1504271667}");
+            load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"32\","
+                    + "\"eventType\":\"EVENT_ALTER_PARTITION\",\"eventsLoadProgress\":\"2/10\""
+                    + ",\"dumpTime\":1504271667}");
+            load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"33\","
+                    + "\"eventType\":\"EVENT_ALTER_TABLE\",\"eventsLoadProgress\":\"3/10\",\"loadTime\":1504271667}");
+            load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"34\",\"eventType\":\"EVENT_INSERT\","
+                    + "\"eventsLoadProgress\":\"4/10\",\"loadTime\":1504271668}");
+            load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"35\","
+                    + "\"eventType\":\"EVENT_ALTER_TABLE\",\"eventsLoadProgress\":\"5/10\",\"loadTime\":1504271668}");
+            load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"36\","
+                    + "\"eventType\":\"EVENT_TRUNCATE_PARTITION\",\"eventsLoadProgress\":\"6/10\","
+                    + "\"loadTime\":1504271668}");
+            load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"37\","
+                    + "\"eventType\":\"EVENT_ALTER_PARTITION\",\"eventsLoadProgress\":\"7/10\""
+                    + ",\"loadTime\":1504271668}");
+            load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"38\","
+                    + "\"eventType\":\"EVENT_CREATE_TABLE\",\"eventsLoadProgress\":\"8/10\",\"loadTime\":1504271669}");
+            load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"39\","
+                    + "\"eventType\":\"EVENT_ALTER_TABLE\",\"eventsLoadProgress\":\"9/10\",\"loadTime\":1504271669}");
+        } else {
+            load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"40\","
+                    + "\"eventType\":\"EVENT_DROP_FUNCTION\",\"eventsLoadProgress\":\"10/10\""
+                    + ",\"loadTime\":1504271669}");
+            load.add("INFO  : REPL::END: {\"dbName\":\"repl\",\"loadType\":\"INCREMENTAL\",\"numEvents\":10,"
+                    + "\"loadEndTime\":1504271669,\"dumpDir\":\" / tmp / dump / next\",\"lastReplId\":\"40\"}");
+        }
         return load;
     }
 }

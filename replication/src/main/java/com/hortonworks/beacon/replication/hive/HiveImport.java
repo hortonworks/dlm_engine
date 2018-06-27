@@ -104,6 +104,7 @@ public class HiveImport extends InstanceReplication {
 
     private void performImport(String dumpDirectory, JobContext jobContext)
             throws BeaconException, InterruptedException {
+        boolean succeeded = false;
         LOG.info("Performing import for database: {}", database);
         ReplCommand replCommand = new ReplCommand(database);
         String replLoad = replCommand.getReplLoad(dumpDirectory);
@@ -127,12 +128,14 @@ public class HiveImport extends InstanceReplication {
                     && replCommand.getReplicatedEventId(targetStatement, properties) > 0) {
                 jobContext.getJobContextMap().put(HiveDRUtils.BOOTSTRAP, "false");
                 LOG.info("Bootstrap replication has already completed, skipping hive import.");
+                succeeded = true;
                 return;
             }
             storeHiveQueryId(jobContext, properties.getProperty(HIVE_QUERY_ID));
             ((HiveStatement) targetStatement).executeAsync(replLoad);
             storeHiveQueryId(jobContext, targetStatement);
             targetStatement.getUpdateCount();
+            succeeded = true;
             LOG.info("REPL LOAD execution finished!");
         } catch (SQLException e) {
             if (e.getErrorCode() >= 20000 && e.getErrorCode() <= 29999) {
@@ -141,8 +144,10 @@ public class HiveImport extends InstanceReplication {
             throw new BeaconException(e);
         } finally {
             LOG.debug("Capturing hive import metrics after job execution");
-            jobContext.getJobContextMap().put(BeaconConstants.END_TIME,
-                    String.valueOf(System.currentTimeMillis()));
+            if (succeeded) {
+                jobContext.getJobContextMap().put(BeaconConstants.END_TIME,
+                        String.valueOf(System.currentTimeMillis()));
+            }
             shutdownTimer();
             captureHiveReplicationMetrics(jobContext, HiveActionType.IMPORT, targetStatement);
             close(targetStatement);

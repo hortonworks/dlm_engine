@@ -73,7 +73,21 @@ public enum HiveDRProperties {
     DISTCP_MAX_MAPS("distcpMaxMaps", "Maximum number of maps used during distcp", false),
 
     // Map Bandwidth
-    DISTCP_MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication", false);
+    DISTCP_MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication", false),
+
+    SOURCE_HIVE_SERVER2_TRANSPORT_MODE("source.hive.server2.transport.mode", "Source hiveserver2 transport mode",
+            false),
+
+    SOURCE_HIVE_SERVER2_THRIFT_HTTP_PATH("source.hive.server2.thrift.http.path", "Path component of URL endpoint when"
+            + " in HTTP mode.", false),
+
+    TARGET_HIVE_SERVER2_TRANSPORT_MODE("target.hive.server2.transport.mode", "Target hiveserver2 transport mode",
+            false),
+
+    TARGET_HIVE_SERVER2_THRIFT_HTTP_PATH("target.hive.server2.thrift.http.path", "Path component of URL endpoint when"
+            + " in HTTP mode.", false);
+
+
 
     private final String name;
     private final String description;

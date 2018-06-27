@@ -66,6 +66,8 @@ public class Cluster extends Entity {
         HIVE_INHERIT_PERMS("hive.warehouse.subdir.inherit.perms"),
         HIVE_FUNCTIONS_DIR("hive.repl.replica.functions.root.dir"),
         HIVE_SERVER_AUTHENTICATION("hive.server2.authentication"),
+        HIVE_SERVER2_TRANSPORT_MODE("hive.server2.transport.mode"),
+        HIVE_SERVER2_THRIFT_HTTP_PATH("hive.server2.thrift.http.path"),
         CLOUDDATALAKE("cloudDataLake"),
         KNOX_GATEWAY_URL("knox.gateway.url"),
         LOCAL("local"),

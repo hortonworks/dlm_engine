@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.entity.util.hive;
 
+import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
 
 import java.sql.Statement;
@@ -32,7 +33,7 @@ import java.sql.Statement;
 public interface HiveServerClient {
     Statement createStatement() throws BeaconException;
 
-    void killQuery(String queryId, String principal) throws BeaconException;
+    void killQuery(String queryId, HiveDRUtils.BeaconHiveConf hiveConf) throws BeaconException;
 
     void close();
 }

@@ -78,7 +78,7 @@ public final class ParseHiveQueryLogV2 {
         long total = 0, completed = 0;
         List<String> queryLogList = getQueryLogsToProcess(str);
 
-            for (String queryLog : queryLogList) {
+        for (String queryLog : queryLogList) {
             String log = splitReplLogMessage(queryLog);
             if (log == null) {
                 continue;

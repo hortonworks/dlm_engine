@@ -124,33 +124,6 @@ public final class HiveDRUtils {
         }
     }
 
-    /**
-     * This method returns @BeaconHiveConf based on the cluster setup where all beacon triggered hive queries would
-     * be running.
-     * @param properties It contains all the source/target cluster and policy properties.
-     * @return BeaconHiveConf containing subset of HiveConf.
-     * @throws BeaconException
-     */
-    public static BeaconHiveConf getTargetHiveConf(Properties properties) throws BeaconException {
-        boolean isDataLake = Boolean.valueOf(properties.getProperty(ClusterFields.CLOUDDATALAKE.getName()));
-        LOG.info("Destination cluster is data lake: [{}]", isDataLake);
-        String principal, transportMode, httpPath = null;
-        if (isDataLake) {
-            principal = properties.getProperty(HiveDRProperties.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName());
-            transportMode = properties.getProperty(
-                    HiveDRProperties.SOURCE_HIVE_SERVER2_TRANSPORT_MODE.getName());
-            httpPath = properties.getProperty(HiveDRProperties.SOURCE_HIVE_SERVER2_THRIFT_HTTP_PATH.getName());
-
-        } else {
-            principal = properties.getProperty(HiveDRProperties.TARGET_HIVE2_KERBEROS_PRINCIPAL.getName());
-            transportMode = properties.getProperty(
-                    HiveDRProperties.TARGET_HIVE_SERVER2_TRANSPORT_MODE.getName());
-            httpPath = properties.getProperty(HiveDRProperties.TARGET_HIVE_SERVER2_THRIFT_HTTP_PATH.getName());
-        }
-        return new BeaconHiveConf(principal, transportMode, httpPath);
-    }
-
-
     public static String setConfigParameters(Properties properties) throws BeaconException {
         StringBuilder builder = new StringBuilder();
         String queryId = generateQueryId(properties);
@@ -337,49 +310,5 @@ public final class HiveDRUtils {
 
     public static String generateQueryId(Properties properties) {
         return properties.get(HiveDRProperties.JOB_NAME.getName()) + BeaconConstants.UNDERSCORE + UUID.randomUUID();
-    }
-
-    /**
-     * This class contains subset of HiveConf properties to be used for passing around configuration.
-     */
-    public static class BeaconHiveConf {
-        private String principal;
-        private String transportMode;
-        private String httpPath;
-
-        public BeaconHiveConf(String principal, String transportMode) {
-            this.principal = principal;
-            this.transportMode = transportMode;
-        }
-
-        public BeaconHiveConf(String principal, String transportMode, String httpPath) {
-            this.principal = principal;
-            this.transportMode = transportMode;
-            this.httpPath = httpPath;
-        }
-
-        public String getPrincipal() {
-            return principal;
-        }
-
-        public void setPrincipal(String principal) {
-            this.principal = principal;
-        }
-
-        public String getTransportMode() {
-            return transportMode;
-        }
-
-        public void setTransportMode(String transportMode) {
-            this.transportMode = transportMode;
-        }
-
-        public String getHttpPath() {
-            return httpPath;
-        }
-
-        public void setHttpPath(String httpPath) {
-            this.httpPath = httpPath;
-        }
     }
 }

@@ -105,12 +105,11 @@ public class HS2Client implements HiveMetadataClient, HiveServerClient {
     }
 
     @Override
-    public void killQuery(String queryId, HiveDRUtils.BeaconHiveConf beaconHiveConf) throws BeaconException {
+    public void killQuery(String queryId) throws BeaconException {
         if (StringUtils.isNotEmpty(queryId)) {
-            LOG.info("Killing Hive query id: {}", queryId);
             List<String> jdbcConnectionURLList = BeaconHiveUtil.getAllUrls(connectionString);
             for (String jdbcConnectionURL : jdbcConnectionURLList) {
-                jdbcConnectionURL = getDirectConnectionString(jdbcConnectionURL, beaconHiveConf);
+                LOG.info("Killing Hive query id: {} on HS2: {}", queryId, jdbcConnectionURL);
                 Statement statement = null;
                 Connection directHS2Connection = null;
                 try {
@@ -390,27 +389,5 @@ public class HS2Client implements HiveMetadataClient, HiveServerClient {
         }
         connection = getConnection(connectionString);
         return connection;
-    }
-
-    private static String getDirectConnectionString(String connectionString, HiveDRUtils.BeaconHiveConf beaconHiveConf)
-            throws BeaconException {
-        StringBuilder tmpConnectionString = new StringBuilder();
-        tmpConnectionString.append(connectionString.split(BeaconConstants.SEMICOLON_SEPARATOR)[0]);
-        if (StringUtils.isNotEmpty(beaconHiveConf.getPrincipal())) {
-            appendConfig(tmpConnectionString, "principal", beaconHiveConf.getPrincipal());
-        }
-        if (beaconHiveConf.getTransportMode().equalsIgnoreCase(BeaconConstants.HIVE_TRANSPORT_MODE_HTTP)) {
-            appendConfig(tmpConnectionString, BeaconConstants.HIVE_TRANSPORT_MODE, beaconHiveConf.getTransportMode());
-            appendConfig(tmpConnectionString, BeaconConstants.HIVE_HTTP_PROXY_PATH, beaconHiveConf.getHttpPath());
-        }
-
-        return tmpConnectionString.toString();
-    }
-
-    private static void appendConfig(StringBuilder builder, String key, String value) {
-        builder.append(BeaconConstants.SEMICOLON_SEPARATOR)
-                .append(key)
-                .append(BeaconConstants.EQUAL_SEPARATOR)
-                .append(value);
     }
 }

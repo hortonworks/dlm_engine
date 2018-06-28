@@ -240,8 +240,6 @@ hive.metastore.uris=thrift://localhost:9083
 hive.metastore.warehouse.dir=s3a://beacontest/hive/warehouse/
 hive.warehouse.subdir.inherit.perms=false
 hive.repl.replica.functions.root.dir=s3a://beacontest/hive-replica-func/
-hive.server2.transport.mode=http
-hive.server2.thrift.http.path=cliservice
 knox.proxy.url=https://knox-host:8443/gateway
 
 *Response:*

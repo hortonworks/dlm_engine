@@ -21,18 +21,27 @@
  */
 package org.apache.hive.jdbc;
 
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
+import static org.apache.hive.jdbc.Utils.URL_PREFIX;
 
 /**
  * Beacon Hive util to access protected methods.
  */
 public final class BeaconHiveUtil {
 
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconHiveUtil.class);
+
     private BeaconHiveUtil() {
     }
+
+    private static final List<String> GET_BLACKLIST_PARAMS = Arrays.asList("serviceDiscoveryMode",
+            "zooKeeperNamespace");
 
     public static List<String> getAllUrls(String zookeeperBasedHS2Url) throws BeaconException {
         List<String> jdbcConnectionUrlList = new ArrayList<>();
@@ -40,11 +49,31 @@ public final class BeaconHiveUtil {
         try {
             jdbcConnectionParams = HiveConnection.getAllUrls(zookeeperBasedHS2Url);
             for (Utils.JdbcConnectionParams jdbcConnectionParam: jdbcConnectionParams) {
-                jdbcConnectionUrlList.add(jdbcConnectionParam.getJdbcUriString());
+                StringBuilder connectionString = new StringBuilder();
+                connectionString.append(URL_PREFIX)
+                        .append(jdbcConnectionParam.getHost())
+                        .append(BeaconConstants.COLON_SEPARATOR)
+                        .append(jdbcConnectionParam.getPort())
+                        .append("/");
+                setParamsFromSessionVars(connectionString, jdbcConnectionParam.getSessionVars());
+
+                jdbcConnectionUrlList.add(connectionString.toString());
+                LOG.debug("Connection string: {}", connectionString);
             }
         } catch (Exception e) {
             throw new BeaconException(e);
         }
         return jdbcConnectionUrlList;
+    }
+
+    private static void setParamsFromSessionVars(StringBuilder connectionString, Map<String, String> sessionVars) {
+        for (Map.Entry<String, String> entry: sessionVars.entrySet()) {
+            if (!GET_BLACKLIST_PARAMS.contains(entry.getKey())) {
+                connectionString.append(BeaconConstants.SEMICOLON_SEPARATOR)
+                        .append(entry.getKey())
+                        .append(BeaconConstants.EQUAL_SEPARATOR)
+                        .append(entry.getValue());
+            }
+        }
     }
 }

@@ -177,7 +177,7 @@ public class HiveImport extends InstanceReplication {
             try {
                 String targetConnection = HiveDRUtils.getTargetConnectionString(properties);
                 hiveServerClient = HiveClientFactory.getHiveServerClient(targetConnection);
-                hiveServerClient.killQuery(queryId, HiveDRUtils.getTargetHiveConf(properties));
+                hiveServerClient.killQuery(queryId);
             } finally {
                 HiveClientFactory.close(hiveServerClient);
             }

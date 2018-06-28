@@ -90,15 +90,6 @@ public final class HivePolicyHelper {
         map.put(HiveDRProperties.TARGET_HIVE_SERVER_AUTHENTICATION.getName(),
                 targetCluster.getHiveServerAuthentication());
 
-        map.put(HiveDRProperties.SOURCE_HIVE_SERVER2_TRANSPORT_MODE.getName(), sourceCluster.getCustomProperties()
-                .getProperty(ClusterFields.HIVE_SERVER2_TRANSPORT_MODE.getName()));
-        map.put(HiveDRProperties.SOURCE_HIVE_SERVER2_THRIFT_HTTP_PATH.getName(), sourceCluster.getCustomProperties()
-                .getProperty(ClusterFields.HIVE_SERVER2_THRIFT_HTTP_PATH.getName()));
-        map.put(HiveDRProperties.TARGET_HIVE_SERVER2_TRANSPORT_MODE.getName(), targetCluster.getCustomProperties()
-                .getProperty(ClusterFields.HIVE_SERVER2_TRANSPORT_MODE.getName()));
-        map.put(HiveDRProperties.TARGET_HIVE_SERVER2_THRIFT_HTTP_PATH.getName(), targetCluster.getCustomProperties()
-                .getProperty(ClusterFields.HIVE_SERVER2_THRIFT_HTTP_PATH.getName()));
-
         if (customProp.containsKey(HiveDRProperties.DISTCP_MAX_MAPS.getName())) {
             map.put(BeaconConstants.DISTCP_OPTIONS+"m",
                     customProp.getProperty(HiveDRProperties.DISTCP_MAX_MAPS.getName()));

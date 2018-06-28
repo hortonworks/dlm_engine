@@ -112,6 +112,12 @@
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-json</artifactId>
                 <version>${jersey.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>javax.activation</groupId>
+                        <artifactId>activation</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.sun.jersey</groupId>
@@ -335,12 +341,6 @@
             </dependency>
 
             <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>${guava.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-client</artifactId>
                 <version>${hadoop.version}</version>
@@ -545,6 +545,12 @@
                 <groupId>javax.servlet.jsp</groupId>
                 <artifactId>jsp-api</artifactId>
                 <version>2.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.sun.activation</groupId>
+                <artifactId>javax.activation</artifactId>
+                <version>${activation.version}</version>
             </dependency>
 
             <dependency>
@@ -962,7 +968,6 @@
         <jettison.version>1.3</jettison.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <testng.version>6.9.8</testng.version>
-        <guava.version>12.0.1</guava.version>
         <httpcomponents.client.version>4.4</httpcomponents.client.version>
         <httpcomponents.core.version>4.4</httpcomponents.core.version>
         <skip.check>false</skip.check>
@@ -989,5 +994,6 @@
         <postgres.jdbc.version>42.1.4</postgres.jdbc.version>
         <annotations.version>3.0.1</annotations.version>
         <sdk.aws.version>1.10.6</sdk.aws.version>
+        <activation.version>1.2.0</activation.version>
     </properties>
 </project>

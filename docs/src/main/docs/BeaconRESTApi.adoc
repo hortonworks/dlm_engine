@@ -137,6 +137,7 @@ Supported functionality include:
 *Cluster*
 
 . link:#\_post_api_beacon_cluster_submit_cluster_name[Submit cluster]
+. link:#\_put_api_beacon_cluster_cluster_name[Update cluster]
 . link:#\_get_api_beacon_cluster_list[List clusters]
 . link:#\_get_api_beacon_cluster_status_cluster_name[Get cluster status]
 . link:#\_get_api_beacon_cluster_getentity_cluster_name[Get cluster]
@@ -288,6 +289,89 @@ dfs.namenode.kerberos.principal=hdfs/_HOST@YOUR-REALM.COM
 {
   "status": "SUCCEEDED",
   "message": "Submit successful (CLUSTER) dataCenter$source",
+  "requestId": "310412574@qtp-1676010932-0"
+}
+
+PUT api/beacon/cluster/:cluster-name
+------------------------------------
+
+*Description:* Updates a cluster.
+
+*Parameters:* _:cluster-name_ Name of the cluster.
+
+*Note:* *cluster-name* can contain the data center value. In that case, dataCenter and clusterName are separated by single '$'
+ character.
+
+*REST Call:* PUT http://localhost:25968/api/beacon/cluster/primaryCluster
+
+[source, properties]
+fsEndpoint=hdfs://primary
+beaconEndpoint=http://localhost:25968
+hsEndpoint=jdbc:hive2://localhost:2181
+description=primary cluster
+user=ambari-qa
+tags=consumer=consumer@xyz.com,owner=producer@xyz.com
+dfs.namenode.kerberos.principal=nn/_HOST@YOUR-REALM.COM
+hive.server2.authentication=KERBEROS
+hive.server2.authentication.kerberos.principal=hive/_HOST@YOUR-REALM
+hive.metastore.kerberos.principal=hive/_HOST@YOUR-REALM
+rangerEndPoint=http://localhost:6080
+rangerHDFSServiceName=target_hadoop
+rangerHIVEServiceName=target_hive
+dfs.nameservices=primary
+dfs.internal.nameservices=primary
+dfs.ha.namenodes.primary=nn1,nn2
+dfs.namenode.rpc-address.primary.nn1=http://nnhost1:8020
+dfs.namenode.rpc-address.primary.nn2=http://nnhost2:8020
+hive.metastore.uris=thrift://localhost:9083
+hive.metastore.warehouse.dir=s3a://beacontest/hive/warehouse/
+hive.warehouse.subdir.inherit.perms=false
+hive.repl.replica.functions.root.dir=s3a://beacontest/hive-replica-func/
+knox.proxy.url=https://knox-host:8443/gateway
+
+* Payload data can be subset of any of the above properties
+
+*Response:*
+
+[source, json]
+{
+   "requestId":"e5cc8230-f356-4566-9b65-536abdcc8aa3",
+   "message":"Update successful (CLUSTER) primaryCluster",
+   "status":"SUCCEEDED"
+}
+
+*Note 1:* When a cluster is updated, it's existing pairing with other clusters are re-validated. If the re-validation of
+ pairing fails, the corresponding cluster pairing status is moved to 'SUSPENDED' state from existing 'PAIRED' state. All
+ the policy instances which are running between these two clusters will start skipping, until the paired state is back to
+ 'PAIRED'.
+
+*Note 2:* Change in paired state from 'PAIRED' to 'SUSPENDED' or from 'SUSPENDED' to 'PAIRED' is automatic and it is
+ driven by pairing re-validation which triggers when cluster update takes place.
+
+*Note 3:* Active policy instances detects automatically any change in cluster pairing status.
+
+*Note 4:* 'name', 'version' and 'local' properties of a cluster can not be updated.
+
+
+Example of a cluster update with data center in the cluster name.
+
+*REST Call:* PUT http://localhost:25968/api/beacon/cluster/dataCenter$source
+
+[source, properties]
+fsEndpoint=hdfs://localhost:8020
+beaconEndpoint=http://localhost:25968
+hsEndpoint=jdbc:hive2://localhost:2181
+description=source cluster
+user=ambari-qa
+tags=consumer=consumer@xyz.com,owner=producer@xyz.com
+dfs.namenode.kerberos.principal=hdfs/_HOST@YOUR-REALM.COM
+
+*Response:*
+
+[source, json]
+{
+  "status": "SUCCEEDED",
+  "message": "Update successful (CLUSTER) dataCenter$source",
   "requestId": "310412574@qtp-1676010932-0"
 }
 

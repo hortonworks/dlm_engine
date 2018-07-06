@@ -33,7 +33,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
@@ -69,7 +68,6 @@ class BeaconLogStreamer {
     BeaconLogStreamer(String beaconLog, BeaconLogFilter filter) {
         this.beaconLog = beaconLog;
         this.filter = filter;
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
     void fetchLogs(int numLogs, Writer writer) throws BeaconException {

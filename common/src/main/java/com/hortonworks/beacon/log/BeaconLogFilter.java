@@ -26,7 +26,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,7 +67,6 @@ public class BeaconLogFilter {
         this.filterMap = filterMap;
         this.startDate = startDate;
 
-        dateFormatOfLogs.setTimeZone(TimeZone.getTimeZone("UTC"));
         this.startDateStr = dateFormatOfLogs.format(startDate);
         this.endDate = endDate;
         this.endDateStr = dateFormatOfLogs.format(endDate);

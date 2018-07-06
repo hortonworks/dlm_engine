@@ -34,7 +34,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -102,8 +101,8 @@ public class BeaconLogStreamerTest{
 
     @Test
     public void testLogStartEndTime() throws BeaconException {
-        String startStr = "2017-04-24T07:30:57";
-        String endStr = "2017-04-24T08:54:20";
+        String startStr = "2017-04-24T02:00:57";
+        String endStr = "2017-04-24T03:24:20";
         String filterBy = "policyname:fspolicy";
         String logString = logRetrieval.getPolicyLogs(filterBy, startStr, endStr, 10, 5);
         assertNotNull(logString);
@@ -115,8 +114,8 @@ public class BeaconLogStreamerTest{
         assertEquals(logLines.get(0), logMessages[3][0]);
 
         //end time filtering
-        startStr = "2017-04-24T00:00:00";
-        endStr = "2017-04-24T08:52:20";
+        startStr = "2017-04-23T06:30:00";
+        endStr = "2017-04-24T03:22:20";
         logString = logRetrieval.getPolicyLogs(filterBy, startStr, endStr, 10, 4);
         assertNotNull(logString);
         assertTrue(logString.contains("POLICYNAME[fspolicy]"));
@@ -242,7 +241,6 @@ public class BeaconLogStreamerTest{
         }
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
         BeaconLogStreamer logStreamer = new BeaconLogStreamer(null, null);
 
         List<File> resultFiles = logStreamer.getFileList(files, dateFormat.parse("2016-04-11 08:01"), new Date());

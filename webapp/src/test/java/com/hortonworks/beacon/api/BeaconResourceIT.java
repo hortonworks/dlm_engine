@@ -1717,6 +1717,8 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(status, "false");
         String snapshotReady = jsonObject.getString("enableSourceSnapshottable");
         assertEquals(snapshotReady, "true");
+        String clusterUpdateSupported = jsonObject.getString("clusterUpdateSupported");
+        assertEquals(clusterUpdateSupported, "true");
         String policyEdit = jsonObject.getString("policy_edit");
         assertEquals(policyEdit, "true");
     }

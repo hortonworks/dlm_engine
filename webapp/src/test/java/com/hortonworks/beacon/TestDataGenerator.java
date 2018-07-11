@@ -20,39 +20,31 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.api;
+package com.hortonworks.beacon;
 
-import com.hortonworks.beacon.entity.ClusterProperties;
-import com.hortonworks.beacon.entity.exceptions.ValidationException;
+import com.hortonworks.beacon.api.ResourceBaseTest;
+import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.service.BeaconStoreService;
-import com.hortonworks.beacon.service.ServiceManager;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
-import java.util.Collections;
-import java.util.List;
+import org.apache.hadoop.fs.FileSystem;
 
 /**
- * Test class ClusterResource.
+ * test data generator interface for local and ambari based cluster.
  */
-public class ClusterResourceTest {
+public abstract class TestDataGenerator {
 
-    private ClusterResource resource = null;
-
-    @BeforeClass
-    public void setupClass() throws BeaconException {
-        ServiceManager.getInstance().initialize(Collections.singletonList(BeaconStoreService.class.getName()), null);
-        resource = new ClusterResource();
-    }
-
-    @Test(expectedExceptions = ValidationException.class)
-    public void testValidateExclusionProps() throws Exception {
-        PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
-        List<String> exclusionProps = ClusterProperties.updateExclusionProps();
-        for (String prop : exclusionProps) {
-            properties.put(prop, prop);
+    public static TestDataGenerator getTestDataGenerator() {
+        if (System.getProperty("beacon.test.local", "true").equals("true")) {
+            return new LocalTestDataGenerator();
         }
-        resource.validateExclusionProp(properties);
+        return new AmbariBasedTestDataGenerator();
     }
+
+    public abstract void init() throws BeaconException;
+
+    public abstract Cluster getCluster(ResourceBaseTest.ClusterType clusterType);
+
+    public abstract BeaconClient getClient(ResourceBaseTest.ClusterType clusterType);
+
+    public abstract FileSystem getFileSystem(ResourceBaseTest.ClusterType clusterType);
 }

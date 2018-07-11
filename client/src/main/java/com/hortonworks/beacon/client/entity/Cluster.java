@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.client.entity;
 
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.util.KnoxTokenUtils;
 
@@ -44,7 +45,7 @@ public class Cluster extends Entity {
     private String tags;
     private String peers;
     private List<PeerInfo> peersInfo;
-    private Properties customProperties;
+    private Properties customProperties = new Properties();
     private String user;
 
     /**
@@ -330,23 +331,21 @@ public class Cluster extends Entity {
         return customProperties.getProperty(ClusterFields.KNOX_GATEWAY_URL.getName());
     }
 
-    @Override
-    public String toString() {
-        StringBuilder clusterDefinition = new StringBuilder();
-        appendNonEmpty(clusterDefinition, ClusterFields.NAME.getName(), name);
-        appendNonEmpty(clusterDefinition, ClusterFields.DESCRIPTION.getName(), description);
-        appendNonEmpty(clusterDefinition, ClusterFields.FSENDPOINT.getName(), fsEndpoint);
-        appendNonEmpty(clusterDefinition, ClusterFields.HSENDPOINT.getName(), hsEndpoint);
-        appendNonEmpty(clusterDefinition, ClusterFields.BEACONENDPOINT.getName(), beaconEndpoint);
-        appendNonEmpty(clusterDefinition, ClusterFields.ATLASENDPOINT.getName(), atlasEndpoint);
-        appendNonEmpty(clusterDefinition, ClusterFields.RANGERENDPOINT.getName(), rangerEndpoint);
-        appendNonEmpty(clusterDefinition, ClusterFields.LOCAL.getName(), local);
-        appendNonEmpty(clusterDefinition, ClusterFields.TAGS.getName(), tags);
-        appendNonEmpty(clusterDefinition, ClusterFields.PEERS.getName(), peers);
-        appendNonEmpty(clusterDefinition, ClusterFields.USER.getName(), user);
+    public PropertiesIgnoreCase asProperties() {
+        PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
+        properties.put(ClusterFields.NAME.getName(), name);
+        properties.putIfNotNull(ClusterFields.DESCRIPTION.getName(), description);
+        properties.putIfNotNull(ClusterFields.FSENDPOINT.getName(), fsEndpoint);
+        properties.putIfNotNull(ClusterFields.HSENDPOINT.getName(), hsEndpoint);
+        properties.put(ClusterFields.BEACONENDPOINT.getName(), beaconEndpoint);
+        properties.putIfNotNull(ClusterFields.ATLASENDPOINT.getName(), atlasEndpoint);
+        properties.put(ClusterFields.LOCAL.getName(), local);
+        properties.putIfNotNull(ClusterFields.TAGS.getName(), tags);
+        properties.putIfNotNull(ClusterFields.PEERS.getName(), peers);
+        properties.putIfNotNull(ClusterFields.USER.getName(), user);
         for (String propertyKey : customProperties.stringPropertyNames()) {
-            appendNonEmpty(clusterDefinition, propertyKey, customProperties.getProperty(propertyKey));
+            properties.put(propertyKey, customProperties.getProperty(propertyKey));
         }
-        return clusterDefinition.toString();
+        return properties;
     }
 }

@@ -32,7 +32,6 @@ import com.hortonworks.beacon.plugin.PluginStats;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
-import org.hsqldb.lib.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +78,7 @@ public class BeaconRangerPluginImpl implements Plugin{
 
     @Override
     public PluginInfo register(BeaconInfo info) throws BeaconException{
-        if (!StringUtil.isEmpty(info.getCluster().getRangerEndpoint())) {
+        if (!StringUtils.isEmpty(info.getCluster().getRangerEndpoint())) {
             pluginStatus=Plugin.Status.ACTIVE;
         }
         return getPluginDetails(info);

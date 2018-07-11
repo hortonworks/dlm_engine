@@ -21,29 +21,27 @@
  */
 
 package com.hortonworks.beacon.cli;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
-
-import java.util.ArrayList;
-
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.entity.CloudCred;
-import com.hortonworks.beacon.client.util.CloudCredBuilder;
-import com.hortonworks.beacon.util.PropertiesIgnoreCase;
+import com.hortonworks.beacon.client.entity.Entity;
+import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.hortonworks.beacon.client.entity.Entity;
-import com.hortonworks.beacon.client.resource.PolicyInstanceList;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 
 /**
  * Test for beacon cli, uses mocks.
@@ -53,6 +51,7 @@ public class BeaconCLITest {
     @Mock
     private BeaconClient beaconClient;
     private BeaconCLI cli;
+    private String cloudCredPropertiesFile;
 
     @BeforeClass
     public void setup() {
@@ -71,8 +70,10 @@ public class BeaconCLITest {
 
     @Test
     public void testClusterOperations() throws Exception {
-        cli.processCommand("-cluster src -submit -config file".split(" "));
-        verify(beaconClient).submitCluster("src", "file");
+        String file = getTempPropertiesFile();
+        cli.processCommand(("-cluster src -submit -config " + file).split(" "));
+        PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
+        verify(beaconClient).submitCluster("src", properties);
 
         cli.processCommand("-cluster -list".split(" "));
         verify(beaconClient).getClusterList("name", "name", "ASC", 0, 10);
@@ -90,19 +91,21 @@ public class BeaconCLITest {
         cli.processCommand("-cluster src -delete".split(" "));
         verify(beaconClient).deleteCluster("src");
 
-        cli.processCommand("-cluster src -update -config file".split(" "));
-        verify(beaconClient).updateCluster("src", "file");
+        cli.processCommand(("-cluster src -update -config " + file).split(" "));
+        verify(beaconClient).updateCluster("src", properties);
 
         cli.processCommand("-cluster -help".split(" "));
     }
 
     @Test
     public void testPolicyCommands() throws Exception {
-        cli.processCommand("-policy firstpolicy -submitSchedule -config file".split(" "));
-        verify(beaconClient).submitAndScheduleReplicationPolicy("firstpolicy", "file");
+        String file = getTempPropertiesFile();
+        cli.processCommand(("-policy firstpolicy -submitSchedule -config " + file).split(" "));
+        PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
+        verify(beaconClient).submitAndScheduleReplicationPolicy("firstpolicy", properties);
 
-        cli.processCommand("-policy firstpolicy -dryrun -config file".split(" "));
-        verify(beaconClient).dryrunPolicy("firstpolicy", "file");
+        cli.processCommand(("-policy firstpolicy -dryrun -config " + file).split(" "));
+        verify(beaconClient).dryrunPolicy("firstpolicy", properties);
 
         cli.processCommand("-policy -list".split(" "));
         verify(beaconClient).getPolicyList("name", "name", null, "ASC", 0, 10);
@@ -114,8 +117,8 @@ public class BeaconCLITest {
         cli.processCommand("-policy firstpolicy -delete".split(" "));
         verify(beaconClient).deletePolicy("firstpolicy", false);
 
-        cli.processCommand("-policy src -update -config file".split(" "));
-        verify(beaconClient).updatePolicy("src", "file");
+        cli.processCommand(("-policy src -update -config " + file).split(" "));
+        verify(beaconClient).updatePolicy("src", properties);
 
         cli.processCommand("-policy firstpolicy -abort".split(" "));
         verify(beaconClient).abortPolicyInstance("firstpolicy");
@@ -130,26 +133,18 @@ public class BeaconCLITest {
 
     @Test
     public void testCloudCredCommands() throws Exception {
-        File configFile = getTempCloudCredConfigFile();
-        String cmdStr = "-cloudcred -submit -config " + configFile.getAbsolutePath();
-        PropertiesIgnoreCase propertiesIgnoreCase = new PropertiesIgnoreCase();
-        FileInputStream fis = new FileInputStream(configFile);
-        propertiesIgnoreCase.load(fis);
-        fis.close();
-        CloudCred cloudCred = CloudCredBuilder.buildCloudCred(propertiesIgnoreCase);
-
-        cli.processCommand(cmdStr.split(" "));
-        verify(beaconClient).submitCloudCred(cloudCred);
+        String file = getCloudCredPropertiesFile();
+        cli.processCommand(("-cloudcred -submit -config " + file).split(" "));
+        verify(beaconClient).submitCloudCred(any(CloudCred.class));
 
         cli.processCommand("-cloudcred -list".split(" "));
-        verify(beaconClient).listCloudCred("name", "name", "ASC", 0,  10);
+        verify(beaconClient).listCloudCred("name", "name", "ASC", 0, 10);
 
         cli.processCommand("-cloudcred someCloudCredID -delete".split(" "));
         verify(beaconClient).deleteCloudCred("someCloudCredID");
 
-        cmdStr = "-cloudcred someCloudCredID -update -config " + configFile.getAbsolutePath();
-        cli.processCommand(cmdStr.split(" "));
-        verify(beaconClient).updateCloudCred("someCloudCredID", cloudCred);
+        cli.processCommand(("-cloudcred someCloudCredID -update -config " + file).split(" "));
+        verify(beaconClient).updateCloudCred(eq("someCloudCredID"), any(CloudCred.class));
 
         cli.processCommand("-cloudcred someCloudCredID -get".split(" "));
         verify(beaconClient).getCloudCred("someCloudCredID");
@@ -183,19 +178,26 @@ public class BeaconCLITest {
         return randomInstanceList;
     }
 
-    private File getTempCloudCredConfigFile() throws IOException {
-        StringBuilder configContent = new StringBuilder();
-        configContent.append("name=testCCname\n")
-                     .append("provider=AWS\n")
-                     .append("aws.access.key=testKey\n")
-                     .append("aws.secret.key=testSecret\n")
-                     .append("authtype=AWS_ACCESSKEY\n");
+    private String getTempPropertiesFile() throws IOException {
+        return getPropertiesFile(new PropertiesIgnoreCase());
+    }
+
+    private String getPropertiesFile(PropertiesIgnoreCase properties) throws IOException {
         File tmpConfigFile = File.createTempFile("beacon-", ".properties");
-        Writer writer = new FileWriter(tmpConfigFile);
-        BufferedWriter bufferedWriter = new BufferedWriter(writer);
-        bufferedWriter.write(configContent.toString());
-        bufferedWriter.close();
         tmpConfigFile.deleteOnExit();
-        return tmpConfigFile;
+        FileOutputStream outputStream = new FileOutputStream(tmpConfigFile);
+        properties.store(outputStream, "");
+        outputStream.close();
+        return tmpConfigFile.getAbsolutePath();
+    }
+
+    public String getCloudCredPropertiesFile() throws IOException {
+        return getPropertiesFile(new PropertiesIgnoreCase() {{
+                put("name", "testCCname");
+                put("provider", "AWS");
+                put("aws.access.key", "testkey");
+                put("aws.secret.key", "testkey");
+                put("authtype", "AWS_ACCESSKEY");
+            }});
     }
 }

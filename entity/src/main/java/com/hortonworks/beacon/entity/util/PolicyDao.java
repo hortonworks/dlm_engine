@@ -24,6 +24,7 @@ package com.hortonworks.beacon.entity.util;
 
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.Timer;
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.Notification;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.Retry;
@@ -45,7 +46,6 @@ import com.hortonworks.beacon.store.executors.PolicyInstanceListExecutor;
 import com.hortonworks.beacon.store.executors.PolicyListExecutor;
 import com.hortonworks.beacon.store.executors.PolicyUpdateExecutor;
 import com.hortonworks.beacon.util.DateUtil;
-import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.PrivilegedAction;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Timer;
@@ -68,17 +68,8 @@ public final class Beacon {
     private static Server server;
     private static Timer timer = new Timer();
 
-    private static final List<String> DEFAULT_SERVICES = new ArrayList<String>() {
-        {
-            add(BeaconStoreService.class.getName());
-        }
-    };
-
-    private static final List<String> DEPENDENT_SERVICES = new ArrayList<String>() {
-        {
-            add(BeaconQuartzScheduler.class.getName());
-        }
-    };
+    static final List<String> DEFAULT_SERVICES = Arrays.asList(BeaconStoreService.class.getName());
+    static final List<String> DEPENDENT_SERVICES = Arrays.asList(BeaconQuartzScheduler.class.getName());
 
     private static final String APP_PATH = "app";
     private static final String APP_PORT = "port";

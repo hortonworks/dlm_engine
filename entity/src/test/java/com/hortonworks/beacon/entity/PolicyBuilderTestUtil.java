@@ -21,7 +21,7 @@
  */
 package com.hortonworks.beacon.entity;
 
-import com.hortonworks.beacon.util.PropertiesIgnoreCase;
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
 

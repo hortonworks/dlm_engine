@@ -23,7 +23,6 @@
 package com.hortonworks.beacon.api;
 
 import com.codahale.metrics.annotation.Timed;
-import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.util.ValidationUtil;
@@ -32,14 +31,13 @@ import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.CloudCredList;
 import com.hortonworks.beacon.client.util.CloudCredBuilder;
+import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -49,7 +47,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -67,10 +64,8 @@ public class CloudCredResource extends AbstractResourceManager {
     @POST
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     @Timed(absolute = true, name="api.beacon.cloudcred.submit")
-    public APIResult submit(@Context HttpServletRequest request) {
+    public APIResult submit(PropertiesIgnoreCase properties) {
         try {
-            PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
-            properties.load(request.getInputStream());
             String entityId = submitInternal(properties);
             return new APIResult(entityId, APIResult.Status.SUCCEEDED, "Cloud credential entity submitted.");
         } catch (BeaconWebException e) {
@@ -85,10 +80,8 @@ public class CloudCredResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     @Timed(absolute = true, name="api.beacon.cloudcred.update")
     public APIResult update(@PathParam("cloud-cred-id") String cloudCredId,
-                            @Context HttpServletRequest request) {
+                            PropertiesIgnoreCase properties) {
         try {
-            PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
-            properties.load(request.getInputStream());
             properties.setProperty(CloudCredProperties.ID.getName(), cloudCredId);
             updateInternal(cloudCredId, properties);
             return new APIResult(APIResult.Status.SUCCEEDED, "Cloud credential entity updated.");

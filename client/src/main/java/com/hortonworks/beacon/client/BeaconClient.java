@@ -23,6 +23,7 @@
 package com.hortonworks.beacon.client;
 
 
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Entity;
@@ -35,6 +36,7 @@ import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.ServerVersionResult;
 import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
 import com.hortonworks.beacon.client.result.DBListResult;
+import com.hortonworks.beacon.client.result.EventsResult;
 import com.hortonworks.beacon.client.result.FileListResult;
 
 
@@ -42,32 +44,37 @@ import com.hortonworks.beacon.client.result.FileListResult;
  * Abstract Client API to submit and manage Beacon resources.
  */
 public interface BeaconClient {
-    void submitCluster(String clusterName, String filePath) throws BeaconClientException;
-
-    void submitAndScheduleReplicationPolicy(String policyName, String filePath) throws BeaconClientException;
-
-    void dryrunPolicy(String policyName, String filePath) throws BeaconClientException;
+    //Cluster operations
+    void submitCluster(String clusterName, PropertiesIgnoreCase properties) throws BeaconClientException;
 
     ClusterList getClusterList(String fields, String orderBy, String sortOrder,
-                                               Integer offset, Integer numResults) throws BeaconClientException;
+                               Integer offset, Integer numResults) throws BeaconClientException;
+
+    Entity.EntityStatus getClusterStatus(String clusterName) throws BeaconClientException;
+
+    Cluster getCluster(String clusterName) throws BeaconClientException;
+
+    void deleteCluster(String clusterName) throws BeaconClientException;
+
+    void updateCluster(String clusterName, PropertiesIgnoreCase properties) throws BeaconClientException;
+
+    //Policy operations
+    void submitAndScheduleReplicationPolicy(String policyName, PropertiesIgnoreCase properties)
+            throws BeaconClientException;
+
+    void dryrunPolicy(String policyName, PropertiesIgnoreCase properties) throws BeaconClientException;
 
     PolicyList getPolicyList(String fields, String orderBy, String filterBy, String sortOrder,
                              Integer offset, Integer numResults) throws BeaconClientException;
 
-    Entity.EntityStatus getClusterStatus(String clusterName) throws BeaconClientException;
-
     Entity.EntityStatus getPolicyStatus(String policyName) throws BeaconClientException;
 
-    Cluster getCluster(String clusterName) throws BeaconClientException;
-
     ReplicationPolicy getPolicy(String policyName) throws BeaconClientException;
-
-    void deleteCluster(String clusterName) throws BeaconClientException;
 
     void deletePolicy(String policyName,
             boolean isInternalSyncDelete) throws BeaconClientException;
 
-    void updatePolicy(String policyName, String filePath) throws BeaconClientException;
+    void updatePolicy(String policyName, PropertiesIgnoreCase properties) throws BeaconClientException;
 
     void suspendPolicy(String policyName) throws BeaconClientException;
 
@@ -79,21 +86,14 @@ public interface BeaconClient {
     void unpairClusters(String remoteClusterName,
             boolean isInternalunpairing) throws BeaconClientException;
 
-    void syncPolicy(String policyName, String policyDefinition, boolean update)
-            throws BeaconClientException;
+    void syncPolicy(String policyName, PropertiesIgnoreCase properties, boolean update) throws BeaconClientException;
 
     void syncPolicyStatus(String policyName, String status,
             boolean isInternalStatusSync) throws BeaconClientException;
 
-    ServerStatusResult getServiceStatus() throws BeaconClientException;
-
-    ServerVersionResult getServiceVersion() throws BeaconClientException;
-
     PolicyInstanceList listPolicyInstances(String policyName) throws BeaconClientException;
 
     void abortPolicyInstance(String policyName) throws BeaconClientException;
-
-    void updateCluster(String clusterName, String filePath) throws BeaconClientException;
 
     void rerunPolicyInstance(String policyName) throws BeaconClientException;
 
@@ -101,6 +101,12 @@ public interface BeaconClient {
 
     String getPolicyLogsForId(String policId) throws BeaconClientException;
 
+    //Admin operations
+    ServerStatusResult getServiceStatus() throws BeaconClientException;
+
+    ServerVersionResult getServiceVersion() throws BeaconClientException;
+
+    //CloudCred operations
     String submitCloudCred(CloudCred cloudCred) throws BeaconClientException;
 
     void updateCloudCred(String cloudCredId, CloudCred cloudCred) throws BeaconClientException;
@@ -114,11 +120,16 @@ public interface BeaconClient {
     CloudCredList listCloudCred(String filterBy, String orderBy, String sortOrder,
                                 Integer offset, Integer resultsPerPage) throws BeaconClientException;
 
+    //Dataset listing operations
     FileListResult listFiles(String path) throws BeaconClientException;
 
     FileListResult listFiles(String path, String cloudCredId) throws BeaconClientException;
 
     DBListResult listDBs() throws BeaconClientException;
 
+    //Miscellaneous operations
     UserPrivilegesResult getUserPrivileges() throws BeaconClientException;
+
+    //Events APIs
+    EventsResult getAllEvents() throws BeaconClientException;
 }

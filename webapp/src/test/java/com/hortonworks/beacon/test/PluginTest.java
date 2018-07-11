@@ -35,14 +35,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.tools.DistCp;
-import org.apache.hadoop.tools.DistCpOptions;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 /**
@@ -52,7 +47,7 @@ public class PluginTest implements Plugin {
     private static String stagingPath;
     private static final String PLUGIN_NAME = PluginManagerService.DEFAULT_PLUGIN;
     // Used only for Beacon IT purpose
-    private static boolean allowPlugin = false;
+    private static boolean allowPlugin = true;
 
     @Override
     public PluginInfo register(BeaconInfo info) throws BeaconException {
@@ -86,6 +81,7 @@ public class PluginTest implements Plugin {
         if (!allowPlugin) {
             return null;
         }
+
         Cluster srcCluster = dataset.getSourceCluster();
         FileSystem sourceFs = FSUtils.getFileSystem(srcCluster.getFsEndpoint(), new Configuration());
         String name = new Path(dataset.getSourceDataSet()).getName();
@@ -108,8 +104,6 @@ public class PluginTest implements Plugin {
         }
         Cluster targetCluster = dataset.getTargetCluster();
         Path targetPath = new Path(targetCluster.getFsEndpoint(), stagingPath);
-        // Do distcp
-        invokeCopy(exportedDataPath, targetPath);
         FileSystem targetFS = FSUtils.getFileSystem(targetCluster.getFsEndpoint(), new Configuration());
         try {
             /* TODO - DO we have to delete sample.txt and this file after test run */
@@ -168,40 +162,6 @@ public class PluginTest implements Plugin {
             }
         };
         return info;
-    }
-
-    private static void invokeCopy(Path sourceStagingUri, Path targetPath) throws BeaconException {
-        Configuration conf = new Configuration();
-        Job job = null;
-        try {
-            DistCpOptions options = getDistCpOptions(sourceStagingUri, targetPath);
-
-            DistCp distCp = new DistCp(conf, options);
-            job = distCp.createAndSubmitJob();
-            distCp.waitForJobCompletion(job);
-        } catch (InterruptedException e) {
-            if (job != null) {
-                try {
-                    job.killJob();
-                } catch (IOException ioe) {
-                    throw new BeaconException(ioe);
-                }
-            }
-            throw new BeaconException(e);
-        } catch (Exception e) {
-            throw new BeaconException(e);
-        }
-    }
-
-    private static DistCpOptions getDistCpOptions(Path sourceStagingUri,
-                                                  Path targetPath) throws BeaconException, IOException {
-        List<Path> sourceUris = new ArrayList<>();
-        sourceUris.add(sourceStagingUri);
-
-        DistCpOptions distcpOptions = new DistCpOptions(sourceUris, targetPath);
-        distcpOptions.setBlocking(true);
-
-        return distcpOptions;
     }
 
     public static String getPluginName() {

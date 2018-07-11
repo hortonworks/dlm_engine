@@ -48,7 +48,7 @@ public class DbStore {
      * Enum for db type.
      */
     public enum DBType {
-        MYSQL, ORACLE, POSTGRESQL, DERBY, HSQLDB
+        MYSQL, ORACLE, POSTGRESQL, DERBY
     }
 
     public void copy(DbStore o) {

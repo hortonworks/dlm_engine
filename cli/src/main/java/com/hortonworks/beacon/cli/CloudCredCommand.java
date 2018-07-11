@@ -23,24 +23,19 @@
 
 package com.hortonworks.beacon.cli;
 
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.resource.CloudCredList;
 import com.hortonworks.beacon.client.util.CloudCredBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
 /**
  * Cloudcred command that handles cloudcred operations like submit, delete, update, validate, list.
@@ -122,7 +117,7 @@ public class CloudCredCommand extends CommandBase {
     }
 
     private void submit(String configFile) throws BeaconClientException {
-        PropertiesIgnoreCase configProps = createConfigProperties(configFile);
+        PropertiesIgnoreCase configProps = getProperties(configFile);
         CloudCred cloudCred = null;
         try {
             cloudCred = CloudCredBuilder.buildCloudCred(configProps);
@@ -136,7 +131,7 @@ public class CloudCredCommand extends CommandBase {
     }
 
     private void update(String configFile) throws BeaconClientException {
-        PropertiesIgnoreCase configProps = createConfigProperties(configFile);
+        PropertiesIgnoreCase configProps = getProperties(configFile);
         CloudCred cloudCred = null;
         try {
             cloudCred = CloudCredBuilder.buildCloudCred(configProps);
@@ -157,32 +152,6 @@ public class CloudCredCommand extends CommandBase {
     private void validate(String path) throws BeaconClientException {
         client.validateCloudPath(cloudCredID, path);
         printResult("Validate a CloudCred entity");
-    }
-
-    private PropertiesIgnoreCase createConfigProperties(String configFile) throws BeaconClientException {
-        FileInputStream configFileIS = null;
-        PropertiesIgnoreCase configProps = null;
-        try {
-            configFileIS = new FileInputStream(new File(configFile));
-            configProps = new PropertiesIgnoreCase();
-            configProps.load(configFileIS);
-        } catch (FileNotFoundException e) {
-            System.out.println("Config file is not present:"+configFile);
-            throw  new BeaconClientException(new BeaconException(e));
-        } catch (IOException e) {
-            System.out.println("Unable to load config file:"+configFile);
-            throw  new BeaconClientException(new BeaconException(e));
-
-        } finally {
-            try {
-                if (configFileIS != null) {
-                    configFileIS.close();
-                }
-            } catch (IOException e) {
-                System.out.println("Could not close the config file:"+configFile);
-            }
-        }
-        return configProps;
     }
 
     @Override

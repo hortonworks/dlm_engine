@@ -22,18 +22,17 @@
 
 package com.hortonworks.beacon.replication.utils;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Collections;
-
 import com.hortonworks.beacon.RequestContext;
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterDao;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
 import com.hortonworks.beacon.replication.fs.HDFSReplicationTest;
+import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
 import com.hortonworks.beacon.service.BeaconStoreService;
-import com.hortonworks.beacon.util.PropertiesIgnoreCase;
+import com.hortonworks.beacon.service.ServiceManager;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
@@ -44,10 +43,10 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
-import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
-import com.hortonworks.beacon.service.ServiceManager;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Collections;
 
 /**
  * FSDRUtils Test class to test FileSystem functionality.

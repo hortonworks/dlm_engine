@@ -22,14 +22,13 @@
 
 package com.hortonworks.beacon.entity.util;
 
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.PolicyBuilderTestUtil;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.FSUtils;
-
-import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.junit.Assert;

@@ -35,7 +35,7 @@ import com.hortonworks.beacon.util.StringFormat;
 /**
  * Exception for REST APIs.
  */
-public class BeaconWebException extends WebApplicationException {
+public final class BeaconWebException extends WebApplicationException {
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconWebException.class);
 
@@ -61,16 +61,16 @@ public class BeaconWebException extends WebApplicationException {
         if (rootCause instanceof BeaconWebException) {
             return (BeaconWebException) rootCause;
         }
+
+        LOG.error(StringFormat.format("Throwing web exception with status code: {}, message: {}",
+                status.getStatusCode(), message), rootCause);
         Response response = Response.status(status).entity(new APIResult(APIResult.Status.FAILED, message, objects))
             .type(MediaType.APPLICATION_JSON_TYPE).build();
-        BeaconWebException bwe;
         if (rootCause != null) {
-            bwe = new BeaconWebException(rootCause, response);
+            return new BeaconWebException(rootCause, response);
         } else {
-            bwe = new BeaconWebException(response);
+            return new BeaconWebException(response);
         }
-        LOG.error("Throwing web exception with status code: {}, message: {}", status.getStatusCode(), message, bwe);
-        return bwe;
     }
 
     public static BeaconWebException newAPIException(String message, Object... objects) {
@@ -91,11 +91,11 @@ public class BeaconWebException extends WebApplicationException {
         return e.getCause() == null ? e.getMessage() : e.getMessage() + "\nCausedBy: " + e.getCause().getMessage();
     }
 
-    public BeaconWebException(Response response) {
+    private BeaconWebException(Response response) {
         super(response);
     }
 
-    public BeaconWebException(Throwable e, Response response) {
+    private BeaconWebException(Throwable e, Response response) {
         super(e, response);
     }
 }

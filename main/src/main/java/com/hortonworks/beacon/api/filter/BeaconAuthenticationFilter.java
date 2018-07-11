@@ -38,7 +38,6 @@ import org.apache.hadoop.security.authentication.util.Signer;
 import org.apache.hadoop.security.authentication.util.SignerException;
 import org.apache.hadoop.security.authentication.util.SignerSecretProvider;
 import org.apache.hadoop.security.authentication.util.ZKSignerSecretProvider;
-import org.hsqldb.lib.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -503,7 +502,7 @@ public class BeaconAuthenticationFilter implements Filter {
                 }
                 if (token != null) {
                     unauthorizedResponse = false;
-                    if (!StringUtil.isEmpty(token.getUserName())){
+                    if (!StringUtils.isEmpty(token.getUserName())){
                         HttpSession session = httpRequest.getSession();
                         if (session != null) {
                             if (session.getAttribute("username") == null) {

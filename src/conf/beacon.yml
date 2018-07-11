@@ -65,12 +65,12 @@ dbStore:
     maxIdleConnections: 5
     minIdleConnections: 2
     maxWaitMSecs: 60000
-    schemaDirectory: ./sql
+    schemaDirectory: ${beacon.schemadirectory}
     validateDbConn: false
 
 scheduler:
     quartzPrefix: ${beacon.quartz.prefix}
-    quartzThreadPool: 5
+    quartzThreadPool: 10
     retiredPolicyOlderThan: 1
     cleanupFrequency: 1
     housekeepingThreads: 5

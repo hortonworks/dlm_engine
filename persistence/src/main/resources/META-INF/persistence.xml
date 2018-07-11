@@ -24,50 +24,6 @@
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              version="1.0">
 
-    <persistence-unit name="beacon-hsqldb" transaction-type="RESOURCE_LOCAL">
-        <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
-
-        <class>com.hortonworks.beacon.store.bean.ClusterBean</class>
-        <class>com.hortonworks.beacon.store.bean.ClusterPairBean</class>
-        <class>com.hortonworks.beacon.store.bean.ClusterPropertiesBean</class>
-        <class>com.hortonworks.beacon.store.bean.PolicyInstanceBean</class>
-        <class>com.hortonworks.beacon.store.bean.PolicyBean</class>
-        <class>com.hortonworks.beacon.store.bean.PolicyPropertiesBean</class>
-        <class>com.hortonworks.beacon.store.bean.InstanceJobBean</class>
-        <class>com.hortonworks.beacon.store.bean.EventBean</class>
-        <class>com.hortonworks.beacon.store.bean.CloudCredBean</class>
-
-        <properties>
-            <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
-
-            <property name="openjpa.ConnectionProperties" value="**INVALID**"/> <!--Set by StoreService at init time -->
-
-            <property name="openjpa.MetaDataFactory"
-                      value="jpa(Types=
-                      com.hortonworks.beacon.store.bean.ClusterBean
-                      com.hortonworks.beacon.store.bean.ClusterPairBean
-                      com.hortonworks.beacon.store.bean.ClusterPropertiesBean
-                      com.hortonworks.beacon.store.bean.PolicyInstanceBean;
-                      com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
-                      com.hortonworks.beacon.store.bean.PolicyBean;
-                      com.hortonworks.beacon.store.bean.InstanceJobBean;
-                      com.hortonworks.beacon.store.bean.EventBean;
-                      com.hortonworks.beacon.store.bean.CloudCredBean)"></property>
-
-            <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
-            <property name="openjpa.LockManager" value="pessimistic"/>
-            <property name="openjpa.ReadLockLevel" value="read"/>
-            <property name="openjpa.WriteLockLevel" value="write"/>
-            <property name="openjpa.jdbc.TransactionIsolation" value="read-committed"/> <!--CUSTOM-->
-            <property name="openjpa.jdbc.DBDictionary" value="UseGetBytesForBlobs=true"/>
-            <property name="openjpa.jdbc.DBDictionary" value="UseSetBytesForBlobs=true"/>
-            <property name="openjpa.jdbc.DBDictionary" value="BlobBufferSize=500000"/>
-            <property name="openjpa.jdbc.DBDictionary" value="batchLimit=50"/>
-            <property name="openjpa.RuntimeUnenhancedClasses" value="unsupported"/>
-            <property name="openjpa.Log" value="log4j"/>
-        </properties>
-    </persistence-unit>
-
     <persistence-unit name="beacon-mysql" transaction-type="RESOURCE_LOCAL">
         <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
 
@@ -191,7 +147,7 @@
                       com.hortonworks.beacon.store.bean.CloudCredBean)"></property>
 
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
-            <property name="openjpa.LockManager" value="pessimistic"/>
+            <property name="openjpa.LockManager" value="version"/>
             <property name="openjpa.ReadLockLevel" value="read"/>
             <property name="openjpa.WriteLockLevel" value="write"/>
             <property name="openjpa.jdbc.TransactionIsolation" value="read-committed"/> <!--CUSTOM-->

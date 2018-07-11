@@ -195,8 +195,8 @@
     <properties>
         <beacon.services>com.hortonworks.beacon.service.BeaconStoreService</beacon.services>
         <beacon.app.path>webapp/target/beacon-webapp-1.1-SNAPSHOT</beacon.app.path>
-        <beacon.driver>org.hsqldb.jdbcDriver</beacon.driver>
-        <beacon.url>jdbc:hsqldb:mem:beacon</beacon.url>
+        <beacon.driver>org.apache.derby.jdbc.EmbeddedDriver</beacon.driver>
+        <beacon.url>jdbc:derby:memory:memdatabase;create=true</beacon.url>
         <beacon.user>beacon</beacon.user>
         <beacon.password>beacon</beacon.password>
         <beacon.quartz.prefix>QUARTZ_</beacon.quartz.prefix>

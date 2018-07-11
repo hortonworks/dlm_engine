@@ -129,18 +129,10 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>beacon-tools</artifactId>
         </dependency>
 
         <dependency>
@@ -158,6 +150,10 @@
             <artifactId>javax.activation</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -206,8 +202,8 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.16</version>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.21.0</version>
                 <executions>
                     <execution>
                         <id>integration-test</id>
@@ -215,6 +211,11 @@
                             <goal>integration-test</goal>
                             <goal>verify</goal>
                         </goals>
+                        <!--<configuration>-->
+                            <!--<parallel>methods</parallel>-->
+                            <!--<forkCount>2.5C</forkCount>-->
+                            <!--<reuseForks>true</reuseForks>-->
+                        <!--</configuration>-->
                     </execution>
                 </executions>
                 <configuration>
@@ -229,6 +230,7 @@
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
@@ -287,8 +289,8 @@
             com.hortonworks.beacon.service.PolicyRecoveryService
         </beacon.services>
         <beacon.app.path>../webapp/target/beacon-webapp-1.1-SNAPSHOT</beacon.app.path>
-        <beacon.driver>org.hsqldb.jdbcDriver</beacon.driver>
-        <beacon.url>jdbc:hsqldb:mem:quartz</beacon.url>
+        <beacon.driver>org.apache.derby.jdbc.EmbeddedDriver</beacon.driver>
+        <beacon.url>jdbc:derby:memory:memdatabase;create=true</beacon.url>
         <beacon.user>quartz</beacon.user>
         <beacon.password>quartz</beacon.password>
         <beacon.quartz.prefix>QUARTZ_</beacon.quartz.prefix>

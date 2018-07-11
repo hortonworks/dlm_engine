@@ -208,17 +208,17 @@ public class PolicyCommand extends CommandBase {
     }
 
     private void submitAndSchedule(String configFile) throws BeaconClientException {
-        client.submitAndScheduleReplicationPolicy(policyName, configFile);
+        client.submitAndScheduleReplicationPolicy(policyName, getProperties(configFile));
         printResult("Submit and schedule of policy " + policyName);
     }
 
     private void dryrun(String configFile) throws BeaconClientException {
-        client.dryrunPolicy(policyName, configFile);
+        client.dryrunPolicy(policyName, getProperties(configFile));
         printResult("Dry-run of policy " + policyName);
     }
 
     private void updatePolicy(String configFile) throws BeaconClientException {
-        client.updatePolicy(policyName, configFile);
+        client.updatePolicy(policyName, getProperties(configFile));
         printResult("Policy update of " + policyName);
     }
 

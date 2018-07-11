@@ -20,32 +20,34 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.util;
+package com.hortonworks.beacon;
 
-import java.util.Iterator;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
+import com.hortonworks.beacon.api.ResourceBaseTest;
+import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import org.apache.hadoop.fs.FileSystem;
 
 /**
- * Class to implement java util properties IgnoreCase.
+ * Test data generator for ambari based cluster.
  */
-public final class PropertiesIgnoreCase extends Properties {
-    public String getPropertyIgnoreCase(String key) {
-        String value = getProperty(key);
-        if (value != null) {
-            return value;
-        }
+public class AmbariBasedTestDataGenerator extends TestDataGenerator {
+    @Override
+    public void init() throws BeaconException {
+    }
 
-        // Not matching with the actual key then
-        Set<Entry<Object, Object>> s = entrySet();
-        Iterator<Entry<Object, Object>> it = s.iterator();
-        while (it.hasNext()) {
-            Entry<Object, Object> entry = it.next();
-            if (key.equalsIgnoreCase((String) entry.getKey())) {
-                return (String) entry.getValue();
-            }
-        }
+    @Override
+    public Cluster getCluster(ResourceBaseTest.ClusterType clusterType) {
+        return null;
+    }
+
+    @Override
+    public BeaconClient getClient(ResourceBaseTest.ClusterType clusterType) {
+        return null;
+    }
+
+    @Override
+    public FileSystem getFileSystem(ResourceBaseTest.ClusterType clusterType) {
         return null;
     }
 }

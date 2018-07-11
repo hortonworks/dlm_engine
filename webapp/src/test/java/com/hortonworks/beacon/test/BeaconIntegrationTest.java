@@ -22,28 +22,64 @@
 
 package com.hortonworks.beacon.test;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconWebClient;
+import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.log4j.NDC;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.ITestResult;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.core.Response;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.StringWriter;
+import java.lang.reflect.Method;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Base class for setup and teardown IT test cluster.
  */
 public class BeaconIntegrationTest {
+    public static final Logger LOG = LoggerFactory.getLogger(BeaconIntegrationTest.class);
 
+    protected static final String GET = HttpMethod.GET;
+    protected static final String POST = HttpMethod.POST;
+    protected static final String PUT = HttpMethod.PUT;
+    protected static final String DELETE = HttpMethod.DELETE;
+
+    protected static final String SOURCE_DIR = "/apps/beacon/snapshot-replication/sourceDir/";
     protected static final String SOURCE_CLUSTER = "dc$source-cluster";
     protected static final String TARGET_CLUSTER = "target-cluster";
     protected static final String OTHER_CLUSTER = "dc$other-cluster";
@@ -52,13 +88,32 @@ public class BeaconIntegrationTest {
     protected static final int SOURCE_PORT = 8021;
     protected static final int TARGET_PORT = 8022;
 
+    protected static final String BASE_API = "/api/beacon/";
+    protected static final String USERNAME = "admin";
+    protected static final String PASSWORD = "admin";
+
+    protected MiniDFSCluster srcDfsCluster;
+    protected MiniDFSCluster tgtDfsCluster;
+    private static final String SOURCE_DFS = System.getProperty("beacon.data.dir") + "/dfs/" + SOURCE_CLUSTER;
+    private static final String TARGET_DFS = System.getProperty("beacon.data.dir") + "/dfs/" + TARGET_CLUSTER;
+
+    protected static final String FS = "FS";
+
     static {
         String commonOptions = "-Dlog4j.configuration=beacon-log4j.xml -Dbeacon.version="
                 + System.getProperty(BeaconConstants.BEACON_VERSION_CONST)
                 + " -Dbeacon.log.appender=FILE";
         sourceJVMOptions.add(commonOptions + " -Dbeacon.log.filename=beacon-application.log." + SOURCE_CLUSTER);
+        String sourceBeaconOpts = "source.beacon.server.opts";
+        if (System.getProperty(sourceBeaconOpts) != null) {
+            sourceJVMOptions.add(System.getProperty(sourceBeaconOpts));
+        }
 
         targetJVMOptions.add(commonOptions + " -Dbeacon.log.filename=beacon-application.log." + TARGET_CLUSTER);
+        String targetBeaconOpts = "target.beacon.server.opts";
+        if (System.getProperty(targetBeaconOpts) != null) {
+            targetJVMOptions.add(System.getProperty(targetBeaconOpts));
+        }
     }
 
     private Process sourceCluster;
@@ -68,20 +123,49 @@ public class BeaconIntegrationTest {
 
     protected BeaconClient sourceClient;
     protected BeaconClient targetClient;
+    private long startTime;
 
     public BeaconIntegrationTest() throws IOException {
         sourceProp = BeaconTestUtil.getProperties("beacon-source-server.properties");
         targetProp = BeaconTestUtil.getProperties("beacon-target-server.properties");
     }
 
+    @BeforeClass
+    public void setup() throws Exception {
+        srcDfsCluster = startMiniHDFS(SOURCE_PORT, SOURCE_DFS);
+        tgtDfsCluster = startMiniHDFS(TARGET_PORT, TARGET_DFS);
+    }
+
+    @AfterClass
+    public void cleanup() {
+        shutdownMiniHDFS(srcDfsCluster);
+        shutdownMiniHDFS(tgtDfsCluster);
+    }
+
     @BeforeMethod
+    public void printTestname(Method testMethod) {
+        String testName = this.getClass().getSimpleName() + "#" + testMethod.getName();
+        NDC.push(testName);
+        startTime = System.currentTimeMillis();
+    }
+
+    @AfterMethod
+    public void afterTest(ITestResult result) {
+        LOG.debug("Time taken: {} msecs", System.currentTimeMillis() - startTime);
+
+        if (result.getStatus() == ITestResult.FAILURE) {
+            LOG.error("Test Failed", result.getThrowable());
+        }
+        NDC.pop();
+    }
+
     public void setupBeaconServers(Method testMethod) throws Exception {
         String sourceExtraClassPath;
         String submitHAClusterTestName = "testSubmitHACluster";
-        if (!testMethod.getName().equals(submitHAClusterTestName)) {
-            sourceExtraClassPath = System.getProperty("user.dir") + "/src/test/resources/source/:";
-        } else {
+        if (testMethod != null && testMethod.getName().equals(submitHAClusterTestName)) {
             sourceExtraClassPath = System.getProperty("user.dir") + "/src/test/resources/sourceHA/:";
+        } else {
+            sourceExtraClassPath = System.getProperty("user.dir") + "/src/test/resources/source/:";
         }
         sourceCluster = ProcessHelper.startNew(StringUtils.join(sourceJVMOptions, " "),
                 EmbeddedBeaconServer.class.getName(), sourceExtraClassPath,
@@ -95,7 +179,6 @@ public class BeaconIntegrationTest {
         targetClient = new BeaconWebClient(getTargetBeaconServer());
     }
 
-    @AfterMethod
     public void teardownBeaconServers() throws Exception {
         ProcessHelper.killProcess(sourceCluster);
         ProcessHelper.killProcess(targetCluster);
@@ -121,12 +204,336 @@ public class BeaconIntegrationTest {
      * @throws Exception
      */
     protected MiniDFSCluster startMiniHDFS(int port, String path) throws Exception {
-        return MiniHDFSClusterUtil.initMiniDfs(port, new File(path));
+        MiniDFSCluster dfsCluster = MiniHDFSClusterUtil.initMiniDfs(port, new File(path));
+        LOG.debug("Started mini dfs cluster at {}", dfsCluster.getURI());
+        return dfsCluster;
     }
 
     protected void shutdownMiniHDFS(MiniDFSCluster dfsCluster) {
         if (dfsCluster != null) {
+            LOG.debug("Shutting down dfs cluster at {}", dfsCluster.getURI());
             dfsCluster.shutdown(true);
         }
     }
+
+    protected void validatePolicyList(String api, int numResults, int totalResults,
+                                    List<String> names, List<String> types) throws IOException, JSONException {
+        String message = getPolicyListResponse(api, getTargetBeaconServer());
+        JSONObject jsonObject = new JSONObject(message);
+        int result = jsonObject.getInt("results");
+        int totalResult = jsonObject.getInt("totalResults");
+        assertEquals(result, numResults);
+        assertEquals(totalResult, totalResults);
+        String policy = jsonObject.getString("policy");
+        JSONArray jsonArray = new JSONArray(policy);
+
+        int i = 0;
+        for (String policyName : names) {
+            JSONObject replicationPolicy = jsonArray.getJSONObject(i);
+            assertTrue(policyName.equals(replicationPolicy.getString("name")));
+            assertTrue(types.get(i).equals(replicationPolicy.getString("type")));
+            ++i;
+        }
+    }
+
+    protected String getRandomString(String prefix) {
+        return prefix + RandomStringUtils.randomAlphanumeric(5);
+    }
+
+    protected String getPolicyListResponse(String api, String beaconServer) throws IOException {
+        HttpURLConnection conn = sendRequest(beaconServer + api, null, GET);
+        int responseCode = conn.getResponseCode();
+        assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream, "should not be null.");
+        return getResponseMessage(inputStream);
+    }
+
+    protected void submitCluster(String cluster, String clusterBeaconServer,
+                               String server, String fsEndPoint, boolean isLocal) throws Exception {
+        submitCluster(cluster, clusterBeaconServer, server, fsEndPoint, null, isLocal);
+    }
+
+    protected void submitCluster(String clusterName, String clusterBeaconServer,
+                               String server, String fsEndPoint,
+                               Map<String, String> clusterCustomProperties, boolean isLocal) throws Exception {
+        PropertiesIgnoreCase cluster =
+                getClusterData(clusterName, clusterBeaconServer, fsEndPoint, clusterCustomProperties, isLocal);
+        BeaconClient client = new BeaconWebClient(server);
+        client.submitCluster(clusterName, cluster);
+    }
+
+    private PropertiesIgnoreCase getClusterData(String clusterName, String server, String fsEndPoint,
+                                                Map<String, String> customProperties, boolean isLocal) {
+        Cluster cluster = new Cluster();
+        cluster.setName(clusterName);
+        cluster.setFsEndpoint(fsEndPoint);
+        cluster.setDescription("source cluster description");
+        cluster.setBeaconEndpoint(server);
+        cluster.setLocal(isLocal);
+        cluster.setTags("consumer,owner");
+        if (customProperties != null) {
+            cluster.getCustomProperties().putAll(customProperties);
+        }
+        return cluster.asProperties();
+    }
+
+    protected void pairClusterFailed(String beaconServer, String remoteCluster) throws Exception {
+        String api = BASE_API + "cluster/pair";
+        StringBuilder builder = new StringBuilder(api);
+        builder.append("?").append("remoteClusterName=").append(remoteCluster);
+        HttpURLConnection conn = sendRequest(beaconServer + builder.toString(), null, POST);
+        int responseCode = conn.getResponseCode();
+        assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
+    }
+
+    protected void unpairCluster(String beaconServer, String localCluster,
+                               String remoteCluster) throws IOException, JSONException {
+        String api = BASE_API + "cluster/unpair";
+        StringBuilder builder = new StringBuilder(api);
+        builder.append("?").append("remoteClusterName=").append(remoteCluster);
+        HttpURLConnection conn = sendRequest(beaconServer + builder.toString(), null, POST);
+        int responseCode = conn.getResponseCode();
+        assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String response = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(response);
+        String status = jsonObject.getString("status");
+        assertEquals(status, APIResult.Status.SUCCEEDED.name());
+
+        // Get cluster and verify if unpaired
+        String cluster1Message = getClusterResponse(localCluster, getSourceBeaconServer());
+        jsonObject = new JSONObject(cluster1Message);
+        assertEquals(jsonObject.getString("name"), localCluster);
+        assertEquals(jsonObject.getString("peers"), "null");
+
+        String cluster2Message = getClusterResponse(remoteCluster, getSourceBeaconServer());
+        jsonObject = new JSONObject(cluster2Message);
+        assertEquals(jsonObject.getString("name"), remoteCluster);
+        assertEquals(jsonObject.getString("peers"), "null");
+    }
+
+    protected void validateListClusterWithPeers(boolean hasPeers) throws Exception {
+        String api = BASE_API + "cluster/list?fields=peers";
+        HttpURLConnection conn = sendRequest(getSourceBeaconServer() + api, null, GET);
+        int responseCode = conn.getResponseCode();
+        assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream, "should not be null.");
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        int totalResults = jsonObject.getInt("totalResults");
+        int results = jsonObject.getInt("results");
+        assertEquals(totalResults, 2);
+        assertEquals(results, 2);
+        String cluster = jsonObject.getString("cluster");
+        JSONArray jsonArray = new JSONArray(cluster);
+        JSONObject cluster1 = jsonArray.getJSONObject(0);
+        JSONObject cluster2 = jsonArray.getJSONObject(1);
+        assertTrue(SOURCE_CLUSTER.equals(cluster1.getString("name")));
+        assertTrue(TARGET_CLUSTER.equals(cluster2.getString("name")));
+
+        JSONArray cluster1Peers = new JSONArray(cluster1.getString("peers"));
+        JSONArray cluster2Peers = new JSONArray(cluster2.getString("peers"));
+        if (hasPeers) {
+            assertTrue(TARGET_CLUSTER.equals(cluster1Peers.get(0)));
+            assertTrue(SOURCE_CLUSTER.equals(cluster2Peers.get(0)));
+        } else {
+            assertTrue(cluster1Peers.length() == 0);
+            assertTrue(cluster2Peers.length() == 0);
+        }
+    }
+
+    protected void unpairWrongClusters(String beaconServer, String remoteCluster) throws IOException, JSONException {
+        StringBuilder unPairAPI = new StringBuilder(BASE_API + "cluster/unpair");
+        unPairAPI.append("?").append("remoteClusterName=").append(remoteCluster);
+        HttpURLConnection conn = sendRequest(beaconServer + unPairAPI.toString(), null, POST);
+        int responseCode = conn.getResponseCode();
+        assertEquals(responseCode, Response.Status.NOT_FOUND.getStatusCode());
+    }
+
+    protected void unpairClusterFailed(String beaconServer, String remoteCluster) throws IOException, JSONException {
+        String api = BASE_API + "cluster/unpair";
+        StringBuilder builder = new StringBuilder(api);
+        builder.append("?").append("remoteClusterName=").append(remoteCluster);
+        HttpURLConnection conn = sendRequest(beaconServer + builder.toString(), null, POST);
+        int responseCode = conn.getResponseCode();
+        assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
+    }
+
+    protected HttpURLConnection sendRequest(String beaconUrl, String data, String method) throws IOException {
+        LOG.debug("Calling API path: {}, method: {}", beaconUrl, method);
+        URL url = new URL(beaconUrl);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod(method);
+        connection.setDoInput(true);
+        String authorization = USERNAME + ":" + PASSWORD;
+        String encodedAuthorization= new String(Base64.encodeBase64(authorization.getBytes()));
+        if (data != null) {
+            connection.setDoOutput(true);
+            connection.setRequestProperty("Content-Type", "text/plain");
+            connection.setRequestProperty("Content-Length", Integer.toString(data.getBytes().length));
+            connection.setRequestProperty("Authorization", "Basic " + encodedAuthorization);
+            OutputStream outputStreamObj=null;
+            int retry=0;
+            while (outputStreamObj==null && retry<10) {
+                try{
+                    outputStreamObj=connection.getOutputStream();
+                    retry++;
+                }catch(Exception ex){
+                    outputStreamObj=null;
+                }
+            }
+            DataOutputStream outputStream = new DataOutputStream(outputStreamObj);
+            outputStream.write(data.getBytes());
+            outputStream.flush();
+            outputStream.close();
+        } else {
+            connection.setDoOutput(true);
+            connection.setRequestProperty("Authorization", "Basic " + encodedAuthorization);
+        }
+        return connection;
+    }
+
+    protected void pairCluster(String beaconServer, String localCluster, String remoteCluster)
+            throws IOException, JSONException {
+        String api = BASE_API + "cluster/pair";
+        StringBuilder builder = new StringBuilder(api);
+        builder.append("?").append("remoteClusterName=").append(remoteCluster);
+        HttpURLConnection conn = sendRequest(beaconServer + builder.toString(), null, POST);
+        int responseCode = conn.getResponseCode();
+        assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String response = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(response);
+        String status = jsonObject.getString("status");
+        assertEquals(status, APIResult.Status.SUCCEEDED.name());
+
+        // Get cluster and verify if paired
+        String cluster1Message = getClusterResponse(localCluster, getTargetBeaconServer());
+        jsonObject = new JSONObject(cluster1Message);
+        assertEquals(jsonObject.getString("name"), localCluster);
+        validatePeers(jsonObject.getString("peers"), remoteCluster);
+
+        String cluster2Message = getClusterResponse(remoteCluster, getTargetBeaconServer());
+        jsonObject = new JSONObject(cluster2Message);
+        assertEquals(jsonObject.getString("name"), remoteCluster);
+        validatePeers(jsonObject.getString("peers"), localCluster);
+    }
+
+    protected String getResponseMessage(InputStream inputStream) throws IOException {
+        StringBuilder response = new StringBuilder();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            response.append(line);
+        }
+        reader.close();
+        inputStream.close();
+        return response.toString();
+    }
+
+    protected String getClusterResponse(String clusterName, String serverEndpoint) throws IOException {
+        String api = BASE_API + "cluster/getEntity/" + clusterName;
+        HttpURLConnection conn = sendRequest(serverEndpoint + api, null, GET);
+        int responseCode = conn.getResponseCode();
+        assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        return getResponseMessage(inputStream);
+    }
+
+    protected void validatePeers(String peers, String cluster) {
+        if (org.apache.commons.lang3.StringUtils.isNotBlank(peers)) {
+            String[] peerList = peers.split(",");
+            if (peerList.length > 1) {
+                boolean found = false;
+                for (String peer : peerList) {
+                    if (peer.trim().equalsIgnoreCase(cluster)) {
+                        found = true;
+                        break;
+                    }
+                }
+                assertTrue(found);
+            } else {
+                assertEquals(peerList[0], cluster);
+            }
+        }
+    }
+
+    protected void submitAndSchedule(String policyName, int frequency, String sourceDataset, String targetDataSet,
+                                   Properties properties) throws IOException, JSONException {
+        PropertiesIgnoreCase policy = getPolicyData(policyName, FS, frequency, sourceDataset, targetDataSet,
+                SOURCE_CLUSTER, TARGET_CLUSTER);
+        policy.putAll(properties);
+        StringBuilder api = new StringBuilder(getTargetBeaconServer() + BASE_API + "policy/submitAndSchedule/"
+                + policyName);
+        // Submit and Schedule job using submitAndSchedule API
+        StringWriter stringWriter = new StringWriter();
+        policy.store(stringWriter, "");
+        HttpURLConnection conn = sendRequest(api.toString(), stringWriter.toString(), POST);
+        int responseCode = conn.getResponseCode();
+        assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        assertEquals(jsonObject.getString("status"), APIResult.Status.SUCCEEDED.name());
+        assertTrue(jsonObject.getString("message").contains(policyName));
+        assertTrue(jsonObject.getString("message").contains("submitAndSchedule successful"));
+    }
+
+    protected PropertiesIgnoreCase getPolicyData(String policyName, String type, int freq, String sourceDataset,
+                                               String targetDataSet, String srcCluster, String trgtCluster) {
+        ReplicationPolicy policy = new ReplicationPolicy();
+        policy.setName(policyName);
+        policy.setType(type);
+        policy.setDescription("Beacon test policy");
+        policy.setFrequencyInSec(freq);
+        policy.setSourceDataset(sourceDataset);
+        policy.setTargetDataset(targetDataSet);
+        policy.setSourceCluster(srcCluster);
+        policy.setTargetCluster(trgtCluster);
+        policy.getCustomProperties().setProperty("distcpMaxMaps", "1");
+        policy.getCustomProperties().setProperty("distcpMapBandwidth", "10");
+        policy.getCustomProperties().setProperty("sourceSnapshotRetentionAgeLimit", "10");
+        policy.getCustomProperties().setProperty("sourceSnapshotRetentionNumber", "1");
+        policy.getCustomProperties().setProperty("targetSnapshotRetentionAgeLimit", "10");
+        policy.getCustomProperties().setProperty("targetSnapshotRetentionNumber", "1");
+        policy.getCustomProperties().setProperty("tags", "owner=producer@xyz.com,component=sales");
+        policy.getCustomProperties().setProperty("retryAttempts", "3");
+        policy.getCustomProperties().setProperty("retryDelay", "120");
+        policy.getCustomProperties().setProperty("user", System.getProperty("user.name"));
+        return policy.asProperties();
+    }
+
+    protected void deleteClusterAndValidate(String api, String serverEndpoint, String cluster)
+            throws IOException, JSONException {
+        HttpURLConnection conn = sendRequest(serverEndpoint + api, null, DELETE);
+        int responseCode = conn.getResponseCode();
+        assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        assertEquals(jsonObject.getString("status"), APIResult.Status.SUCCEEDED.name());
+        assertTrue(jsonObject.getString("message").contains("removed successfully"));
+        assertTrue(jsonObject.getString("message").contains(cluster));
+    }
+
+    protected void deletePolicy(String policyName) throws IOException, JSONException {
+        String api = BASE_API + "policy/delete/" + policyName;
+        HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, DELETE);
+        int responseCode = conn.getResponseCode();
+        assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        assertEquals(jsonObject.getString("status"), APIResult.Status.SUCCEEDED.name());
+        assertTrue(jsonObject.getString("message").contains("removed successfully"));
+    }
+
 }

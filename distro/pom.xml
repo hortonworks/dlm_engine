@@ -102,5 +102,6 @@
         <beacon.user>beacon</beacon.user>
         <beacon.password>beacon</beacon.password>
         <beacon.quartz.prefix>QUARTZ_</beacon.quartz.prefix>
+        <beacon.schemadirectory>./sql</beacon.schemadirectory>
     </properties>
 </project>

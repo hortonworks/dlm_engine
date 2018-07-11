@@ -554,12 +554,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.hsqldb</groupId>
-                <artifactId>hsqldb</artifactId>
-                <version>2.4.0</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.eclipse.jetty.orbit</groupId>
                 <artifactId>javax.servlet</artifactId>
                 <version>${javax.servlet.version}</version>
@@ -747,6 +741,7 @@
                 <version>${surefire.plugin.version}</version>
                 <configuration>
                     <skip>false</skip>
+                    <skipAfterFailureCount>1</skipAfterFailureCount>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
                     <systemPropertyVariables>
                         <log4j.debug/>
@@ -755,7 +750,7 @@
                         <beacon.version>${project.version}</beacon.version>
                     </systemPropertyVariables>
                     <forkCount>1C</forkCount>
-                    <reuseForks>false</reuseForks>
+                    <reuseForks>true</reuseForks>
                     <argLine>-Xmx1024m -XX:MaxPermSize=256m</argLine>
                 </configuration>
             </plugin>
@@ -806,8 +801,7 @@
                                 <licenseMerge>
                                     The BSD License | BSD | BSD License | BSD licence |
                                     BSD style | New BSD license |
-                                    Revised BSD | The BSD 3-Clause License |
-                                    HSQLDB License, a BSD open source license
+                                    Revised BSD | The BSD 3-Clause License
                                 </licenseMerge>
                                 <licenseMerge>
                                     COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.1 |
@@ -878,70 +872,61 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${checkstyle.plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>${checkstyle.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>checkstyle-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>verify</phase>
+                        <configuration>
+                            <skip>${skip.check}</skip>
+                            <consoleOutput>true</consoleOutput>
+                            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                            <configLocation>src/build/checkstyle.xml</configLocation>
+                            <headerLocation>src/build/checkstyle-java-header.txt</headerLocation>
+                            <suppressionsLocation>src/build/checkstyle-suppressions.xml</suppressionsLocation>
+                            <failOnViolation>true</failOnViolation>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>${findbugs.plugin.version}</version>
+                <configuration>
+                    <!--debug>true</debug -->
+                    <xmlOutput>true</xmlOutput>
+                    <excludeFilterFile>src/build/findbugs-exclude.xml</excludeFilterFile>
+                    <failOnError>true</failOnError>
+                    <skip>${skip.findbugs}</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>findbugs-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>verify</phase>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>test-patch</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-checkstyle-plugin</artifactId>
-                        <version>${checkstyle.plugin.version}</version>
-                        <dependencies>
-                            <dependency>
-                                <groupId>com.puppycrawl.tools</groupId>
-                                <artifactId>checkstyle</artifactId>
-                                <version>${checkstyle.version}</version>
-                            </dependency>
-                        </dependencies>
-                        <executions>
-                            <execution>
-                                <id>checkstyle-check</id>
-                                <goals>
-                                    <goal>check</goal>
-                                </goals>
-                                <phase>verify</phase>
-                                <configuration>
-                                    <skip>${skip.check}</skip>
-                                    <consoleOutput>true</consoleOutput>
-                                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                                    <configLocation>src/build/checkstyle.xml</configLocation>
-                                    <headerLocation>src/build/checkstyle-java-header.txt</headerLocation>
-                                    <suppressionsLocation>src/build/checkstyle-suppressions.xml</suppressionsLocation>
-                                    <failOnViolation>true</failOnViolation>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>findbugs-maven-plugin</artifactId>
-                        <version>${findbugs.plugin.version}</version>
-                        <configuration>
-                            <!--debug>true</debug -->
-                            <xmlOutput>true</xmlOutput>
-                            <excludeFilterFile>src/build/findbugs-exclude.xml</excludeFilterFile>
-                            <failOnError>true</failOnError>
-                            <skip>${skip.findbugs}</skip>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>findbugs-check</id>
-                                <goals>
-                                    <goal>check</goal>
-                                </goals>
-                                <phase>verify</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
     <properties>
         <snakeyaml.version>1.17</snakeyaml.version>
@@ -995,5 +980,7 @@
         <annotations.version>3.0.1</annotations.version>
         <sdk.aws.version>1.10.6</sdk.aws.version>
         <activation.version>1.2.0</activation.version>
+
+        <beacon.schemadirectory>../src/sql</beacon.schemadirectory>
     </properties>
 </project>

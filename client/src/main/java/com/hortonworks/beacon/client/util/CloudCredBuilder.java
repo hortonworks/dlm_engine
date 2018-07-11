@@ -22,11 +22,11 @@
 
 package com.hortonworks.beacon.client.util;
 
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
+import com.hortonworks.beacon.client.CloudCredProperties;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.CloudCred.Config;
-import com.hortonworks.beacon.client.CloudCredProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;

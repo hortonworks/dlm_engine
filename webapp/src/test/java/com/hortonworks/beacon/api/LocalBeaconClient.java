@@ -22,12 +22,15 @@
 
 package com.hortonworks.beacon.api;
 
+import com.hortonworks.beacon.RequestContext;
+import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.CloudCredList;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
@@ -36,6 +39,7 @@ import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.ServerVersionResult;
 import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
 import com.hortonworks.beacon.client.result.DBListResult;
+import com.hortonworks.beacon.client.result.EventsResult;
 import com.hortonworks.beacon.client.result.FileListResult;
 
 
@@ -43,19 +47,35 @@ import com.hortonworks.beacon.client.result.FileListResult;
  * Local beacon client that calls resource's methods in the same JVM.
  */
 public class LocalBeaconClient implements BeaconClient {
-    @Override
-    public void submitCluster(String clusterName, String filePath) throws BeaconClientException {
 
+
+    private ClusterResource clusterResource = new ClusterResource();
+
+    @Override
+    public void submitCluster(final String clusterName, final PropertiesIgnoreCase properties)
+            throws BeaconClientException {
+        new ClientResource<APIResult>() {
+            @Override
+            APIResult api() throws BeaconWebException {
+                return clusterResource.submit(clusterName, properties);
+            }
+        }.call();
     }
 
-    @Override
-    public void submitAndScheduleReplicationPolicy(String policyName, String filePath) throws BeaconClientException {
-
-    }
-
-    @Override
-    public void dryrunPolicy(String policyName, String filePath) throws BeaconClientException {
-
+    abstract static class ClientResource<T> {
+        abstract T api() throws BeaconWebException;
+        T call() throws BeaconClientException {
+            try {
+                RequestContext.setInitialValue();
+                return api();
+            } catch (BeaconWebException e) {
+                BeaconClientException clientException = new BeaconClientException(e);
+                clientException.setStatus(e.getResponse().getStatus());
+                throw clientException;
+            } finally {
+                RequestContext.get().clear();
+            }
+        }
     }
 
     @Override
@@ -65,18 +85,7 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public PolicyList getPolicyList(String fields, String orderBy, String filterBy, String sortOrder, Integer offset,
-                                    Integer numResults) throws BeaconClientException {
-        return null;
-    }
-
-    @Override
     public Entity.EntityStatus getClusterStatus(String clusterName) throws BeaconClientException {
-        return null;
-    }
-
-    @Override
-    public Entity.EntityStatus getPolicyStatus(String policyName) throws BeaconClientException {
         return null;
     }
 
@@ -86,13 +95,40 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public ReplicationPolicy getPolicy(String policyName) throws BeaconClientException {
+    public void deleteCluster(String clusterName) throws BeaconClientException {
+
+    }
+
+    @Override
+    public void updateCluster(String clusterName, PropertiesIgnoreCase properties) throws BeaconClientException {
+
+    }
+
+    @Override
+    public void submitAndScheduleReplicationPolicy(String policyName, PropertiesIgnoreCase properties)
+            throws BeaconClientException {
+
+    }
+
+    @Override
+    public void dryrunPolicy(String policyName, PropertiesIgnoreCase properties) throws BeaconClientException {
+
+    }
+
+    @Override
+    public PolicyList getPolicyList(String fields, String orderBy, String filterBy, String sortOrder, Integer offset,
+                                    Integer numResults) throws BeaconClientException {
         return null;
     }
 
     @Override
-    public void deleteCluster(String clusterName) throws BeaconClientException {
+    public Entity.EntityStatus getPolicyStatus(String policyName) throws BeaconClientException {
+        return null;
+    }
 
+    @Override
+    public ReplicationPolicy getPolicy(String policyName) throws BeaconClientException {
+        return null;
     }
 
     @Override
@@ -101,7 +137,7 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public void updatePolicy(String policyName, String filePath) throws BeaconClientException {
+    public void updatePolicy(String policyName, PropertiesIgnoreCase properties) throws BeaconClientException {
     }
 
     @Override
@@ -125,9 +161,8 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public void syncPolicy(String policyName, String policyDefinition, boolean update)
+    public void syncPolicy(String policyName, PropertiesIgnoreCase policyDefinition, boolean update)
             throws BeaconClientException {
-
     }
 
     @Override
@@ -137,27 +172,12 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public ServerStatusResult getServiceStatus() throws BeaconClientException {
-        return null;
-    }
-
-    @Override
-    public ServerVersionResult getServiceVersion() throws BeaconClientException {
-        return null;
-    }
-
-    @Override
     public PolicyInstanceList listPolicyInstances(String policyName) throws BeaconClientException {
         return null;
     }
 
     @Override
     public void abortPolicyInstance(String policyName) throws BeaconClientException {
-
-    }
-
-    @Override
-    public void updateCluster(String clusterName, String updateDefinition) throws BeaconClientException {
 
     }
 
@@ -173,6 +193,16 @@ public class LocalBeaconClient implements BeaconClient {
 
     @Override
     public String getPolicyLogsForId(String policId) throws BeaconClientException {
+        return null;
+    }
+
+    @Override
+    public ServerStatusResult getServiceStatus() throws BeaconClientException {
+        return null;
+    }
+
+    @Override
+    public ServerVersionResult getServiceVersion() throws BeaconClientException {
         return null;
     }
 
@@ -224,6 +254,11 @@ public class LocalBeaconClient implements BeaconClient {
 
     @Override
     public UserPrivilegesResult getUserPrivileges() throws BeaconClientException {
+        return null;
+    }
+
+    @Override
+    public EventsResult getAllEvents() throws BeaconClientException {
         return null;
     }
 }

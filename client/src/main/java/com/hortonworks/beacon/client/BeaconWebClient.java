@@ -22,12 +22,13 @@
 
 package com.hortonworks.beacon.client;
 
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.CloudCred;
-import com.hortonworks.beacon.client.entity.CloudCred.Config;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.client.resource.CloudCredList;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
@@ -35,11 +36,12 @@ import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.ServerVersionResult;
 import com.hortonworks.beacon.client.resource.StatusResult;
 import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
-import com.hortonworks.beacon.client.resource.CloudCredList;
 import com.hortonworks.beacon.client.result.DBListResult;
+import com.hortonworks.beacon.client.result.EventsResult;
 import com.hortonworks.beacon.client.result.FileListResult;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.PropertiesUtil;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.KnoxTokenUtils;
 import com.hortonworks.beacon.util.SSLUtils;
 import com.sun.jersey.api.client.Client;
@@ -65,15 +67,11 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.security.PrivilegedAction;
-import java.util.Map;
 import java.util.Properties;
+
 
 /**
  * Client API to submit and manage Beacon resources (Cluster, Policies).
@@ -86,7 +84,6 @@ public class BeaconWebClient implements BeaconClient {
 
     private static final String IS_INTERNAL_UNPAIRING = "isInternalUnpairing";
 
-    private static final String NEW_LINE = System.lineSeparator();
     public static final String ORDER_BY = "orderBy";
     public static final String SORT_ORDER = "sortOrder";
     public static final String OFFSET = "offset";
@@ -154,10 +151,13 @@ public class BeaconWebClient implements BeaconClient {
             );
             config.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
             config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+            config.getClasses().add(PropertiesIgnoreCase.class);
+            config.getSingletons().add(new PropertiesIgnoreCase());
+            Client client =  Client.create(config);
+
+
             boolean isBasicAuthentication = AUTHCONFIG.getBooleanProperty(BEACON_BASIC_AUTH_ENABLED, true);
 
-
-            Client client =  Client.create(config);
 
             if (isBasicAuthentication) {
                 String username=AUTHCONFIG.getProperty(BEACON_USERNAME);
@@ -177,8 +177,11 @@ public class BeaconWebClient implements BeaconClient {
                     "180000")));
             client.setReadTimeout(Integer.parseInt(clientProperties.getProperty("beacon.read.timeout", "180000")));
             service = client.resource(UriBuilder.fromUri(baseUrl).build());
-        } catch (Exception e) {
-            LOG.error("Unable to initialize Beacon Client object. Cause: {}", e.getMessage(), e);
+
+            ssoToken = getSSOToken();
+            authToken = getToken(service.getURI().toString());
+        } catch (BeaconException e) {
+            LOG.error("Unable to initialize Beacon Client object", e);
             throw new BeaconClientException(e, "Unable to initialize Beacon Client object. Cause: {}", e.getMessage());
         }
     }
@@ -271,7 +274,7 @@ public class BeaconWebClient implements BeaconClient {
         POLICY_INSTANCE_LIST(API_PREFIX + "instance/list", HttpMethod.GET, MediaType.APPLICATION_JSON),
         POLICY_INSTANCE_ABORT("api/beacon/policy/instance/abort/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         POLICY_INSTANCE_RERUN("api/beacon/policy/instance/rerun/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-        POLICY_LOGS(API_PREFIX + "logs", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        POLICY_LOGS(API_PREFIX + "logs/", HttpMethod.GET, MediaType.APPLICATION_JSON),
 
         //Internal policy operations
         POLICY_SYNC("api/beacon/policy/sync/", HttpMethod.POST, MediaType.APPLICATION_JSON),
@@ -282,8 +285,8 @@ public class BeaconWebClient implements BeaconClient {
         ADMIN_VERSION(API_PREFIX + "admin/version", HttpMethod.GET, MediaType.APPLICATION_JSON),
 
         //Beacon Resource operations
-        LIST_FILES(API_PREFIX + "file/list", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        LIST_DBS(API_PREFIX + "hive/listDBs", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        LIST_FILES(API_PREFIX + "file/list/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        LIST_DBS(API_PREFIX + "hive/listDBs/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         USER_PRIVILEGES_GET(API_PREFIX + "user/", HttpMethod.GET, MediaType.APPLICATION_JSON),
 
         //Cloud Cred operations
@@ -292,7 +295,10 @@ public class BeaconWebClient implements BeaconClient {
         DELETE_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.DELETE, MediaType.APPLICATION_JSON),
         GET_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.GET, MediaType.APPLICATION_JSON),
         LIST_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.GET, MediaType.APPLICATION_JSON),
-        VALIDATE_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.GET, MediaType.APPLICATION_JSON);
+        VALIDATE_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.GET, MediaType.APPLICATION_JSON),
+
+        //Events operations
+        EVENTS_ALL(API_PREFIX + "events/all", HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
         private String method;
@@ -313,23 +319,22 @@ public class BeaconWebClient implements BeaconClient {
     }
 
     @Override
-    public void submitCluster(String clusterName, String filePath) throws BeaconClientException {
-        submitEntity(API.CLUSTER_SUBMIT, clusterName, filePath);
+    public void submitCluster(String clusterName, PropertiesIgnoreCase properties) throws BeaconClientException {
+        submitEntity(API.CLUSTER_SUBMIT, clusterName, properties);
     }
 
     @Override
-    public void submitAndScheduleReplicationPolicy(String policyName, String filePath) throws BeaconClientException {
-        InputStream entityStream = getServletInputStreamFromFile(filePath);
+    public void submitAndScheduleReplicationPolicy(String policyName, PropertiesIgnoreCase properties)
+            throws BeaconClientException {
         ClientResponse clientResponse = new ResourceBuilder().path(API.POLICY_SUBMITANDSCHEDULE.path, policyName)
-                .call(API.POLICY_SUBMITANDSCHEDULE, entityStream);
+                .call(API.POLICY_SUBMITANDSCHEDULE, properties);
         getResponse(clientResponse, APIResult.class);
     }
 
     @Override
-    public void dryrunPolicy(String policyName, String filePath) throws BeaconClientException {
-        InputStream entityStream = getServletInputStreamFromFile(filePath);
+    public void dryrunPolicy(String policyName, PropertiesIgnoreCase properties) throws BeaconClientException {
         ClientResponse clientResponse = new ResourceBuilder().path(API.POLICY_DRYRUN.path, policyName)
-                .call(API.POLICY_DRYRUN, entityStream);
+                .call(API.POLICY_DRYRUN, properties);
         getResponse(clientResponse, APIResult.class);
     }
 
@@ -376,8 +381,8 @@ public class BeaconWebClient implements BeaconClient {
     }
 
     @Override
-    public void updatePolicy(String policyName, String filePath) throws BeaconClientException {
-        submitEntity(API.POLICY_UPDATE, policyName, filePath);
+    public void updatePolicy(String policyName, PropertiesIgnoreCase properties) throws BeaconClientException {
+        submitEntity(API.POLICY_UPDATE, policyName, properties);
     }
 
     @Override
@@ -402,7 +407,7 @@ public class BeaconWebClient implements BeaconClient {
     }
 
     @Override
-    public void syncPolicy(String policyName, String policyDefinition, boolean update)
+    public void syncPolicy(String policyName, PropertiesIgnoreCase policyDefinition, boolean update)
             throws BeaconClientException {
         syncEntity(API.POLICY_SYNC, policyName, policyDefinition, update);
     }
@@ -439,8 +444,8 @@ public class BeaconWebClient implements BeaconClient {
     }
 
     @Override
-    public void updateCluster(String clusterName, String filePath) throws BeaconClientException {
-        submitEntity(API.CLUSTER_UPDATE, clusterName, filePath);
+    public void updateCluster(String clusterName, PropertiesIgnoreCase properties) throws BeaconClientException {
+        submitEntity(API.CLUSTER_UPDATE, clusterName, properties);
     }
 
     @Override
@@ -464,26 +469,6 @@ public class BeaconWebClient implements BeaconClient {
                 .call(API.POLICY_LOGS);
         APIResult result = getResponse(clientResponse, APIResult.class);
         return result.getMessage();
-    }
-
-    /**
-     * Converts a InputStream into ServletInputStream.
-     *
-     * @param filePath - Path of file to stream
-     * @return ServletInputStream
-     */
-    private InputStream getServletInputStreamFromFile(String filePath) throws BeaconClientException {
-
-        if (filePath == null) {
-            return null;
-        }
-        InputStream stream;
-        try {
-            stream = new FileInputStream(filePath);
-        } catch (FileNotFoundException e) {
-            throw new BeaconClientException(e, "File not found:"  + filePath);
-        }
-        return stream;
     }
 
     private <T> T getResponse(ClientResponse clientResponse, Class<T> clazz) throws BeaconClientException {
@@ -522,37 +507,32 @@ public class BeaconWebClient implements BeaconClient {
         }
 
         private ClientResponse call(API entities) throws BeaconClientException {
-            setSSOToken(getSSOToken());
-            setAuthToken(getToken(service.getURI().toString()));
-            WebResource.Builder builder = resource.accept(entities.mimeType);
-            builder.type(MediaType.TEXT_PLAIN);
+            return call(entities, null);
+        }
+
+        public ClientResponse call(API operation, Object requestEntity) throws BeaconClientException {
+            WebResource.Builder builder = resource.accept(operation.mimeType);
+            builder.type(MediaType.TEXT_PLAIN).accept(MediaType.APPLICATION_JSON);
             if (ssoToken != null) {
                 builder.cookie(new Cookie("hadoop-jwt", ssoToken));
-            } else {
-                if (authToken != null && authToken.isSet()) {
-                    builder.cookie(new Cookie(AuthenticatedURL.AUTH_COOKIE, authToken.toString()));
-                }
+            } else if (authToken != null && authToken.isSet()) {
+                builder.cookie(new Cookie(AuthenticatedURL.AUTH_COOKIE, authToken.toString()));
             }
+
+            LOG.debug("Calling API path: {}, method: {}, body: {}", resource.getURI(), operation.method, requestEntity);
+            ClientResponse response;
             try {
-                return builder.method(entities.method, ClientResponse.class);
+                if (requestEntity != null) {
+                    response = builder.method(operation.method, ClientResponse.class, requestEntity);
+                } else {
+                    response = builder.method(operation.method, ClientResponse.class);
+                }
+                Response.StatusType status = response.getStatusInfo();
+                LOG.debug("API response status code: {}, reason: {}", status.getStatusCode(), status.getReasonPhrase());
+                return response;
             } catch (ClientHandlerException e) {
                 throw new BeaconClientException(e, "Failed to connect to {}", service.getURI());
             }
-        }
-
-        public ClientResponse call(API operation, Object entityDefinition) {
-            setSSOToken(getSSOToken());
-            setAuthToken(getToken(service.getURI().toString()));
-            WebResource.Builder builder = resource.accept(operation.mimeType);
-            builder.type(MediaType.APPLICATION_OCTET_STREAM_TYPE);
-            if (ssoToken != null) {
-                builder.cookie(new Cookie("hadoop-jwt", ssoToken));
-            } else {
-                if (authToken != null && authToken.isSet()) {
-                    builder.cookie(new Cookie(AuthenticatedURL.AUTH_COOKIE, authToken.toString()));
-                }
-            }
-            return builder.method(operation.method, ClientResponse.class, entityDefinition);
         }
     }
     //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
@@ -570,10 +550,9 @@ public class BeaconWebClient implements BeaconClient {
         }
     }
 
-    private void submitEntity(API operation, String entityName, String filePath) throws BeaconClientException {
-        InputStream entityStream = getServletInputStreamFromFile(filePath);
+    private void submitEntity(API operation, String entityName, PropertiesIgnoreCase requestBody) throws BeaconClientException {
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path, entityName)
-                .call(operation, entityStream);
+                .call(operation, requestBody);
         getResponse(clientResponse, APIResult.class);
     }
 
@@ -595,11 +574,11 @@ public class BeaconWebClient implements BeaconClient {
         getResponse(clientResponse, APIResult.class);
     }
 
-    private void syncEntity(API operation, String entityName, String entityDefinition, boolean update)
+    private void syncEntity(API operation, String entityName, PropertiesIgnoreCase properties, boolean update)
             throws BeaconClientException {
         ResourceBuilder resourceBuilder = new ResourceBuilder().path(operation.path, entityName);
         resourceBuilder.addQueryParam("update", String.valueOf(update));
-        ClientResponse clientResponse = resourceBuilder.call(operation, entityDefinition);
+        ClientResponse clientResponse = resourceBuilder.call(operation, properties);
         getResponse(clientResponse);
     }
 
@@ -682,44 +661,17 @@ public class BeaconWebClient implements BeaconClient {
         getResponse(clientResponse, APIResult.class);
     }
 
-    private void setAuthToken(AuthenticatedURL.Token token) {
-        this.authToken = token;
-    }
-
-    private void setSSOToken(String token) {
-        this.ssoToken = token;
-    }
     @Override
     public String submitCloudCred(CloudCred cloudCred) throws BeaconClientException {
-        InputStream stream = getStream(cloudCred);
         ClientResponse clientResponse = new ResourceBuilder().path(API.SUBMIT_CLOUD_CRED.path)
-                .call(API.SUBMIT_CLOUD_CRED, stream);
+                .call(API.SUBMIT_CLOUD_CRED, cloudCred.asProperties());
         return getResponse(clientResponse, APIResult.class).getEntityId();
-    }
-
-    private InputStream getStream(CloudCred cloudCred) {
-        StringBuilder builder = new StringBuilder();
-        if (StringUtils.isNotBlank(cloudCred.getName())) {
-            builder.append("name=").append(cloudCred.getName()).append(NEW_LINE);
-        }
-        if (cloudCred.getProvider() != null) {
-            builder.append("provider=").append(cloudCred.getProvider().name()).append(NEW_LINE);
-        }
-        if (cloudCred.getAuthType() != null) {
-            builder.append("authtype=").append(cloudCred.getAuthType()).append(NEW_LINE);
-        }
-        Map<Config, String> configs = cloudCred.getConfigs();
-        for (Map.Entry<Config, String> entry : configs.entrySet()) {
-            builder.append(entry.getKey().getName()).append("=").append(entry.getValue()).append(NEW_LINE);
-        }
-        return new ByteArrayInputStream(builder.toString().getBytes());
     }
 
     @Override
     public void updateCloudCred(String cloudCredId, CloudCred cloudCred) throws BeaconClientException {
-        InputStream stream = getStream(cloudCred);
         ClientResponse clientResponse = new ResourceBuilder().path(API.UPDATE_CLOUD_CRED.path, cloudCredId)
-                .call(API.UPDATE_CLOUD_CRED, stream);
+                .call(API.UPDATE_CLOUD_CRED, cloudCred.asProperties());
         getResponse(clientResponse, APIResult.class);
     }
 
@@ -788,6 +740,13 @@ public class BeaconWebClient implements BeaconClient {
         ClientResponse clientResponse = new ResourceBuilder().path(API.USER_PRIVILEGES_GET.path)
                 .call(API.USER_PRIVILEGES_GET);
         return getResponse(clientResponse, UserPrivilegesResult.class);
+    }
+
+    @Override
+    public EventsResult getAllEvents() throws BeaconClientException {
+        ClientResponse clientResponse = new ResourceBuilder().path(API.EVENTS_ALL.path)
+                .call(API.EVENTS_ALL);
+        return getResponse(clientResponse, EventsResult.class);
     }
 
     @Override

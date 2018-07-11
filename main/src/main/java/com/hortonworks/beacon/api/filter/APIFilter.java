@@ -22,8 +22,10 @@
 
 package com.hortonworks.beacon.api.filter;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.Timer;
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -38,8 +40,11 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -48,7 +53,7 @@ import java.util.Set;
 public class APIFilter implements Filter {
 
     private static final Logger LOG = LoggerFactory.getLogger(APIFilter.class);
-
+    public static final String MASK = "********";
     private static final Set<String> MASKING_KEYWORDS = new HashSet<String>() {
         {
             add("aws.access.key");
@@ -80,11 +85,13 @@ public class APIFilter implements Filter {
             LOG.info("ThreadId: {}, HTTP method: {}, Query Parameters: {}, APIPath: {}",
                     Thread.currentThread().getName(), request.getMethod(), queryString, apiPath);
             String body = multiReadRequest.getRequestBody();
+            logHeaders(request);
             if (StringUtils.isNotBlank(body)) {
-                logRequestBody(body);
+                LOG.info("Request body: {}", mask(body));
             }
 
             filterChain.doFilter(multiReadRequest, servletResponse);
+            LOG.info("Response status: {}", ((HttpServletResponse)servletResponse).getStatus());
         } finally {
             if (timer != null) {
                 timer.stop();
@@ -102,25 +109,30 @@ public class APIFilter implements Filter {
         }
     }
 
-    private void logRequestBody(String body) throws IOException {
+    private void logHeaders(HttpServletRequest request) {
+        Enumeration<String> headers = request.getHeaderNames();
         StringBuilder builder = new StringBuilder();
-        for (String line : body.split(System.lineSeparator())) {
-            String[] pair = line.split(BeaconConstants.EQUAL_SEPARATOR, 2);
-            if (pair.length != 2) {
-                throw new IOException("Failed to parse [key=value] pair: " + line);
-            }
-            for (String s : MASKING_KEYWORDS) {
-                if (pair[0].trim().toLowerCase().equals(s)) {
-                    pair[1] = BeaconConstants.MASK;
-                    break;
-                }
-            }
-            builder.append(pair[0])
-                    .append(BeaconConstants.EQUAL_SEPARATOR)
-                    .append(pair[1])
+        while (headers.hasMoreElements()) {
+            String header = headers.nextElement();
+            builder.append(header).append(BeaconConstants.EQUAL_SEPARATOR).append(request.getHeader(header))
                     .append(BeaconConstants.SEMICOLON_SEPARATOR);
         }
-        LOG.info("Request body: {}", builder.toString());
+        LOG.debug("Headers: {}", builder);
+    }
+
+    @VisibleForTesting
+    public String mask(String body) throws IOException {
+        StringBuilder maskedEntries = new StringBuilder();
+        PropertiesIgnoreCase properties = new PropertiesIgnoreCase(body);
+        for (Map.Entry entry: properties.entrySet()) {
+            if (MASKING_KEYWORDS.contains(entry.getKey())) {
+                maskedEntries.append(entry.getKey()).append(BeaconConstants.EQUAL_SEPARATOR).append(MASK);
+            } else {
+                maskedEntries.append(entry.getKey()).append(BeaconConstants.EQUAL_SEPARATOR).append(entry.getValue());
+            }
+            maskedEntries.append(BeaconConstants.NEW_LINE);
+        }
+        return maskedEntries.toString();
     }
 
     @Override

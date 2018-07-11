@@ -155,6 +155,7 @@ public class PolicyInstanceListExecutor extends BaseExecutor {
             query.setParameter(paramNames.get(i), paramValues.get(i));
         }
         LOG.debug("Executing query: [{}]", queryBuilder.toString());
+        LOG.debug("Query parameters: {}, values: {}", paramNames, paramValues);
         return query;
     }
 

@@ -53,7 +53,7 @@ public final class QuartzJobDetailBuilder {
                 .usingJobData(getJobDataMap(QuartzDataMapEnum.DETAILS.getValue(), job))
                 .usingJobData(QuartzDataMapEnum.CHAINED.getValue(), isChained)
                 .build();
-        LOG.info("JobDetail [key: {}] is created. isChained: {}", jobDetail.getKey(), isChained);
+        LOG.info("JobDetail created, key: {}, type: {}, isChained: {}", jobDetail.getKey(), job.getType(), isChained);
         return jobDetail;
     }
 

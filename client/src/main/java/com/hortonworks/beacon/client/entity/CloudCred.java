@@ -22,7 +22,10 @@
 
 package com.hortonworks.beacon.client.entity;
 
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
+import com.hortonworks.beacon.client.CloudCredProperties;
 import com.hortonworks.beacon.util.StringFormat;
+import org.apache.commons.collections.map.HashedMap;
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonValue;
 
@@ -57,7 +60,7 @@ public class CloudCred extends Entity {
     private AuthType authType;
 
     @XmlElement
-    protected Map<Config, String> configs;
+    protected Map<Config, String> configs = new HashedMap();
 
     @XmlElement
     private String creationTime;
@@ -93,6 +96,19 @@ public class CloudCred extends Entity {
     @Override
     public String getTags() {
         throw new RuntimeException("Operation is not supported on cloudCred entity");
+    }
+
+    @Override
+    public PropertiesIgnoreCase asProperties() {
+        PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
+        properties.put(CloudCredProperties.NAME.getName(), name);
+        properties.putIfNotNull(CloudCredProperties.ID.getName(), id);
+        properties.put(CloudCredProperties.PROVIDER.getName(), provider);
+        properties.put(CloudCredProperties.AUTHTYPE.getName(), authType);
+        for (Map.Entry entry : configs.entrySet()) {
+            properties.put(entry.getKey(), entry.getValue());
+        }
+        return properties;
     }
 
     public void setName(String name) {

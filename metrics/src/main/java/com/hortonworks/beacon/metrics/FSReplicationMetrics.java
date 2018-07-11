@@ -47,6 +47,10 @@ public class FSReplicationMetrics {
     private Progress progress = new Progress();
 
     public void obtainJobMetrics(Job job, boolean isJobComplete) {
+        if (job == null) {
+            return;
+        }
+
         try {
             long timeTaken;
             if (isJobComplete) {

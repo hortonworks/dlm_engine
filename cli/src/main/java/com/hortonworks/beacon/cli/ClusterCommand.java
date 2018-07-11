@@ -23,17 +23,16 @@
 
 package com.hortonworks.beacon.cli;
 
+import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.Entity;
+import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.client.resource.ClusterList;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-
-import com.hortonworks.beacon.client.BeaconClient;
-import com.hortonworks.beacon.client.BeaconClientException;
-import com.hortonworks.beacon.client.entity.Entity;
-import com.hortonworks.beacon.client.resource.APIResult;
-import com.hortonworks.beacon.client.resource.ClusterList;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
@@ -150,12 +149,12 @@ public class ClusterCommand extends CommandBase {
     }
 
     private void submitCluster(String configFile) throws BeaconClientException {
-        client.submitCluster(clusterName, configFile);
+        client.submitCluster(clusterName, getProperties(configFile));
         printResult("Cluster submit of " + clusterName);
     }
 
     private void updateCluster(String configFile) throws BeaconClientException {
-        client.updateCluster(clusterName, configFile);
+        client.updateCluster(clusterName, getProperties(configFile));
         printResult("Cluster update of " + clusterName);
     }
 

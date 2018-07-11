@@ -22,37 +22,21 @@
 
 package com.hortonworks.beacon.api;
 
-import com.hortonworks.beacon.entity.ClusterProperties;
-import com.hortonworks.beacon.entity.exceptions.ValidationException;
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.service.BeaconStoreService;
-import com.hortonworks.beacon.service.ServiceManager;
-import org.testng.annotations.BeforeClass;
+import com.hortonworks.beacon.api.filter.APIFilter;
 import org.testng.annotations.Test;
 
-import java.util.Collections;
-import java.util.List;
+import static org.testng.AssertJUnit.assertEquals;
 
 /**
- * Test class ClusterResource.
+ * Tests masking of parameters in request body.
  */
-public class ClusterResourceTest {
-
-    private ClusterResource resource = null;
-
-    @BeforeClass
-    public void setupClass() throws BeaconException {
-        ServiceManager.getInstance().initialize(Collections.singletonList(BeaconStoreService.class.getName()), null);
-        resource = new ClusterResource();
-    }
-
-    @Test(expectedExceptions = ValidationException.class)
-    public void testValidateExclusionProps() throws Exception {
-        PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
-        List<String> exclusionProps = ClusterProperties.updateExclusionProps();
-        for (String prop : exclusionProps) {
-            properties.put(prop, prop);
-        }
-        resource.validateExclusionProp(properties);
+public class TestAPIFilter {
+    @Test
+    public void testRequestMasking() throws Exception {
+        APIFilter filter = new APIFilter();
+        String maskedValue = filter.mask("aws.access.key=some\na=b");
+        PropertiesIgnoreCase properties = new PropertiesIgnoreCase(maskedValue);
+        assertEquals(APIFilter.MASK, properties.getProperty("aws.access.key"));
+        assertEquals("b", properties.getProperty("a"));
     }
 }

@@ -23,6 +23,7 @@
 package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.RequestContext;
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
@@ -39,7 +40,6 @@ import com.hortonworks.beacon.service.BeaconStoreService;
 import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.tools.BeaconDBSetup;
 import com.hortonworks.beacon.util.FSUtils;
-import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;

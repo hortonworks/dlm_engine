@@ -22,37 +22,31 @@
 
 package com.hortonworks.beacon.api;
 
-import com.hortonworks.beacon.entity.ClusterProperties;
-import com.hortonworks.beacon.entity.exceptions.ValidationException;
+import com.hortonworks.beacon.TestDataGenerator;
+import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.service.BeaconStoreService;
-import com.hortonworks.beacon.service.ServiceManager;
+import org.apache.hadoop.fs.FileSystem;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
- * Test class ClusterResource.
+ * Base class for tests.
  */
-public class ClusterResourceTest {
-
-    private ClusterResource resource = null;
-
-    @BeforeClass
-    public void setupClass() throws BeaconException {
-        ServiceManager.getInstance().initialize(Collections.singletonList(BeaconStoreService.class.getName()), null);
-        resource = new ClusterResource();
+public class ResourceBaseTest {
+    /**
+     * Enum for source/target.
+     */
+    public enum ClusterType {
+        SOURCE,
+        TARGET
     }
 
-    @Test(expectedExceptions = ValidationException.class)
-    public void testValidateExclusionProps() throws Exception {
-        PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
-        List<String> exclusionProps = ClusterProperties.updateExclusionProps();
-        for (String prop : exclusionProps) {
-            properties.put(prop, prop);
-        }
-        resource.validateExclusionProp(properties);
+    protected TestDataGenerator testDataGenerator = TestDataGenerator.getTestDataGenerator();
+
+    protected BeaconClient sourceClient = testDataGenerator.getClient(ClusterType.SOURCE);
+    protected FileSystem sourceFs = testDataGenerator.getFileSystem(ClusterType.SOURCE);
+
+    @BeforeClass
+    public void setup() throws BeaconException {
+        testDataGenerator.init();
     }
 }

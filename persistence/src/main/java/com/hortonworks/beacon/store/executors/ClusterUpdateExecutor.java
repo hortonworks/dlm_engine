@@ -22,10 +22,10 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.store.bean.ClusterBean;
 import com.hortonworks.beacon.store.bean.ClusterPropertiesBean;
 import com.hortonworks.beacon.store.executors.ClusterPropertiesExecutor.ClusterPropertiesQuery;
-import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -82,6 +82,7 @@ public class PolicyInstanceExecutor extends BaseExecutor {
 
     public void executeUpdate(PolicyInstanceQuery namedQuery) {
         Query query = getQuery(namedQuery);
+        LOG.debug("Executing query: {}", query);
         int update = query.executeUpdate();
         LOG.debug("Records updated for PolicyInstanceBean table namedQuery [{}], count [{}]", namedQuery, update);
     }

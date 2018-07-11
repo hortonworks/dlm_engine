@@ -49,13 +49,11 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.util.ClusterStatus;
-import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -65,7 +63,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.HashSet;
@@ -86,10 +83,8 @@ public class ClusterResource extends AbstractResourceManager {
     @Path("submit/{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     @Timed(absolute = true, name="api.beacon.cluster.submit")
-    public APIResult submit(@PathParam("cluster-name") String clusterName, @Context HttpServletRequest request) {
-        PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
+    public APIResult submit(@PathParam("cluster-name") String clusterName, PropertiesIgnoreCase requestProperties) {
         try {
-            requestProperties.load(request.getInputStream());
             String localStr = requestProperties.getPropertyIgnoreCase(Cluster.ClusterFields.LOCAL.getName());
             APIResult result = submitCluster(ClusterBuilder.buildCluster(requestProperties, clusterName));
             if (APIResult.Status.SUCCEEDED == result.getStatus()
@@ -112,11 +107,9 @@ public class ClusterResource extends AbstractResourceManager {
     @Path("{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     @Timed(absolute = true, name="api.beacon.cluster.update")
-    public APIResult update(@PathParam("cluster-name") String clusterName, @Context HttpServletRequest request) {
+    public APIResult update(@PathParam("cluster-name") String clusterName, PropertiesIgnoreCase requestProperties) {
         try {
-            PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
-            properties.load(request.getInputStream());
-            update(clusterName, properties);
+            updateInternal(clusterName, requestProperties);
             return new APIResult(APIResult.Status.SUCCEEDED, "Cluster [{}] update request succeeded.", clusterName);
         } catch (BeaconWebException e) {
             throw e;
@@ -359,7 +352,7 @@ public class ClusterResource extends AbstractResourceManager {
         }
     }
 
-    private void update(String name, PropertiesIgnoreCase properties) {
+    private void updateInternal(String name, PropertiesIgnoreCase properties) throws BeaconException {
         LOG.debug("Cluster update processing started.");
         try {
             RequestContext.get().startTransaction();
@@ -387,8 +380,6 @@ public class ClusterResource extends AbstractResourceManager {
             clusterDao.persistUpdatedCluster(updatedCluster, updatedProps, newProps);
             RequestContext.get().commitTransaction();
             LOG.debug("Cluster update processing completed.");
-        } catch (Exception e) {
-            throw BeaconWebException.newAPIException(e);
         } finally {
             RequestContext.get().rollbackTransaction();
         }
@@ -522,8 +513,13 @@ public class ClusterResource extends AbstractResourceManager {
         try {
             remoteClient.unpairClusters(localClusterName, true);
         } catch (BeaconClientException e) {
-            throw BeaconWebException.newAPIException(Response.Status.fromStatusCode(e.getStatus()), e,
-                    "Remote cluster {} returned error: ", remoteClusterName);
+            LOG.error("Error in pairing", e);
+            Response.Status status = Response.Status.fromStatusCode(e.getStatus());
+            if (status == null) {
+                status = Response.Status.INTERNAL_SERVER_ERROR;
+            }
+            throw BeaconWebException.newAPIException(status, e, "Remote cluster {} returned error: ",
+                    remoteClusterName);
         } catch (Exception e) {
             LOG.error("Exception while unpairing local cluster to remote");
             throw e;

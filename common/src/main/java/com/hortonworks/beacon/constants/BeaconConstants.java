@@ -65,7 +65,6 @@ public final class BeaconConstants {
             + "namenode.ha.ConfiguredFailoverProxyProvider";
     public static final String HA_CONFIG_KEYS = "ha.config.keys";
     public static final String MAPRED_QUEUE_NAME = "mapreduce.job.queuename";
-    public static final String SET = "SET ";
     public static final String HIVE_EXEC_PARALLEL = "hive.exec.parallel";
     public static final String HIVE_TDE_SAMEKEY = "hive.repl.add.raw.reserved.namespace";
     public static final String HIVE_DISTCP_DOAS = "hive.distcp.privileged.doAs";

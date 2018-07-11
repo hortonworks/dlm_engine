@@ -26,14 +26,15 @@ package com.hortonworks.beacon.api.util;
 import com.hortonworks.beacon.Destination;
 import com.hortonworks.beacon.EncryptionAlgorithmType;
 import com.hortonworks.beacon.SchemeType;
-import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.api.EncryptionZoneListing;
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
@@ -42,9 +43,9 @@ import com.hortonworks.beacon.entity.util.ClusterDao;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
+import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.notification.BeaconNotification;
 import com.hortonworks.beacon.replication.ReplicationUtils;
@@ -54,16 +55,15 @@ import com.hortonworks.beacon.replication.fs.SnapshotListing;
 import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.FSUtils;
-import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.util.StringFormat;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
@@ -609,12 +609,12 @@ public final class ValidationUtil {
         boolean sourceDatasetConflicted = ReplicationUtils.isDatasetConflicting(ReplicationHelper
                 .getReplicationType(policy.getType()), policy.getSourceDataset(), Destination.SOURCE);
         if (sourceDatasetConflicted) {
-            notification.addError("Source dataset already in replication.");
+            notification.addError("Source dataset already in replication, " + policy.getSourceDataset());
         }
         boolean targetDatasetConflicted = ReplicationUtils.isDatasetConflicting(ReplicationHelper.getReplicationType(
                 policy.getType()), policy.getTargetDataset(), Destination.TARGET);
         if (targetDatasetConflicted) {
-            notification.addError("Target dataset already in replication.");
+            notification.addError("Target dataset already in replication, " + policy.getTargetDataset());
         }
         // TODO : Check if a target dataset is source for another policy and vice versa.
         if (notification.hasErrors()) {

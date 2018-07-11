@@ -23,6 +23,7 @@
 package com.hortonworks.beacon.entity.util;
 
 import com.hortonworks.beacon.EncryptionAlgorithmType;
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.util.EntityHelper;
 import com.hortonworks.beacon.config.BeaconConfig;
@@ -30,7 +31,6 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.ClusterProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.KnoxTokenUtils;
-import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;

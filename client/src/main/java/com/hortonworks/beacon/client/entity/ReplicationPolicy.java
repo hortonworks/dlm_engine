@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.client.entity;
 
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 
@@ -49,7 +50,7 @@ public class ReplicationPolicy extends Entity {
     private Date endTime;
     private int frequencyInSec;
     private String tags;
-    private Properties customProperties;
+    private Properties customProperties = new Properties();
     private Retry retry;
     private String user;
     private Notification notification;
@@ -380,31 +381,34 @@ public class ReplicationPolicy extends Entity {
         return customProperties.getProperty(ReplicationPolicyFields.CLOUD_ENCRYPTIONKEY.getName());
     }
 
-    @Override
-    public String toString() {
-        StringBuilder policyDefinition = new StringBuilder();
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.ID.getName(), policyId);
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.NAME.getName(), name);
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.DESCRIPTION.getName(), description);
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.TYPE.getName(), type);
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.EXECUTIONTYPE.getName(), executionType);
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.SOURCEDATASET.getName(), sourceDataset);
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.TARGETDATASET.getName(), targetDataset);
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.SOURCECLUSTER.getName(), sourceCluster);
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.TARGETCLUSTER.getName(), targetCluster);
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.STARTTIME.getName(), DateUtil.formatDate(startTime));
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.ENDTIME.getName(), DateUtil.formatDate(endTime));
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.FREQUENCYINSEC.getName(), frequencyInSec);
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.TAGS.getName(), tags);
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.RETRYATTEMPTS.getName(), retry.getAttempts());
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.RETRYDELAY.getName(), retry.getDelay());
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.USER.getName(), user);
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.NOTIFICATIONTO.getName(), notification.getTo());
-        appendNonEmpty(policyDefinition, ReplicationPolicyFields.NOTIFICATIONTYPE.getName(), notification.getType());
-        for (String propertyKey : customProperties.stringPropertyNames()) {
-            appendNonEmpty(policyDefinition, propertyKey, customProperties.getProperty(propertyKey));
+    public PropertiesIgnoreCase asProperties() {
+        PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
+        properties.putIfNotNull(ReplicationPolicyFields.ID.getName(), policyId);
+        properties.put(ReplicationPolicyFields.NAME.getName(), name);
+        properties.put(ReplicationPolicyFields.DESCRIPTION.getName(), description);
+        properties.putIfNotNull(ReplicationPolicyFields.TYPE.getName(), type);
+        properties.putIfNotNull(ReplicationPolicyFields.EXECUTIONTYPE.getName(), executionType);
+        properties.putIfNotNull(ReplicationPolicyFields.SOURCEDATASET.getName(), sourceDataset);
+        properties.putIfNotNull(ReplicationPolicyFields.TARGETDATASET.getName(), targetDataset);
+        properties.putIfNotNull(ReplicationPolicyFields.SOURCECLUSTER.getName(), sourceCluster);
+        properties.putIfNotNull(ReplicationPolicyFields.TARGETCLUSTER.getName(), targetCluster);
+        properties.putIfNotNull(ReplicationPolicyFields.STARTTIME.getName(), DateUtil.formatDate(startTime));
+        properties.putIfNotNull(ReplicationPolicyFields.ENDTIME.getName(), DateUtil.formatDate(endTime));
+        properties.put(ReplicationPolicyFields.FREQUENCYINSEC.getName(), frequencyInSec);
+        properties.putIfNotNull(ReplicationPolicyFields.TAGS.getName(), tags);
+        if (retry != null) {
+            properties.putIfNotNull(ReplicationPolicyFields.RETRYATTEMPTS.getName(), retry.getAttempts());
+            properties.putIfNotNull(ReplicationPolicyFields.RETRYDELAY.getName(), retry.getDelay());
         }
-        return policyDefinition.toString();
+        properties.putIfNotNull(ReplicationPolicyFields.USER.getName(), user);
+        if (notification != null) {
+            properties.putIfNotNull(ReplicationPolicyFields.NOTIFICATIONTO.getName(), notification.getTo());
+            properties.putIfNotNull(ReplicationPolicyFields.NOTIFICATIONTYPE.getName(), notification.getType());
+        }
+        for (String propertyKey : customProperties.stringPropertyNames()) {
+            properties.put(propertyKey, customProperties.getProperty(propertyKey));
+        }
+        return properties;
     }
 }
 

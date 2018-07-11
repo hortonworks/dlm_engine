@@ -22,13 +22,13 @@
 package com.hortonworks.beacon.entity.util;
 
 
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.PolicyBuilderTestUtil;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.service.ServiceManager;
-import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;

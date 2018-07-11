@@ -23,16 +23,21 @@
 
 package com.hortonworks.beacon.cli;
 
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
+import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.BeaconClientException;
+import com.hortonworks.beacon.client.entity.Entity;
+import com.hortonworks.beacon.client.resource.APIResult;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import com.hortonworks.beacon.client.BeaconClient;
-import com.hortonworks.beacon.client.BeaconClientException;
-import com.hortonworks.beacon.client.entity.Entity;
-import com.hortonworks.beacon.client.resource.APIResult;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 /**
  * Base class for all commands - MainCommand, PolicyCommand and CLusterCommand.
@@ -108,6 +113,27 @@ public abstract class CommandBase {
     protected void checkOptionValue(CommandLine cmd, String option) throws InvalidCommandException {
         if (!cmd.hasOption(option) || cmd.getOptionValue(option) == null) {
             throw new InvalidCommandException("Missing option/option value for  -" + option);
+        }
+    }
+
+    protected PropertiesIgnoreCase getProperties(String configFile) throws BeaconClientException {
+        FileInputStream configFileIS = null;
+        try {
+            configFileIS = new FileInputStream(new File(configFile));
+            return new PropertiesIgnoreCase(configFileIS);
+        } catch (FileNotFoundException e) {
+            throw new BeaconClientException(e, "Config file is not present: {}", configFile);
+        } catch (IOException e) {
+            throw new BeaconClientException(e, "Unable to load config file: {}", configFile);
+
+        } finally {
+            try {
+                if (configFileIS != null) {
+                    configFileIS.close();
+                }
+            } catch (IOException e) {
+                //ignore
+            }
         }
     }
 }

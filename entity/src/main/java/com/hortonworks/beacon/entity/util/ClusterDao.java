@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.entity.util;
 
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.PeerInfo;
 import com.hortonworks.beacon.client.resource.ClusterList;
@@ -38,7 +39,6 @@ import com.hortonworks.beacon.store.executors.ClusterListExecutor;
 import com.hortonworks.beacon.store.executors.ClusterPairExecutor;
 import com.hortonworks.beacon.store.executors.ClusterUpdateExecutor;
 import com.hortonworks.beacon.util.ClusterStatus;
-import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

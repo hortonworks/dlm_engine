@@ -22,8 +22,8 @@
 
 package com.hortonworks.beacon.api;
 
-import com.google.common.base.Joiner;
 import com.codahale.metrics.annotation.Timed;
+import com.google.common.base.Joiner;
 import com.hortonworks.beacon.BeaconClientFactory;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
@@ -65,7 +65,6 @@ import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.DateUtil;
-import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.util.StringFormat;
@@ -73,7 +72,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -83,7 +81,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
@@ -108,11 +105,9 @@ public class PolicyResource extends AbstractResourceManager {
     @Timed(absolute = true, name="api.beacon.policy.submitAndSchedule")
     public APIResult submitAndSchedule(@PathParam("policy-name") String policyName,
                                        @DefaultValue("true") @QueryParam("validateCloud") String validateCloudStr,
-                                       @Context HttpServletRequest request) {
-        PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
+                                       PropertiesIgnoreCase requestProperties) {
         try {
             LOG.info("Request for policy submitAndSchedule is received. Policy-name: [{}]", policyName);
-            requestProperties.load(request.getInputStream());
             BeaconLogUtils.prefixPolicy(
                     policyName,
                     requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName()));
@@ -135,11 +130,9 @@ public class PolicyResource extends AbstractResourceManager {
     @Path("{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     @Timed(absolute = true, name="api.beacon.policy.update")
-    public APIResult update(@PathParam("policy-name") String policyName, @Context HttpServletRequest request) {
+    public APIResult update(@PathParam("policy-name") String policyName, PropertiesIgnoreCase properties) {
         try {
             LOG.info("Request for policy update is received. Policy-name: [{}]", policyName);
-            PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
-            properties.load(request.getInputStream());
             ReplicationPolicy policy = policyDao.getActivePolicy(policyName);
             BeaconLogUtils.prefixPolicy(policyName, policy.getPolicyId());
             ValidationUtil.validatePolicyOnUpdate(policy,  properties);
@@ -157,11 +150,9 @@ public class PolicyResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     @Timed(absolute = true, name="api.beacon.policy.dryrun")
     public APIResult validatePolicy(@PathParam("policy-name") String policyName,
-                                       @Context HttpServletRequest request) {
-        PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
+                                    PropertiesIgnoreCase requestProperties) {
         try {
             LOG.info("Request for policy dry-run is received. Policy-name: [{}]", policyName);
-            requestProperties.load(request.getInputStream());
             BeaconLogUtils.prefixPolicy(
                     policyName,
                     requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName()));
@@ -320,11 +311,9 @@ public class PolicyResource extends AbstractResourceManager {
     @Timed(absolute = true, name="api.beacon.policy.sync")
     public APIResult syncPolicy(@PathParam("policy-name") String policyName,
                                 @QueryParam("update") boolean update,
-                                @Context HttpServletRequest request) {
+                                PropertiesIgnoreCase requestProperties) {
         BeaconLogUtils.prefixPolicy(policyName);
-        PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
         try {
-            requestProperties.load(request.getInputStream());
             BeaconLogUtils.prefixPolicy(
                     policyName,
                     requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName()));
@@ -1001,8 +990,7 @@ public class PolicyResource extends AbstractResourceManager {
             return;
         }
         syncPolicyInRemote(policy,
-                PolicyHelper.getRemoteBeaconEndpoint(policy), PolicyHelper.getRemoteClusterName(policy),
-                PolicyHelper.getRemoteKnoxBaseURL(policy), update);
+                PolicyHelper.getRemoteBeaconEndpoint(policy), PolicyHelper.getRemoteKnoxBaseURL(policy), update);
     }
 
     private void modifyDBReplProperty(ReplicationPolicy policy, AlterDBProperty alterDBProperty)
@@ -1073,11 +1061,11 @@ public class PolicyResource extends AbstractResourceManager {
     }
 
     // TODO : In future when house keeping async is added ignore any errors as this will be retried async
-    private void syncPolicyInRemote(ReplicationPolicy policy, String remoteBeaconEndpoint,
-                                    String remoteClusterName, String knoxBaseUrl, boolean update) {
+    private void syncPolicyInRemote(ReplicationPolicy policy, String remoteBeaconEndpoint, String knoxBaseUrl,
+                                    boolean update) {
         try {
             BeaconClient remoteClient = BeaconClientFactory.getBeaconClient(remoteBeaconEndpoint, knoxBaseUrl);
-            remoteClient.syncPolicy(policy.getName(), policy.toString(), update);
+            remoteClient.syncPolicy(policy.getName(), policy.asProperties(), update);
             BeaconEvents.createEvents(Events.SYNCED, EventEntityType.POLICY,
                     policyDao.getPolicyBean(policy), getEventInfo(policy, false));
         } catch (BeaconClientException e) {

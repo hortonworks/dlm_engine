@@ -24,7 +24,6 @@ package com.hortonworks.beacon.client;
 
 
 import com.hortonworks.beacon.client.resource.APIResult;
-import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.StringFormat;
 import com.sun.jersey.api.client.ClientResponse;
 
@@ -43,7 +42,7 @@ public class BeaconClientException extends Exception {
         this.status = statusCode;
     }
 
-    public BeaconClientException(BeaconException e) {
+    public BeaconClientException(Exception e) {
         super(e);
     }
 

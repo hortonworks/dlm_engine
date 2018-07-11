@@ -75,6 +75,9 @@ public class ServerStatusResult {
     @XmlElement(name = "policy_edit")
     private boolean policyEditSupported;
 
+    @XmlElement
+    private boolean clusterUpdateSupported;
+
     private boolean cloudHosted;
 
 
@@ -204,6 +207,15 @@ public class ServerStatusResult {
 
     public void setPolicyEditSupported(boolean policyEditSupported) {
         this.policyEditSupported = policyEditSupported;
+    }
+
+    @JsonProperty
+    public boolean getClusterUpdateSupported() {
+        return clusterUpdateSupported;
+    }
+
+    public void setClusterUpdateSupported(boolean clusterUpdateSupported) {
+        this.clusterUpdateSupported = clusterUpdateSupported;
     }
 
     @JsonProperty

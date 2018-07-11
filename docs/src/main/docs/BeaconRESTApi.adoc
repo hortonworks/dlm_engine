@@ -1640,6 +1640,7 @@ GET api/beacon/admin/status
     "replication_cloud_fs": true,
     "replication_cloud_hive_withCluster": true,
     "policy_edit": true,
+    "clusterUpdateSupported": true,
     "cloudHosted": false
 }
 

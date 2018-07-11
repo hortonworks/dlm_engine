@@ -97,6 +97,8 @@ public class AdminResource extends AbstractResourceManager {
 
         //Beacon DLM-Jun18 features
         result.setPolicyEditSupported(true);
+        //Beacon DLM 1.1.2 features
+        result.setClusterUpdateSupported(true);
 
         return result;
     }

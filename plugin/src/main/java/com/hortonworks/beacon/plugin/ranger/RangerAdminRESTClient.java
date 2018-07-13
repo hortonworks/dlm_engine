@@ -657,6 +657,10 @@ public class RangerAdminRESTClient {
         Properties clusterProperties = cluster.getCustomProperties();
         ClientConfig config = new DefaultClientConfig();
         config.getClasses().add(MultiPartWriter.class);
+        config.getProperties().put(ClientConfig.PROPERTY_CONNECT_TIMEOUT,
+                BeaconConfig.getInstance().getEngine().getRangerClientConnectTimeout() * 1000);
+        config.getProperties().put(ClientConfig.PROPERTY_READ_TIMEOUT,
+                BeaconConfig.getInstance().getEngine().getRangerClientReadTimeout() * 1000);
         if (StringUtils.startsWith(rangerEndpoint, "https://")) {
             SSLContext sslContext = shouldProxy ? SSLUtils.getSSLContext() : null;
             if (sslContext == null) {

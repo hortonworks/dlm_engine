@@ -54,6 +54,8 @@ engine:
     snapshotRetentionNumber: 3
     cloudCredProviderPath: jceks://hdfs//user/beacon/credential/
     hiveBootstrapJobRetryAttempts : 3
+    rangerClientConnectTimeout: 10
+    rangerClientReadTimeout: 60
 
 dbStore:
     driver: ${beacon.driver}

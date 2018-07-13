@@ -84,6 +84,9 @@ public class Engine {
 
     private int hiveBootstrapJobRetryAttempts;
 
+    private int rangerClientConnectTimeout;
+    private int rangerClientReadTimeout;
+
     private boolean knoxProxyEnabled;
 
     private String knoxPreAuthTopology;
@@ -179,6 +182,8 @@ public class Engine {
         setKnoxProxyTokenThreshold(o.getKnoxProxyTokenThreshold());
         setPreserveMeta(o.isPreserveMeta());
         setHiveBootstrapJobRetryAttempts(o.getHiveBootstrapJobRetryAttempts());
+        setRangerClientConnectTimeout(o.getRangerClientConnectTimeout());
+        setRangerClientReadTimeout(o.getRangerClientReadTimeout());
     }
 
     public String getHostName() {
@@ -546,5 +551,21 @@ public class Engine {
 
     public void setHiveBootstrapJobRetryAttempts(int hiveBootstrapJobRetryAttempts) {
         this.hiveBootstrapJobRetryAttempts = hiveBootstrapJobRetryAttempts;
+    }
+
+    public int getRangerClientConnectTimeout() {
+        return rangerClientConnectTimeout;
+    }
+
+    public void setRangerClientConnectTimeout(int rangerClientConnectTimeout) {
+        this.rangerClientConnectTimeout = rangerClientConnectTimeout;
+    }
+
+    public int getRangerClientReadTimeout() {
+        return rangerClientReadTimeout;
+    }
+
+    public void setRangerClientReadTimeout(int rangerClientReadTimeout) {
+        this.rangerClientReadTimeout = rangerClientReadTimeout;
     }
 }

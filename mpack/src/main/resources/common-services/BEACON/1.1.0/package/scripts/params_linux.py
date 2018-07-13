@@ -136,6 +136,9 @@ beacon_cloud_cred_provider_path = beacon_env['beacon_cloud_cred_provider_path']
 beacon_preserve_meta = beacon_env['beacon_preserve_meta']
 hive_bootstrap_job_retry_attempts = beacon_env['hive_bootstrap_job_retry_attempts']
 
+ranger_client_connect_timeout = beacon_env['ranger_client_connect_timeout']
+ranger_client_read_timeout = beacon_env['ranger_client_read_timeout']
+
 etc_prefix_dir = "/etc/beacon"
 
 hadoop_stack_version = default("/commandParams/version", None)

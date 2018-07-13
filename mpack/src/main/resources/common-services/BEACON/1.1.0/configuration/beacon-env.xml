@@ -549,4 +549,16 @@
     <description>Hive bootstrap job retry attempts</description>
     <display-name>Hive bootstrap job retry attempts</display-name>
   </property>
+  <property>
+    <name>ranger_client_connect_timeout</name>
+    <value>10</value>
+    <description>Ranger http client connect timeout (in seconds)</description>
+    <display-name>Ranger http client connect timeout (in seconds)</display-name>
+  </property>
+  <property>
+    <name>ranger_client_read_timeout</name>
+    <value>60</value>
+    <description>Ranger http client read timeout (in seconds)</description>
+    <display-name>Ranger http client read timeout (in seconds)</display-name>
+  </property>
 </configuration>

@@ -368,7 +368,7 @@ public final class PolicyDao {
             propertiesBeans.add(propertiesBean);
         }
         bean.setCustomProperties(propertiesBeans);
-        bean.setTags(policy.getTags());
+        bean.setTags(ClusterHelper.convertToString(policy.getTags()));
         return bean;
     }
 
@@ -392,7 +392,7 @@ public final class PolicyDao {
         policy.setFrequencyInSec(bean.getFrequencyInSec());
         policy.setNotification(new Notification(bean.getNotificationType(), bean.getNotificationTo()));
         policy.setRetry(new Retry(bean.getRetryCount(), bean.getRetryDelay()));
-        policy.setTags(bean.getTags());
+        policy.setTags(ClusterHelper.convertToList(bean.getTags()));
         Properties prop = getPolicyCustomProperties(bean);
         policy.setCustomProperties(prop);
         return policy;

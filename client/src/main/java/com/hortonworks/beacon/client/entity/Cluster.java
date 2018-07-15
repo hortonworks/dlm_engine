@@ -42,8 +42,8 @@ public class Cluster extends Entity {
     private String atlasEndpoint;
     private String rangerEndpoint;
     private boolean local;
-    private String tags;
-    private String peers;
+    private List<String> tags;
+    private List<String> peers;
     private List<PeerInfo> peersInfo;
     private Properties customProperties = new Properties();
     private String user;
@@ -118,8 +118,8 @@ public class Cluster extends Entity {
         private String rangerEndpoint;
         private String hsEndpoint;
         private boolean local;
-        private String tags;
-        private String peers;
+        private List<String> tags;
+        private List<String> peers;
         private List<PeerInfo> peersInfo;
         private Properties customProperties;
         private String user;
@@ -156,12 +156,12 @@ public class Cluster extends Entity {
             return this;
         }
 
-        public Builder tags(String tagsValue) {
+        public Builder tags(List<String> tagsValue) {
             this.tags = tagsValue;
             return this;
         }
 
-        public Builder peers(String peersValue) {
+        public Builder peers(List<String> peersValue) {
             this.peers = peersValue;
             return this;
         }
@@ -263,19 +263,19 @@ public class Cluster extends Entity {
     }
 
     @Override
-    public String getTags() {
+    public List<String> getTags() {
         return tags;
     }
 
-    public void setTags(String tags) {
+    public void setTags(List<String> tags) {
         this.tags = tags;
     }
 
-    public String getPeers() {
+    public List<String> getPeers() {
         return peers;
     }
 
-    public void setPeers(String peers) {
+    public void setPeers(List<String> peers) {
         this.peers = peers;
     }
 

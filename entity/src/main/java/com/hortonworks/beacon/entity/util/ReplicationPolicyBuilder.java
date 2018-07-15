@@ -202,9 +202,8 @@ public final class ReplicationPolicyBuilder {
         Notification notification = new Notification(to, notificationType);
 
         return new ReplicationPolicy.Builder(policyName, type, sourceDataset, targetDataset,
-                sourceCluster,
-                targetCluster,
-                frequencyInSec).startTime(start).endTime(end).tags(tags).customProperties(properties).retry(retry)
+                sourceCluster, targetCluster, frequencyInSec).startTime(start).endTime(end)
+                .tags(ClusterHelper.convertToList(tags)).customProperties(properties).retry(retry)
                 .user(user).notification(notification).description(description).build();
     }
 

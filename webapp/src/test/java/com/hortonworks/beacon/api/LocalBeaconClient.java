@@ -42,7 +42,6 @@ import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.EventsResult;
 import com.hortonworks.beacon.client.result.FileListResult;
 
-
 /**
  * Local beacon client that calls resource's methods in the same JVM.
  */
@@ -79,24 +78,48 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public ClusterList getClusterList(String fields, String orderBy, String sortOrder, Integer offset,
-                                      Integer numResults) throws BeaconClientException {
-        return null;
+    public ClusterList getClusterList(final String fields, final String orderBy,
+                                      final String sortOrder, final Integer offset,
+                                      final Integer numResults) throws BeaconClientException {
+        return new ClientResource<ClusterList>() {
+            @Override
+            ClusterList api() throws BeaconWebException {
+                return clusterResource.list(fields, orderBy, sortOrder, offset, numResults);
+            }
+        }.call();
     }
 
     @Override
-    public Entity.EntityStatus getClusterStatus(String clusterName) throws BeaconClientException {
-        return null;
+    public Entity.EntityStatus getClusterStatus(final String clusterName) throws BeaconClientException {
+        return new ClientResource<Entity.EntityStatus>(
+
+        ) {
+            @Override
+            Entity.EntityStatus api() throws BeaconWebException {
+                return clusterResource.status(clusterName).getStatus();
+            }
+        }.call();
     }
 
     @Override
-    public Cluster getCluster(String clusterName) throws BeaconClientException {
-        return null;
+    public Cluster getCluster(final String clusterName) throws BeaconClientException {
+        return new ClientResource<Cluster>(
+        ) {
+            @Override
+            Cluster api() throws BeaconWebException {
+                return clusterResource.definition(clusterName);
+            }
+        }.call();
     }
 
     @Override
-    public void deleteCluster(String clusterName) throws BeaconClientException {
-
+    public void deleteCluster(final String clusterName) throws BeaconClientException {
+        new ClientResource<APIResult>() {
+            @Override
+            APIResult api() throws BeaconWebException {
+                return clusterResource.delete(clusterName);
+            }
+        }.call();
     }
 
     @Override
@@ -151,13 +174,27 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public void pairClusters(String remoteClusterName, boolean isInternalPairing) throws BeaconClientException {
-
+    public void pairClusters(final String remoteClusterName, final boolean isInternalPairing)
+            throws BeaconClientException {
+        new ClientResource<APIResult>() {
+            @Override
+            APIResult api() throws BeaconWebException {
+                return clusterResource.pair(remoteClusterName, isInternalPairing);
+            }
+        }.call();
     }
 
     @Override
-    public void unpairClusters(String remoteClusterName, boolean isInternalunpairing) throws BeaconClientException {
+    public void unpairClusters(final String remoteClusterName, final boolean isInternalunpairing)
+            throws BeaconClientException {
+        new ClientResource<APIResult>(
 
+        ) {
+            @Override
+            APIResult api() throws BeaconWebException {
+                return clusterResource.unPair(remoteClusterName, isInternalunpairing);
+            }
+        }.call();
     }
 
     @Override

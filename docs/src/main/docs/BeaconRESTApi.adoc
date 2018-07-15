@@ -382,30 +382,47 @@ GET api/beacon/cluster/list
 
 *Parameters:*
 
-* *_fields_* <optional> Entity output fields separated by commas. Valid options are peers, peersInfo and tags.
+* *_fields_* <optional> Entity output fields separated by commas. Valid options are all, peers, peersInfo and tags.
 * *_orderBy_* <optional> Column by which results should be ordered. Sorted by descending order. Valid options are nominalTime (default) and status.
 * *_sortOrder_* <optional> Valid options are _asc_ and _desc_
 * *_offset_* <optional> Show results from the offset. Used for pagination. Negative offset are reset to 0. Default is 0.
 * *_numResults_* <optional> Number of instances per entity to show. Default value is 10.
 
-*REST Call:* GET http://localhost:25968/api/beacon/cluster/list?fields=peers,tags
+*REST Call:* GET http://localhost:25968/api/beacon/cluster/list?fields=all
 
 *Response:*
 [source, json]
 {
 	"totalResults": 2,
 	"results": 2,
-	"cluster": [{
-			"name": "backupCluster",
-			"peers": ["primaryCluster"],
-			"tags": ["consumer=consumer@xyz.com", "owner=producer@xyz.com"]
-		},
-		{
-			"name": "primaryCluster",
-			"peers": ["backupCluster"],
-			"tags": ["consumer=consumer@xyz.com", "owner=producer@xyz.com"]
-		}
-	]
+	"cluster": [
+	        {
+             "name": "default$c1",
+        "version": 1,
+        "description": "Prod cluster for hwx",
+        "fsEndpoint": "hdfs://test-dlm-25-a-1.c.pramod-thangali.internal:8020",
+        "hsEndpoint": "jdbc:hive2://test-dlm-25-a-1.c.pramod-thangali.internal:2181,jaimin-dlm-25-a-2.c.pramod-thangali.internal:2181,jaimin-dlm-25-a-3.c.pramod-thangali.internal:2181/;serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=hiveserver2",
+        "beaconEndpoint": "http://test-dlm-25-a-1.c.pramod-thangali.internal:25968",
+        "customProperties": {
+            "hive.server2.authentication": "NONE",
+            "hive.warehouse.subdir.inherit.perms": "true",
+            "cloudDataLake": "false",
+            "hive.metastore.warehouse.dir": "/apps/hive/warehouse",
+            "hive.metastore.uris": "thrift://test-dlm-25-a-2.c.pramod-thangali.internal:9083",
+            "hive.metastore.kerberos.principal": "hive/_HOST@EXAMPLE.COM"
+        },
+        "peers": [
+                        "default$c2"
+                    ],
+         "peersInfo": [
+                    {
+                        "clusterName": "default$c2",
+                        "pairStatus": "PAIRED"
+                    }
+                ],
+          "tags": ["test", "dlm"]
+         }
+        ]
 }
 
 GET api/beacon/cluster/status/:cluster-name
@@ -452,8 +469,14 @@ GET api/beacon/cluster/getEntity/:cluster-name
    "fsEndpoint":"hdfs://localhost:8020",
    "hsEndpoint":"jdbc:hive2://localhost:2181",
    "local": false,
-   "tags":"consumer=consumer@xyz.com,owner=producer@xyz.com",
-   "peers":"c1, c2",
+   "tags":["consumer=consumer@xyz.com", "owner=producer@xyz.com"],
+   "peers":["c1", "c2"],
+   "peersInfo": [
+               {
+                   "clusterName": "targetCluster",
+                   "pairStatus": "PAIRED"
+               }
+   ],
    "customProperties":{
       "dfs.namenode.kerberos.principal":"hdfs/_HOST@YOUR-REALM.COM"
    },

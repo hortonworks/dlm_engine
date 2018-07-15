@@ -602,7 +602,7 @@ public class BeaconWebClient implements BeaconClient {
         ClientResponse response =
                 getEntityListResponse(operation, fields, orderBy, filterBy, sortOrder, offset, numResults);
         ClusterList result = response.getEntity(ClusterList.class);
-        if (result == null || result.getElements() == null) {
+        if (result == null || result.getClusters() == null) {
             return null;
         }
         return result;

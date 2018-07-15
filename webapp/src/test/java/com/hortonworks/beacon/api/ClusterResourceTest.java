@@ -22,7 +22,11 @@
 
 package com.hortonworks.beacon.api;
 
+import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.Entity;
+import com.hortonworks.beacon.client.resource.ClusterList;
+import org.junit.Assert;
 import org.testng.annotations.Test;
 
 /**
@@ -30,9 +34,74 @@ import org.testng.annotations.Test;
  */
 public class ClusterResourceTest extends ResourceBaseTest {
 
-    @Test(enabled = false)
+    private Cluster sourceCluster;
+
+    private Cluster targetCluster;
+
+    @Test
     public void testSubmitCluster() throws Exception {
-        Cluster cluster = testDataGenerator.getCluster(ClusterType.SOURCE);
-        sourceClient.submitCluster(cluster.getName(), cluster.asProperties());
+        sourceCluster = testDataGenerator.getCluster(ClusterType.SOURCE, true);
+        sourceClient.submitCluster(sourceCluster.getName(), sourceCluster.asProperties());
+        targetCluster = testDataGenerator.getCluster(ClusterType.TARGET, false);
+        sourceClient.submitCluster(targetCluster.getName(), targetCluster.asProperties());
+    }
+
+    @Test(dependsOnMethods = "testSubmitCluster")
+    public void testPairCluster() throws Exception {
+        sourceClient.pairClusters(targetCluster.getName(), true);
+    }
+
+    @Test(dependsOnMethods = {"testPairCluster"})
+    public void testListClusters() throws Exception {
+        ClusterList clusterListWithAllDetails = sourceClient.getClusterList("all", "name", "asc", 0, 10);
+        Assert.assertEquals(2, clusterListWithAllDetails.getClusters().length);
+        Cluster[] clusters = clusterListWithAllDetails.getClusters();
+        Assert.assertEquals(sourceCluster.getName(), clusters[1].getPeers().get(0));
+        Assert.assertEquals(targetCluster.getName(), clusters[0].getPeers().get(0));
+        Assert.assertEquals(1, clusters[0].getCustomProperties().size());
+        ClusterList clusterListWithJustName = sourceClient.getClusterList("name", "name", "asc", 0, 10);
+        clusters = clusterListWithJustName.getClusters();
+        Assert.assertEquals(0, clusters[0].getCustomProperties().size());
+        ClusterList clusterList = sourceClient.getClusterList("peers,tags,peersInfo", "name", "asc", 0, 10);
+        Assert.assertEquals(2, clusterList.getClusters().length);
+        clusters = clusterList.getClusters();
+        Assert.assertEquals(sourceCluster.getName(), clusters[1].getPeers().get(0));
+        Assert.assertEquals(targetCluster.getName(), clusters[0].getPeers().get(0));
+        Assert.assertEquals(0, clusters[0].getCustomProperties().size());
+        ClusterList clusterListWithoutAnyFields = sourceClient.getClusterList("", "name", "asc", 0, 10);
+        Assert.assertEquals(2, clusterListWithoutAnyFields.getClusters().length);
+        Assert.assertEquals(0, clusters[0].getCustomProperties().size());
+
+    }
+
+    @Test(dependsOnMethods = {"testPairCluster"})
+    public void testGetClusterInfo() throws Exception {
+        Cluster cluster = sourceClient.getCluster(sourceCluster.getName());
+        Assert.assertEquals(sourceCluster.getName(), cluster.getName());
+        Assert.assertEquals("testVal", cluster.getCustomProperties().getProperty("testKey"));
+    }
+
+    @Test(dependsOnMethods = "testSubmitCluster")
+    public void testClusterStatus() throws Exception {
+        Entity.EntityStatus statusResult = sourceClient.getClusterStatus(sourceCluster.getName());
+        Assert.assertEquals(Entity.EntityStatus.SUBMITTED, statusResult);
+    }
+
+
+    @Test(dependsOnMethods = {"testPairCluster"})
+    public void testUnpairCluster() throws Exception {
+        sourceClient.unpairClusters(targetCluster.getName(), true);
+    }
+
+    @Test(dependsOnMethods = {"testPairCluster", "testGetClusterInfo", "testClusterStatus", "testListClusters" })
+    public void testDeleteCluster() throws Exception {
+        deleteClusters();
+        ClusterList clusterList = sourceClient.getClusterList("name", "name", "asc", 0, 10);
+        Assert.assertEquals(0, clusterList.getClusters().length);
+    }
+
+    private void deleteClusters() throws BeaconClientException {
+        sourceClient.deleteCluster(sourceCluster.getName());
+        sourceClient.deleteCluster(targetCluster.getName());
     }
 }

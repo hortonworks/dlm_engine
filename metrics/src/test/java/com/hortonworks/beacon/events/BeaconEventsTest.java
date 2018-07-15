@@ -156,7 +156,7 @@ public class BeaconEventsTest {
         return new Cluster(new Cluster.Builder(SOURCECLUSTER, "source test cluster",
                 "http://localhost:25968")
                 .fsEndpoint("hdfs://localhost:8020")
-                .peers(TARGETCLUSTER));
+                .peers(Arrays.asList(TARGETCLUSTER)));
     }
 
     private PolicyBean createPolicyBean() {

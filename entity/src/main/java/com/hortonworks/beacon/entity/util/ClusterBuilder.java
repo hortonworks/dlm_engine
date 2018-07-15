@@ -67,7 +67,8 @@ public final class ClusterBuilder {
         String localCluster = requestProperties.getPropertyIgnoreCase(ClusterProperties.LOCAL.getName());
         boolean isLocal = StringUtils.isNotBlank(localCluster) && Boolean.parseBoolean(localCluster);
         String peers = requestProperties.getPropertyIgnoreCase(ClusterProperties.PEERS.getName());
-        String tags = requestProperties.getPropertyIgnoreCase(ClusterProperties.TAGS.getName());
+        List<String> tags = ClusterHelper.getTagsList(requestProperties
+                .getPropertyIgnoreCase(ClusterProperties.TAGS.getName()));
         List<String> dfsNSList = ClusterHelper.getHDFSNameservicesList(requestProperties);
         for (String dfsNS : dfsNSList) {
             String haFailOverKey = BeaconConstants.DFS_CLIENT_FAILOVER_PROXY_PROVIDER
@@ -112,7 +113,8 @@ public final class ClusterBuilder {
 
         return new Cluster.Builder(name, description, beaconEndpoint)
                 .fsEndpoint(fsEndpoint).hsEndpoint(hsEndpoint).atlasEndpoint(atlasEndpoint)
-                .rangerEndpoint(rangerEndpoint).tags(tags).peers(peers).customProperties(properties)
+                .rangerEndpoint(rangerEndpoint).tags(tags)
+                .peers(ClusterHelper.convertToList(peers)).customProperties(properties)
                 .user(user).local(isLocal).build();
     }
 }

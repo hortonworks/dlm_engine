@@ -892,7 +892,6 @@
                         </goals>
                         <phase>verify</phase>
                         <configuration>
-                            <skip>${skip.check}</skip>
                             <consoleOutput>true</consoleOutput>
                             <includeTestSourceDirectory>true</includeTestSourceDirectory>
                             <configLocation>src/build/checkstyle.xml</configLocation>
@@ -955,7 +954,6 @@
         <testng.version>6.9.8</testng.version>
         <httpcomponents.client.version>4.4</httpcomponents.client.version>
         <httpcomponents.core.version>4.4</httpcomponents.core.version>
-        <skip.check>false</skip.check>
         <skip.findbugs>false</skip.findbugs>
         <skip.rat>false</skip.rat>
         <checkstyle.plugin.version>2.17</checkstyle.plugin.version>

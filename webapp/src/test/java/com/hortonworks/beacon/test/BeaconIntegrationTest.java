@@ -64,6 +64,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Arrays;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -271,7 +272,7 @@ public class BeaconIntegrationTest {
         cluster.setDescription("source cluster description");
         cluster.setBeaconEndpoint(server);
         cluster.setLocal(isLocal);
-        cluster.setTags("consumer,owner");
+        cluster.setTags(Arrays.asList("consumer", "owner"));
         if (customProperties != null) {
             cluster.getCustomProperties().putAll(customProperties);
         }
@@ -306,12 +307,12 @@ public class BeaconIntegrationTest {
         String cluster1Message = getClusterResponse(localCluster, getSourceBeaconServer());
         jsonObject = new JSONObject(cluster1Message);
         assertEquals(jsonObject.getString("name"), localCluster);
-        assertEquals(jsonObject.getString("peers"), "null");
+        assertEquals(jsonObject.getString("peers"), "[]");
 
         String cluster2Message = getClusterResponse(remoteCluster, getSourceBeaconServer());
         jsonObject = new JSONObject(cluster2Message);
         assertEquals(jsonObject.getString("name"), remoteCluster);
-        assertEquals(jsonObject.getString("peers"), "null");
+        assertEquals(jsonObject.getString("peers"), "[]");
     }
 
     protected void validateListClusterWithPeers(boolean hasPeers) throws Exception {
@@ -415,12 +416,12 @@ public class BeaconIntegrationTest {
         String cluster1Message = getClusterResponse(localCluster, getTargetBeaconServer());
         jsonObject = new JSONObject(cluster1Message);
         assertEquals(jsonObject.getString("name"), localCluster);
-        validatePeers(jsonObject.getString("peers"), remoteCluster);
+        validatePeers(jsonObject.getJSONArray("peers"), remoteCluster);
 
         String cluster2Message = getClusterResponse(remoteCluster, getTargetBeaconServer());
         jsonObject = new JSONObject(cluster2Message);
         assertEquals(jsonObject.getString("name"), remoteCluster);
-        validatePeers(jsonObject.getString("peers"), localCluster);
+        validatePeers(jsonObject.getJSONArray("peers"), localCluster);
     }
 
     protected String getResponseMessage(InputStream inputStream) throws IOException {
@@ -445,21 +446,19 @@ public class BeaconIntegrationTest {
         return getResponseMessage(inputStream);
     }
 
-    protected void validatePeers(String peers, String cluster) {
-        if (org.apache.commons.lang3.StringUtils.isNotBlank(peers)) {
-            String[] peerList = peers.split(",");
-            if (peerList.length > 1) {
-                boolean found = false;
-                for (String peer : peerList) {
-                    if (peer.trim().equalsIgnoreCase(cluster)) {
-                        found = true;
-                        break;
-                    }
+    protected void validatePeers(JSONArray peers, String cluster) throws JSONException {
+        if (peers.length() > 1) {
+            boolean found = false;
+            for (int i=0; i<peers.length(); i++) {
+                String peer = peers.getString(i);
+                if (peer.equalsIgnoreCase(cluster)) {
+                    found = true;
+                    break;
                 }
-                assertTrue(found);
-            } else {
-                assertEquals(peerList[0], cluster);
             }
+            assertTrue(found);
+        } else {
+            assertEquals(peers.get(0), cluster);
         }
     }
 

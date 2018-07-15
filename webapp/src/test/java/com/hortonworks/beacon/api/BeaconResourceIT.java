@@ -175,7 +175,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject clusterJson = new JSONObject(clusterResponse);
         assertEquals(clusterJson.getString("name"), clusterName);
         assertEquals(clusterJson.getString("description"), "source cluster description");
-        assertEquals(clusterJson.getString("tags"), "consumer,owner");
+        assertEquals(clusterJson.getString("tags"), "[\"consumer\",\"owner\"]");
         JSONObject customProps = new JSONObject(clusterJson.getString("customProperties"));
         assertEquals(customProps.getString("property-1"), "value-1");
         assertEquals(customProps.getString("property-2"), "value-2");
@@ -185,14 +185,12 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         properties.put("description", "updated source cluster description");
         properties.put("property-2", "updated-value-2");
         properties.put("property-3", "value-3");
-        properties.put("tags", "sales");
 
         updateCluster(clusterName, getSourceBeaconServer(), properties);
         clusterResponse = getClusterResponse(clusterName, getSourceBeaconServer());
         JSONObject updatedClusterJson = new JSONObject(clusterResponse);
         assertEquals(updatedClusterJson.getString("name"), clusterName);
         assertEquals(updatedClusterJson.getString("description"), "updated source cluster description");
-        assertEquals(updatedClusterJson.getString("tags"), "consumer,owner,sales");
         JSONObject updatedCustomProps = new JSONObject(updatedClusterJson.getString("customProperties"));
         assertEquals(updatedCustomProps.getString("property-1"), "value-1");
         assertEquals(updatedCustomProps.getString("property-2"), "updated-value-2");
@@ -597,14 +595,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     @Test(dependsOnMethods = {"testSubmitCluster", "testPairCluster"})
     public void testPolicyUpdateRequireJobReschedule() throws Exception {
         String dataSet = "/tmp/" + UUID.randomUUID();
-//        String srcFsEndPoint = srcDfsCluster.getURI().toString();
-//        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
         srcDfsCluster.getFileSystem().mkdirs(new Path(dataSet));
-//        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
-//        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
-//        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
-//        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
-//        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         final String policyName = "policy-update-job-reschedule";
         String type = FS;
         int freq = 5 * 60;

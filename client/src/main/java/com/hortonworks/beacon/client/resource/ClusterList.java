@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.client.resource;
 
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.PeerInfo;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -46,7 +47,7 @@ public class ClusterList {
     private int results;
 
     @XmlElement(name = "cluster")
-    private final ClusterElement[] elements;
+    private final Cluster[] clusters;
 
     public long getTotalResults() {
         return totalResults;
@@ -59,7 +60,7 @@ public class ClusterList {
      * List of fields returned by RestAPI.
      */
     public enum ClusterFieldList {
-        NAME, PEERS, PEERSINFO, TAGS
+        NAME, PEERS, PEERSINFO, TAGS, ALL
     }
 
     /**
@@ -92,19 +93,19 @@ public class ClusterList {
 
     //For JAXB
     public ClusterList() {
-        this.elements = null;
+        this.clusters = null;
         this.totalResults = 0;
         this.results = 0;
     }
 
-    public ClusterList(ClusterElement[] elements, long totalResults) {
+    public ClusterList(Cluster[] elements, long totalResults) {
         this.totalResults = totalResults;
-        this.elements = elements != null ? Arrays.copyOf(elements, elements.length) : null;
+        this.clusters = elements != null ? Arrays.copyOf(elements, elements.length) : null;
         this.results = elements != null ? elements.length : 0;
     }
 
-    public ClusterElement[] getElements() {
-        return elements != null ? Arrays.copyOf(elements, elements.length) : null;
+    public Cluster[] getClusters() {
+        return clusters != null ? Arrays.copyOf(clusters, clusters.length) : null;
     }
 
     @Override
@@ -112,7 +113,7 @@ public class ClusterList {
         StringBuilder buffer = new StringBuilder();
         buffer.append(totalResults + "\n");
         buffer.append(results + "\n");
-        for (ClusterElement element : elements) {
+        for (Cluster element : clusters) {
             buffer.append(element.toString());
         }
         return buffer.toString();

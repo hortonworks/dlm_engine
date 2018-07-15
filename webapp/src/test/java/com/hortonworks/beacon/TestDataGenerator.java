@@ -42,7 +42,7 @@ public abstract class TestDataGenerator {
 
     public abstract void init() throws BeaconException;
 
-    public abstract Cluster getCluster(ResourceBaseTest.ClusterType clusterType);
+    public abstract Cluster getCluster(ResourceBaseTest.ClusterType clusterType, boolean isLocal);
 
     public abstract BeaconClient getClient(ResourceBaseTest.ClusterType clusterType);
 

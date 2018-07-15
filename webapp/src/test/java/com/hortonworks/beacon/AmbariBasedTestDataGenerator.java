@@ -37,7 +37,7 @@ public class AmbariBasedTestDataGenerator extends TestDataGenerator {
     }
 
     @Override
-    public Cluster getCluster(ResourceBaseTest.ClusterType clusterType) {
+    public Cluster getCluster(ResourceBaseTest.ClusterType clusterType, boolean isLocal) {
         return null;
     }
 

@@ -27,17 +27,23 @@ import com.hortonworks.beacon.api.ResourceBaseTest;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
+import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
+import com.hortonworks.beacon.entity.util.hive.HiveServerClient;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.BeaconStoreService;
 import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.tools.BeaconDBSetup;
+import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Test data generator for local testing.
@@ -50,23 +56,43 @@ public class LocalTestDataGenerator extends TestDataGenerator {
     @Mock
     private FileSystem targetFs;
 
+    @Mock
+    private HiveMetadataClient hiveMetadataClient;
+
+    @Mock
+    private HiveServerClient hiveServerClient;
+
     @Override
     public void init() throws BeaconException {
+        MockitoAnnotations.initMocks(this);
+        FileSystemClientFactory.setFileSystem(sourceFs);
+        HiveClientFactory.setHiveMetadataClient(hiveMetadataClient);
+        HiveClientFactory.setHiveServerClient(hiveServerClient);
         BeaconConfig.getInstance();
         BeaconDBSetup.setupDB();
         List<String> defaultServices = Arrays.asList(BeaconStoreService.class.getName());
         List<String> dependentServices = Arrays.asList(BeaconQuartzScheduler.class.getName());
         ServiceManager.getInstance().initialize(defaultServices, dependentServices);
+
     }
 
     @Override
-    public Cluster getCluster(ResourceBaseTest.ClusterType clusterType) {
+    public Cluster getCluster(ResourceBaseTest.ClusterType clusterType, boolean isLocal) {
         Cluster cluster = new Cluster();
-        cluster.setName(randomString("cluster"));
+        cluster.setLocal(isLocal);
+        cluster.setName(clusterType.getClusterName(isLocal));
         cluster.setDescription(randomString("description"));
-        cluster.setLocal(false);
-        cluster.setFsEndpoint("hdfs://local-" + clusterType);
+        if (isLocal) {
+            cluster.setFsEndpoint("file:///");
+        } else {
+            cluster.setFsEndpoint("hdfs://local-" + clusterType);
+        }
+        cluster.setHsEndpoint("jdbc:hive2://local-" + clusterType);
         cluster.setBeaconEndpoint("http://beacon-" + cluster);
+        cluster.setTags(Arrays.asList("test", "local", "IT"));
+        Properties properties = new Properties();
+        properties.put("testKey", "testVal");
+        cluster.setCustomProperties(properties);
         return cluster;
     }
 
@@ -80,10 +106,8 @@ public class LocalTestDataGenerator extends TestDataGenerator {
         switch (clusterType) {
             case SOURCE:
                 return sourceFs;
-
             case TARGET:
                 return targetFs;
-
             default:
                 throw new IllegalStateException("Unhandled cluster type " + clusterType);
         }

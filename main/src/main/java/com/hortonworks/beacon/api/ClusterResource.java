@@ -34,7 +34,6 @@ import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.StatusResult;
-import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.ClusterProperties;
 import com.hortonworks.beacon.entity.ClusterValidator;
 import com.hortonworks.beacon.entity.EntityValidatorFactory;
@@ -50,7 +49,6 @@ import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.util.ClusterStatus;
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,6 +77,12 @@ public class ClusterResource extends AbstractResourceManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(ClusterResource.class);
 
+    /**
+     * Submit a new cluster to beacon.
+     * @param clusterName
+     * @param requestProperties
+     * @return
+     */
     @POST
     @Path("submit/{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
@@ -103,6 +107,12 @@ public class ClusterResource extends AbstractResourceManager {
         }
     }
 
+    /**
+     * Update an existing cluster.
+     * @param clusterName
+     * @param requestProperties
+     * @return
+     */
     @PUT
     @Path("{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
@@ -118,6 +128,15 @@ public class ClusterResource extends AbstractResourceManager {
         }
     }
 
+    /**
+     * List all clusters.
+     * @param fields see {@link ClusterList.ClusterFieldList}.
+     * @param orderBy
+     * @param sortOrder
+     * @param offset
+     * @param resultsPerPage
+     * @return
+     */
     @GET
     @Path("list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
@@ -133,6 +152,11 @@ public class ClusterResource extends AbstractResourceManager {
         return getClusterList(fields, orderBy, sortOrder, offset, resultsPerPage);
     }
 
+    /**
+     * Get the status of the cluster.
+     * @param clusterName
+     * @return
+     */
     @GET
     @Path("status/{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
@@ -151,7 +175,7 @@ public class ClusterResource extends AbstractResourceManager {
     @Path("getEntity/{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     @Timed(absolute = true, name="api.beacon.cluster.definition")
-    public String definition(@PathParam("cluster-name") String clusterName) {
+    public Cluster definition(@PathParam("cluster-name") String clusterName) {
         return getClusterDefinition(clusterName);
     }
 
@@ -169,6 +193,13 @@ public class ClusterResource extends AbstractResourceManager {
         }
     }
 
+    /**
+     * Pair the local cluster with other remote cluster.
+     * @param remoteClusterName name of remote cluster.
+     * @param isInternalPairing True means sync call from the remote beacon. False means
+     *                          call is coming from DLM App.
+     * @return
+     */
     @POST
     @Path("pair")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
@@ -188,6 +219,13 @@ public class ClusterResource extends AbstractResourceManager {
         }
     }
 
+    /**
+     * Unpair the local cluster from the remote cluster.
+     * @param remoteClusterName name of remote cluster.
+     * @param isInternalUnpairing True means sync call from the remote beacon. False means
+     *      *                     call is coming from DLM App.
+     * @return
+     */
     @POST
     @Path("unpair")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
@@ -236,11 +274,9 @@ public class ClusterResource extends AbstractResourceManager {
         return new StatusResult(clusterName, Entity.EntityStatus.SUBMITTED.name());
     }
 
-    private String getClusterDefinition(String entityName) {
+    private Cluster getClusterDefinition(String entityName) {
         try {
-            Entity entity = clusterDao.getActiveCluster(entityName);
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.writeValueAsString(entity);
+            return clusterDao.getActiveCluster(entityName);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
@@ -252,7 +288,7 @@ public class ClusterResource extends AbstractResourceManager {
         try {
             RequestContext.get().startTransaction();
             Cluster cluster = clusterDao.getActiveCluster(clusterName);
-            if (StringUtils.isNotBlank(cluster.getPeers())) {
+            if (cluster.getPeers().size() > 0) {
                 throw new ValidationException("Can't delete cluster {} as its paired with {}", clusterName,
                         cluster.getPeers());
             }
@@ -418,14 +454,9 @@ public class ClusterResource extends AbstractResourceManager {
                 newProps.setProperty(property, updatedClusterCustomProps.getProperty(property));
             }
         }
-
-        if (StringUtils.isNotBlank(updatedCluster.getTags())) {
-            String existingClusterTags = existingCluster.getTags();
-            String tags = StringUtils.isNotBlank(existingClusterTags)
-                    ? existingClusterTags + BeaconConstants.COMMA_SEPARATOR + updatedCluster.getTags()
-                    : updatedCluster.getTags();
-            updatedCluster.setTags(tags);
-        }
+        List<String> existingClusterTags = existingCluster.getTags();
+        existingClusterTags.addAll(updatedCluster.getTags());
+        updatedCluster.setTags(existingClusterTags);
     }
 
     private void validateUpdate(PropertiesIgnoreCase properties, Cluster updatedCluster) throws BeaconException {
@@ -437,13 +468,12 @@ public class ClusterResource extends AbstractResourceManager {
     }
 
     private void validatePairingAndUpdateStatus(Cluster modifiedExistingCluster) throws BeaconException {
-        String peersStr = modifiedExistingCluster.getPeers();
-        if (StringUtils.isBlank(peersStr)) {
+        List<String> peers = modifiedExistingCluster.getPeers();
+        if (peers.size() == 0) {
             LOG.info("No peer for cluster [{}] found, skipping the pairing status validation",
                     modifiedExistingCluster.getName());
             return;
         }
-        String[] peers = modifiedExistingCluster.getPeers().split(BeaconConstants.COMMA_SEPARATOR);
         Set<String> toBeSuspendedPeers = new HashSet<String>();
         Set<String> toBePairedBackPeers = new HashSet<String>();
         for (String peer: peers) {
@@ -527,7 +557,9 @@ public class ClusterResource extends AbstractResourceManager {
     }
 
     private Cluster getClusterWithPeerInfo(Cluster localCluster, String remoteClusterName) {
-        localCluster.setPeers(remoteClusterName);
+        List<String> oldPeers = localCluster.getPeers();
+        oldPeers.add(remoteClusterName);
+        localCluster.setPeers(oldPeers);
         return localCluster;
     }
 }

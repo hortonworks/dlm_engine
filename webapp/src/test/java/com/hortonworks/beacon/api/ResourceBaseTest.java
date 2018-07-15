@@ -25,28 +25,57 @@ package com.hortonworks.beacon.api;
 import com.hortonworks.beacon.TestDataGenerator;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.testng.annotations.BeforeClass;
 
 /**
  * Base class for tests.
  */
-public class ResourceBaseTest {
+public abstract class ResourceBaseTest {
     /**
      * Enum for source/target.
      */
     public enum ClusterType {
-        SOURCE,
-        TARGET
+        SOURCE {
+            @Override
+            public String getClusterName(boolean isLocal) {
+                if (isLocal) {
+                    return "cluster-local";
+                } else {
+                    return randomString("cluster");
+                }
+            }
+        },
+        TARGET {
+            @Override
+            public String getClusterName(boolean isLocal) {
+                if (isLocal) {
+                    return "cluster-target";
+                } else {
+                    return randomString("cluster");
+                }
+            }
+        };
+
+        public abstract String getClusterName(boolean isLocal);
+
+        public String randomString(String prefix) {
+            return prefix + RandomStringUtils.randomAlphanumeric(10);
+        }
     }
 
-    protected TestDataGenerator testDataGenerator = TestDataGenerator.getTestDataGenerator();
+    protected TestDataGenerator testDataGenerator;
 
-    protected BeaconClient sourceClient = testDataGenerator.getClient(ClusterType.SOURCE);
-    protected FileSystem sourceFs = testDataGenerator.getFileSystem(ClusterType.SOURCE);
+    protected BeaconClient sourceClient;
+    protected FileSystem sourceFs;
 
     @BeforeClass
     public void setup() throws BeaconException {
+        System.setProperty("beacon.test.local", "true");
+        testDataGenerator = TestDataGenerator.getTestDataGenerator();
+        sourceClient = testDataGenerator.getClient(ClusterType.SOURCE);
+        sourceFs = testDataGenerator.getFileSystem(ClusterType.SOURCE);
         testDataGenerator.init();
     }
 }

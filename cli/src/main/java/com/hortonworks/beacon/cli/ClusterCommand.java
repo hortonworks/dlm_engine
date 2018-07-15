@@ -33,8 +33,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
 
 /**
  * Handles cluster commands like submit, pair etc.
@@ -88,7 +86,7 @@ public class ClusterCommand extends CommandBase {
 
     private void printClusterDefinition() throws BeaconClientException {
         Cluster cluster = client.getCluster(clusterName);
-        System.out.println(ReflectionToStringBuilder.toString(cluster, ToStringStyle.MULTI_LINE_STYLE));
+        System.out.println(cluster.toString());
     }
 
     private void unpair() throws BeaconClientException {
@@ -142,8 +140,8 @@ public class ClusterCommand extends CommandBase {
     private void printResult(String operation, ClusterList result) {
         System.out.println(operation + " " + APIResult.Status.SUCCEEDED);
         if (result != null) {
-            for (ClusterList.ClusterElement element : result.getElements()) {
-                System.out.println(element.name);
+            for (Cluster element : result.getClusters()) {
+                System.out.println(element);
             }
         }
     }

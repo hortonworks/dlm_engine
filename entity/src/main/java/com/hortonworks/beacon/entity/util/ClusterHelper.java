@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Arrays;
 
 /**
  * Helper util class for Beacon Cluster resource.
@@ -46,6 +47,28 @@ public final class ClusterHelper {
     private static ClusterDao clusterDao = new ClusterDao();
 
     private ClusterHelper() {
+    }
+
+    public static List<String> convertToList(String tags) {
+        List<String> tagList = new ArrayList<>();
+        if (org.apache.commons.lang.StringUtils.isNotBlank(tags)) {
+            String[] strings = tags.split(BeaconConstants.COMMA_SEPARATOR);
+            tagList = Arrays.asList(strings);
+        }
+        return tagList;
+    }
+
+
+    public static String convertToString(List<String> tags) {
+        StringBuilder tagString = new StringBuilder();
+        if (tags == null) {
+            return tagString.toString();
+        }
+        for(String tag : tags) {
+            tagString = tagString.length() > 0 ? tagString.append(BeaconConstants.COMMA_SEPARATOR) : tagString;
+            tagString.append(tag.trim());
+        }
+        return tagString.toString();
     }
 
     public static boolean isHDFSEnabled(Cluster cluster) {
@@ -130,13 +153,10 @@ public final class ClusterHelper {
     }
 
     public static boolean areClustersPaired(final Cluster localCluster, final String remoteCluster) {
-        String clusterPeers = localCluster.getPeers();
-        if (StringUtils.isNotBlank(clusterPeers)) {
-            String[] peers = clusterPeers.split(BeaconConstants.COMMA_SEPARATOR);
-            for (String peer : peers) {
-                if (peer.trim().equalsIgnoreCase(remoteCluster)) {
-                    return true;
-                }
+        List<String> clusterPeers = localCluster.getPeers();
+        for (String peer : clusterPeers) {
+            if (peer.equalsIgnoreCase(remoteCluster)) {
+                return true;
             }
         }
         return false;
@@ -164,15 +184,7 @@ public final class ClusterHelper {
     }
 
     static List<String> getTags(Entity entity) {
-        String rawTags = entity.getTags();
-
-        List<String> tags = new ArrayList<>();
-        if (!StringUtils.isEmpty(rawTags)) {
-            for (String tag : rawTags.split(BeaconConstants.COMMA_SEPARATOR)) {
-                tags.add(tag.trim());
-            }
-        }
-        return tags;
+        return entity.getTags();
     }
 
     public static Cluster getActiveCluster(String clusterName) throws BeaconException {
@@ -194,5 +206,17 @@ public final class ClusterHelper {
                 "Clusters {} and {} are not paired. Pair the clusters before submitting or scheduling the policy",
                 sourceCluster, targetCluster);
         }
+    }
+
+    public static List<String> getTagsList(String tags) {
+        List<String> tagList = new ArrayList<>();
+        if (org.apache.commons.lang.StringUtils.isNotBlank(tags)) {
+            tags = tags.substring(1, tags.length());
+            tags = tags.substring(0, tags.length() - 1);
+            String[] strings = tags.split(BeaconConstants.COMMA_SEPARATOR);
+            tagList = Arrays.asList(strings);
+        }
+        return tagList;
+
     }
 }

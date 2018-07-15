@@ -26,7 +26,6 @@ import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.PeerInfo;
 import com.hortonworks.beacon.client.resource.ClusterList;
-import com.hortonworks.beacon.client.resource.ClusterList.ClusterElement;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.store.BeaconStoreException;
@@ -39,18 +38,19 @@ import com.hortonworks.beacon.store.executors.ClusterListExecutor;
 import com.hortonworks.beacon.store.executors.ClusterPairExecutor;
 import com.hortonworks.beacon.store.executors.ClusterUpdateExecutor;
 import com.hortonworks.beacon.util.ClusterStatus;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+
+import static com.hortonworks.beacon.entity.util.ClusterHelper.convertToList;
+import static com.hortonworks.beacon.entity.util.ClusterHelper.convertToString;
 
 /**
  * Persistence Cluster helper for Beacon.
@@ -76,7 +76,7 @@ public final class ClusterDao {
         bean.setAtlasEndpoint(cluster.getAtlasEndpoint());
         bean.setRangerEndpoint(cluster.getRangerEndpoint());
         bean.setLocal(cluster.isLocal());
-        bean.setTags(cluster.getTags());
+        bean.setTags(convertToString(cluster.getTags()));
         List<ClusterPropertiesBean> propertiesBeans = new ArrayList<>();
         Properties customProperties = cluster.getCustomProperties();
         for (String key : customProperties.stringPropertyNames()) {
@@ -100,37 +100,40 @@ public final class ClusterDao {
         cluster.setAtlasEndpoint(bean.getAtlasEndpoint());
         cluster.setRangerEndpoint(bean.getRangerEndpoint());
         cluster.setLocal(bean.isLocal());
-        cluster.setTags(bean.getTags());
+        cluster.setTags(convertToList(bean.getTags()));
         Properties customProperties = new Properties();
-        for (ClusterPropertiesBean propertiesBean : bean.getCustomProperties()) {
-            customProperties.put(propertiesBean.getName(), propertiesBean.getValue());
+        if (bean.getCustomProperties() != null) {
+            for (ClusterPropertiesBean propertiesBean : bean.getCustomProperties()) {
+                customProperties.put(propertiesBean.getName(), propertiesBean.getValue());
+            }
         }
         cluster.setCustomProperties(customProperties);
         // Update the peers information
         List<ClusterPairBean> pairBeans = bean.getClusterPairs();
         ClusterKey key = new ClusterKey(bean.getName(), bean.getVersion());
-        StringBuilder peers = new StringBuilder();
+        List<String> peers = new ArrayList<>();
         List<PeerInfo> peersInfo = new ArrayList<>();
-        for (ClusterPairBean pairBean : pairBeans) {
-            ClusterKey clusterKey = new ClusterKey(pairBean.getClusterName(), pairBean.getClusterVersion());
-            ClusterKey pairedClusterKey = new ClusterKey(pairBean.getPairedClusterName(),
-                    pairBean.getPairedClusterVersion());
-            if (ClusterStatus.PAIRED.name().equals(pairBean.getStatus())
-                    || ClusterStatus.SUSPENDED.name().equals(pairBean.getStatus())) {
-                PeerInfo peerInfo = new PeerInfo();
-                peers = peers.length() > 0 ? peers.append(BeaconConstants.COMMA_SEPARATOR) : peers;
-                if (key.equals(clusterKey)) {
-                    peers.append(pairedClusterKey.getName());
-                    peerInfo.setClusterName(pairedClusterKey.getName());
-                } else {
-                    peers.append(clusterKey.getName());
-                    peerInfo.setClusterName(clusterKey.getName());
+        if (pairBeans != null) {
+            for (ClusterPairBean pairBean : pairBeans) {
+                ClusterKey clusterKey = new ClusterKey(pairBean.getClusterName(), pairBean.getClusterVersion());
+                ClusterKey pairedClusterKey = new ClusterKey(pairBean.getPairedClusterName(),
+                        pairBean.getPairedClusterVersion());
+                if (ClusterStatus.PAIRED.name().equals(pairBean.getStatus())
+                        || ClusterStatus.SUSPENDED.name().equals(pairBean.getStatus())) {
+                    PeerInfo peerInfo = new PeerInfo();
+                    if (key.equals(clusterKey)) {
+                        peers.add(pairedClusterKey.getName());
+                        peerInfo.setClusterName(pairedClusterKey.getName());
+                    } else {
+                        peers.add(clusterKey.getName());
+                        peerInfo.setClusterName(clusterKey.getName());
+                    }
+                    peerInfo.setPairStatus(pairBean.getStatus());
+                    peersInfo.add(peerInfo);
                 }
-                peerInfo.setPairStatus(pairBean.getStatus());
-                peersInfo.add(peerInfo);
             }
         }
-        cluster.setPeers(peers.length() > 1 ? peers.toString() : null);
+        cluster.setPeers(peers);
         cluster.setPeersInfo(!peersInfo.isEmpty() ? peersInfo : null);
         return cluster;
     }
@@ -231,62 +234,55 @@ public final class ClusterDao {
                                                   Integer offset, Integer resultsPerPage) throws BeaconException {
         ClusterListExecutor executor = new ClusterListExecutor();
         long clusterCount = executor.getFilterClusterCount(offset, resultsPerPage);
-        List<Cluster> clusters = new ArrayList<>();
+        List<ClusterBean> filterClusters = new ArrayList<>();
         if (clusterCount > 0) {
-            List<ClusterBean> filterClusters = executor.getFilterClusters(orderBy, sortOrder, offset, resultsPerPage);
-            for (ClusterBean bean : filterClusters) {
-                Cluster cluster = new Cluster();
-                cluster.setName(bean.getName());
-                cluster.setVersion(bean.getVersion());
-                List<ClusterPairBean> pairedCluster = getPairedCluster(cluster);
-                bean.setClusterPairs(pairedCluster);
-                bean.setCustomProperties(Collections.<ClusterPropertiesBean>emptyList());
-                cluster = getCluster(bean);
-                clusters.add(cluster);
-            }
+            filterClusters = executor.getFilterClusters(orderBy, sortOrder, offset, resultsPerPage);
         }
         HashSet<String> fields = new HashSet<>(Arrays.asList(fieldStr.toUpperCase().
                 split(BeaconConstants.COMMA_SEPARATOR)));
-        return clusters.size() == 0
-                ? new ClusterList(new ClusterElement[]{}, 0)
-                : new ClusterList(buildClusterElements(fields, clusters), clusterCount);
+        return clusterCount == 0
+                ? new ClusterList(new Cluster[]{}, 0)
+                : new ClusterList(buildClusterElements(fields, filterClusters), clusterCount);
 
     }
 
-    private ClusterElement[] buildClusterElements(HashSet<String> fields, List<Cluster> clusters) {
-        ClusterElement[] elements = new ClusterElement[clusters.size()];
+    private Cluster[] buildClusterElements(HashSet<String> fields, List<ClusterBean> clusterBeans)
+            throws BeaconStoreException {
+        Cluster[] elements = new Cluster[clusterBeans.size()];
         int elementIndex = 0;
-        for (Cluster cluster : clusters) {
-            elements[elementIndex++] = getClusterElement(cluster, fields);
+        for (ClusterBean clusterBean : clusterBeans) {
+            elements[elementIndex++] = getClusterElement(clusterBean, fields);
         }
         return elements;
     }
 
-    private ClusterElement getClusterElement(Cluster cluster, HashSet<String> fields) {
-        ClusterElement elem = new ClusterElement();
-        elem.name = cluster.getName();
+    private Cluster getClusterElement(ClusterBean clusterBean, HashSet<String> fields) throws BeaconStoreException {
+        Cluster cluster;
+        if (fields.contains(ClusterList.ClusterFieldList.ALL.name())) {
+            ClusterExecutor clusterExecutor = new ClusterExecutor(clusterBean);
+            clusterExecutor.updateClusterPair(clusterBean);
+            clusterExecutor.updateClusterProp(clusterBean);
+            cluster = getCluster(clusterBean);
+        } else {
+            if (fields.contains(ClusterList.ClusterFieldList.PEERS.name())
+                    || fields.contains(ClusterList.ClusterFieldList.PEERSINFO.name())) {
+                ClusterExecutor clusterExecutor = new ClusterExecutor(clusterBean);
+                clusterExecutor.updateClusterPair(clusterBean);
+            }
+            cluster = getCluster(clusterBean);
+            if (!fields.contains(ClusterList.ClusterFieldList.PEERS.name())) {
+                cluster.setPeers(new ArrayList<String>());
+            }
 
-        if (fields.contains(ClusterList.ClusterFieldList.PEERS.name())) {
-            if (StringUtils.isNotBlank(cluster.getPeers())) {
-                String[] peers = cluster.getPeers().split(BeaconConstants.COMMA_SEPARATOR);
-                elem.peer = Arrays.asList(peers);
-            } else {
-                elem.peer = new ArrayList<>();
+            if (!fields.contains(ClusterList.ClusterFieldList.PEERSINFO.name())) {
+                cluster.setPeersInfo(new ArrayList<PeerInfo>());
+            }
+
+            if (!fields.contains(ClusterList.ClusterFieldList.TAGS.name())) {
+                cluster.setTags(new ArrayList<String>());
             }
         }
-
-        if (fields.contains(ClusterList.ClusterFieldList.PEERSINFO.name())) {
-            if (cluster.getPeersInfo() != null && !cluster.getPeersInfo().isEmpty()) {
-                elem.peersInfo = cluster.getPeersInfo();
-            } else {
-                elem.peersInfo = new ArrayList<>();
-            }
-        }
-
-        if (fields.contains(ClusterList.ClusterFieldList.TAGS.name())) {
-            elem.tag = ClusterHelper.getTags(cluster);
-        }
-        return elem;
+        return cluster;
     }
 
     public void pairCluster(Cluster localCluster, Cluster remoteCluster) throws BeaconStoreException {

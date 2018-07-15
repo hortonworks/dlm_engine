@@ -94,7 +94,7 @@ public class CloudCred extends Entity {
     }
 
     @Override
-    public String getTags() {
+    public List<String> getTags() {
         throw new RuntimeException("Operation is not supported on cloudCred entity");
     }
 

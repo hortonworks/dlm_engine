@@ -27,6 +27,7 @@ import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -49,7 +50,7 @@ public class ReplicationPolicy extends Entity {
     private Date startTime;
     private Date endTime;
     private int frequencyInSec;
-    private String tags;
+    private List<String> tags;
     private Properties customProperties = new Properties();
     private Retry retry;
     private String user;
@@ -129,7 +130,7 @@ public class ReplicationPolicy extends Entity {
         private Date startTime;
         private Date endTime;
         private int frequencyInSec;
-        private String tags;
+        private List<String> tags;
         private Properties customProperties;
         private Retry retry;
         private String user;
@@ -168,7 +169,7 @@ public class ReplicationPolicy extends Entity {
             return this;
         }
 
-        public Builder tags(String tagsValue) {
+        public Builder tags(List<String> tagsValue) {
             this.tags = tagsValue;
             return this;
         }
@@ -271,11 +272,11 @@ public class ReplicationPolicy extends Entity {
     }
 
     @Override
-    public String getTags() {
+    public List<String> getTags() {
         return tags;
     }
 
-    public void setTags(String tags) {
+    public void setTags(List<String> tags) {
         this.tags = tags;
     }
 

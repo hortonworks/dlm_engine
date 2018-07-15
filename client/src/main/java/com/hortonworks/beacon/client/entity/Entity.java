@@ -24,6 +24,8 @@ package com.hortonworks.beacon.client.entity;
 
 import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 
+import java.util.List;
+
 /**
  * Base class that all Beacon resource class will extend.
  */
@@ -33,7 +35,7 @@ public abstract class Entity {
 
     public abstract String getName();
 
-    public abstract String getTags();
+    public abstract List<String> getTags();
 
     public abstract PropertiesIgnoreCase asProperties();
 

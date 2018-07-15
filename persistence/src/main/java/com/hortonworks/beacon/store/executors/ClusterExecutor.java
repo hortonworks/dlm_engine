@@ -128,7 +128,7 @@ public class ClusterExecutor extends BaseExecutor {
         return clusterBean;
     }
 
-    private void updateClusterPair(final ClusterBean clusterBean) {
+    public void updateClusterPair(final ClusterBean clusterBean) {
         ClusterPairBean pairBean = new ClusterPairBean();
         pairBean.setClusterName(clusterBean.getName());
         pairBean.setClusterVersion(clusterBean.getVersion());
@@ -137,7 +137,7 @@ public class ClusterExecutor extends BaseExecutor {
         clusterBean.setClusterPairs(pairedCluster);
     }
 
-    private void updateClusterProp(final ClusterBean clusterBean) throws BeaconStoreException {
+    public void updateClusterProp(final ClusterBean clusterBean) throws BeaconStoreException {
         ClusterPropertiesBean propertiesBean = new ClusterPropertiesBean(clusterBean.getName(),
                 clusterBean.getVersion());
         ClusterPropertiesExecutor executor = new ClusterPropertiesExecutor(propertiesBean);

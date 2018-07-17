@@ -329,7 +329,7 @@ hive.warehouse.subdir.inherit.perms=false
 hive.repl.replica.functions.root.dir=s3a://beacontest/hive-replica-func/
 knox.proxy.url=https://knox-host:8443/gateway
 
-* Payload data can be subset of any of the above properties
+*This API does a full update to a cluster and hence the properties supplied in the payload will replace all the existing properties of a cluster.
 
 *Response:*
 
@@ -351,6 +351,8 @@ knox.proxy.url=https://knox-host:8443/gateway
 *Note 3:* Active policy instances detects automatically any change in cluster pairing status.
 
 *Note 4:* 'name', 'version' and 'local' properties of a cluster can not be updated.
+
+*Note 5:* 'local' can be part of payload, but it's existing value can not be changed.
 
 
 Example of a cluster update with data center in the cluster name.

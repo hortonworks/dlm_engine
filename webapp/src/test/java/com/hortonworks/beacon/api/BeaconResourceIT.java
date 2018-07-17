@@ -192,7 +192,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(updatedClusterJson.getString("name"), clusterName);
         assertEquals(updatedClusterJson.getString("description"), "updated source cluster description");
         JSONObject updatedCustomProps = new JSONObject(updatedClusterJson.getString("customProperties"));
-        assertEquals(updatedCustomProps.getString("property-1"), "value-1");
+        assertTrue(updatedCustomProps.isNull("property-1"));
         assertEquals(updatedCustomProps.getString("property-2"), "updated-value-2");
         assertEquals(updatedCustomProps.getString("property-3"), "value-3");
     }

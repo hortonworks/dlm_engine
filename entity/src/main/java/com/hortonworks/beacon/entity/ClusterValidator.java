@@ -53,16 +53,21 @@ public class ClusterValidator extends EntityValidator<Cluster> {
     private static final Logger LOG = LoggerFactory.getLogger(ClusterValidator.class);
     private static final String IPC_MAX_TRIES = "ipc.client.connect.max.retries";
 
-    ClusterValidator() {
+    public ClusterValidator() {
         super(EntityType.CLUSTER);
     }
 
     @Override
     public void validate(Cluster entity) throws BeaconException {
         validateClusterExists(entity.getName());
+        validateClusterInfo(entity, false);
+    }
 
+    public void validateClusterInfo(Cluster entity, boolean update) throws BeaconException {
         if (entity.isLocal()) {
-            validateLocalCluster(entity.getName());
+            if (!update) {
+                validateLocalCluster(entity.getName());
+            }
             validateCustomSetup(entity);
             boolean knoxProxyEnabled = BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled();
 

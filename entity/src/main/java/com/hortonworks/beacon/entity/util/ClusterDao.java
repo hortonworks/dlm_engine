@@ -182,17 +182,6 @@ public final class ClusterDao {
         executor.retireCluster();
     }
 
-    public void unpairAllPairedCluster(Cluster cluster) throws BeaconStoreException {
-        List<ClusterPairBean> pairedCluster = getPairedCluster(cluster);
-        Date lastModifiedTime = new Date();
-        for (ClusterPairBean pairBean : pairedCluster) {
-            pairBean.setStatus(ClusterStatus.UNPAIRED.name());
-            pairBean.setLastModifiedTime(lastModifiedTime);
-            ClusterPairExecutor executor = new ClusterPairExecutor(pairBean);
-            executor.updateStatus();
-        }
-    }
-
     public void movePairStatusForClusters(Cluster cluster, Set<String> peerClusters, ClusterStatus fromStatus,
                                            ClusterStatus toStatus) throws BeaconStoreException {
         List<ClusterPairBean> pairedCluster = getPairedCluster(cluster);
@@ -306,8 +295,8 @@ public final class ClusterDao {
     }
 
     public void persistUpdatedCluster(Cluster updatedCluster, PropertiesIgnoreCase updatedProps,
-                                             PropertiesIgnoreCase newProps) {
+                                             PropertiesIgnoreCase newProps, PropertiesIgnoreCase deletedProps) {
         ClusterUpdateExecutor executor = new ClusterUpdateExecutor();
-        executor.persistUpdatedCluster(getClusterBean(updatedCluster), updatedProps, newProps);
+        executor.persistUpdatedCluster(getClusterBean(updatedCluster), updatedProps, newProps, deletedProps);
     }
 }

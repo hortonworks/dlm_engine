@@ -74,7 +74,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
     public static final String DEFAULT_BROWSER_USERAGENT = "beacon.sso.knox.default.browser-useragents";
     public static final String LOCAL_LOGIN_URL = "locallogin";
     private String originalUrlQueryParam = "originalUrl";
-    private String cookieName = "hadoop-jwt";
+    private String cookieName = JWT_COOKIE_NAME_DEFAULT;
     private SSOAuthenticationProperties jwtProperties;
     private String authenticationProviderUrl = null;
     private RSAPublicKey publicKey = null;

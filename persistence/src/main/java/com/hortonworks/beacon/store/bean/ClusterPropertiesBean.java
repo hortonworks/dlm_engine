@@ -45,7 +45,10 @@ import java.util.Date;
         + "where b.clusterName = :clusterName AND b.clusterVersion = :clusterVersion"),
         @NamedQuery(name = "UPDATE_CLUSTER_PROP", query = "update ClusterPropertiesBean b set b.value = :valueParam "
                 + "where b.clusterName = :clusterNameParam AND b.clusterVersion = :clusterVersionParam "
-                + "AND b.name = :nameParam")
+                + "AND b.name = :nameParam"),
+        @NamedQuery(name = "DELETE_CLUSTER_PROP", query = "delete from ClusterPropertiesBean b "
+                + "where b.clusterName = :clusterNameParam AND b.clusterVersion = :clusterVersionParam "
+                + "AND b.name = :nameParam"),
         })
 public class ClusterPropertiesBean {
 

@@ -87,7 +87,6 @@ public enum ClusterProperties {
     public static List<String> updateExclusionProps() {
         List<String> exclusionProps = new ArrayList<>();
         exclusionProps.add(NAME.getName());
-        exclusionProps.add(LOCAL.getName());
         exclusionProps.add(PEERS.getName());
         exclusionProps.add(PEERSINFO.getName());
         return exclusionProps;

@@ -26,7 +26,6 @@ import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.store.bean.ClusterBean;
 import com.hortonworks.beacon.store.bean.ClusterPropertiesBean;
 import com.hortonworks.beacon.store.executors.ClusterPropertiesExecutor.ClusterPropertiesQuery;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,12 +48,16 @@ public class ClusterUpdateExecutor extends BaseExecutor {
     }
 
     public void persistUpdatedCluster(ClusterBean updatedCluster, PropertiesIgnoreCase updatedProps,
-                                      PropertiesIgnoreCase newProps) {
+                                      PropertiesIgnoreCase newProps, PropertiesIgnoreCase deletedProps) {
         Query clusterUpdateQuery = createClusterUpdateQuery(updatedCluster);
-        List<Query> clusterPropUpdateQuery = createClusterPropUpdateQuery(updatedCluster, updatedProps);
         List<ClusterPropertiesBean> clusterPropertiesBeans = insertNewClusterProps(updatedCluster, newProps);
         clusterUpdateQuery.executeUpdate();
+        List<Query> clusterPropUpdateQuery = createClusterPropUpdateQuery(updatedCluster, updatedProps);
         for (Query query : clusterPropUpdateQuery) {
+            query.executeUpdate();
+        }
+        List<Query> clusterPropDeleteQuery = createClusterPropDeleteQuery(updatedCluster, deletedProps);
+        for (Query query : clusterPropDeleteQuery) {
             query.executeUpdate();
         }
         for (ClusterPropertiesBean bean : clusterPropertiesBeans) {
@@ -93,6 +96,18 @@ public class ClusterUpdateExecutor extends BaseExecutor {
         }
         return clusterPropUpdateQueries;
     }
+    private List<Query> createClusterPropDeleteQuery(ClusterBean updatedCluster, PropertiesIgnoreCase deletedProps) {
+        List<Query> clusterPropUpdateQueries = new ArrayList<>();
+        for (String property : deletedProps.stringPropertyNames()) {
+            Query query = getEntityManager().createNamedQuery(ClusterPropertiesQuery.DELETE_CLUSTER_PROP.name());
+            LOG.debug("Cluster custom properties delete query: [{}]", query.toString());
+            query.setParameter("clusterNameParam", updatedCluster.getName());
+            query.setParameter("clusterVersionParam", updatedCluster.getVersion());
+            query.setParameter("nameParam", property);
+            clusterPropUpdateQueries.add(query);
+        }
+        return clusterPropUpdateQueries;
+    }
 
     private Query createClusterUpdateQuery(ClusterBean updatedCluster) {
         StringBuilder queryBuilder = new StringBuilder();
@@ -103,42 +118,45 @@ public class ClusterUpdateExecutor extends BaseExecutor {
 
         queryBuilder.append("b.changeId = b.changeId+1");
 
-        if (StringUtils.isNotBlank(updatedCluster.getDescription())) {
-            key = "description" + index++;
-            queryBuilder.append(", b.description = :").append(key);
-            paramNames.add(key);
-            paramValues.add(updatedCluster.getDescription());
-        }
+        key = "description" + index++;
+        queryBuilder.append(", b.description = :").append(key);
+        paramNames.add(key);
+        paramValues.add(updatedCluster.getDescription());
 
-        if (StringUtils.isNotBlank(updatedCluster.getFsEndpoint())) {
-            key = "fsEndpoint" + index++;
-            queryBuilder.append(", b.fsEndpoint = :").append(key);
-            paramNames.add(key);
-            paramValues.add(updatedCluster.getFsEndpoint());
-        }
+        key = "atlasEndpoint" + index++;
+        queryBuilder.append(", b.atlasEndpoint = :").append(key);
+        paramNames.add(key);
+        paramValues.add(updatedCluster.getAtlasEndpoint());
 
-        if (StringUtils.isNotBlank(updatedCluster.getHsEndpoint())) {
-            key = "hsEndpoint" + index++;
-            queryBuilder.append(", b.hsEndpoint = :").append(key);
-            paramNames.add(key);
-            paramValues.add(updatedCluster.getHsEndpoint());
-        }
+        key = "beaconUri" + index++;
+        queryBuilder.append(", b.beaconUri = :").append(key);
+        paramNames.add(key);
+        paramValues.add(updatedCluster.getBeaconUri());
 
-        if (StringUtils.isNotBlank(updatedCluster.getRangerEndpoint())) {
-            key = "rangerEndpoint" + index++;
-            queryBuilder.append(", b.rangerEndpoint = :").append(key);
-            paramNames.add(key);
-            paramValues.add(updatedCluster.getRangerEndpoint());
-        }
+        key = "fsEndpoint" + index++;
+        queryBuilder.append(", b.fsEndpoint = :").append(key);
+        paramNames.add(key);
+        paramValues.add(updatedCluster.getFsEndpoint());
 
-        // TODO : update for Atlas and Beacon end point are pending.
+        key = "hsEndpoint" + index++;
+        queryBuilder.append(", b.hsEndpoint = :").append(key);
+        paramNames.add(key);
+        paramValues.add(updatedCluster.getHsEndpoint());
 
-        if (StringUtils.isNotBlank(updatedCluster.getTags())) {
-            key = "tags" + index++;
-            queryBuilder.append(", b.tags = :").append(key);
-            paramNames.add(key);
-            paramValues.add(updatedCluster.getTags());
-        }
+        key = "rangerEndpoint" + index++;
+        queryBuilder.append(", b.rangerEndpoint = :").append(key);
+        paramNames.add(key);
+        paramValues.add(updatedCluster.getRangerEndpoint());
+
+        key = "tags" + index++;
+        queryBuilder.append(", b.tags = :").append(key);
+        paramNames.add(key);
+        paramValues.add(updatedCluster.getTags());
+
+        key = "lastModifiedTime" + index++;
+        queryBuilder.append(", b.lastModifiedTime = :").append(key);
+        paramNames.add(key);
+        paramValues.add(updatedCluster.getLastModifiedTime());
 
         // where clause
         key = "name" + index++;

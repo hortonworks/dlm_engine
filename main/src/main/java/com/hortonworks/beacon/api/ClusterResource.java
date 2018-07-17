@@ -398,22 +398,24 @@ public class ClusterResource extends AbstractResourceManager {
             updatedCluster.setName(existingCluster.getName());
             updatedCluster.setVersion(existingCluster.getVersion());
             updatedCluster.setLocal(existingCluster.isLocal());
+            updatedCluster.setPeers(existingCluster.getPeers());
+            updatedCluster.setPeersInfo(existingCluster.getPeersInfo());
 
             // Validation of the update request
-            validateUpdate(properties, updatedCluster);
+            validateUpdate(existingCluster, updatedCluster, properties);
 
             // Prepare for cluster update into store
             PropertiesIgnoreCase updatedProps = new PropertiesIgnoreCase();
             PropertiesIgnoreCase newProps = new PropertiesIgnoreCase();
-            findUpdatedAndNewCustomProps(updatedCluster, existingCluster, updatedProps, newProps);
-            Cluster modifiedExistingCluster = existingCluster;
-            addNewPropsAndUpdateOlderPropsValue(modifiedExistingCluster, updatedCluster, newProps, updatedProps);
+            PropertiesIgnoreCase deletedProps = new PropertiesIgnoreCase();
+            findUpdatedAndNewCustomProps(updatedCluster, existingCluster, updatedProps, newProps, deletedProps);
+            addNewPropsAndUpdateOlderPropsValue(updatedCluster, newProps, updatedProps);
 
             // Update the pairing status as required
-            validatePairingAndUpdateStatus(modifiedExistingCluster);
+            validatePairingAndUpdateStatus(updatedCluster);
 
             // persist cluster update information
-            clusterDao.persistUpdatedCluster(updatedCluster, updatedProps, newProps);
+            clusterDao.persistUpdatedCluster(updatedCluster, updatedProps, newProps, deletedProps);
             RequestContext.get().commitTransaction();
             LOG.debug("Cluster update processing completed.");
         } finally {
@@ -421,66 +423,56 @@ public class ClusterResource extends AbstractResourceManager {
         }
     }
 
-    private void addNewPropsAndUpdateOlderPropsValue(Cluster modifiedExistingCluster, Cluster updatedCluster,
+    private void addNewPropsAndUpdateOlderPropsValue(Cluster updatedCluster,
                                                      PropertiesIgnoreCase newProps, PropertiesIgnoreCase updatedProps) {
-        Properties customProps = modifiedExistingCluster.getCustomProperties();
+        Properties customProps = updatedCluster.getCustomProperties();
         customProps.putAll(newProps);
         customProps.putAll(updatedProps);
-        if (StringUtils.isNotBlank(updatedCluster.getAtlasEndpoint())) {
-            modifiedExistingCluster.setAtlasEndpoint(updatedCluster.getAtlasEndpoint());
-        }
-        if (StringUtils.isNotBlank(updatedCluster.getBeaconEndpoint())) {
-            modifiedExistingCluster.setBeaconEndpoint(updatedCluster.getBeaconEndpoint());
-        }
-        if (StringUtils.isNotBlank(updatedCluster.getFsEndpoint())) {
-            modifiedExistingCluster.setFsEndpoint(updatedCluster.getFsEndpoint());
-        }
-        if (StringUtils.isNotBlank(updatedCluster.getHsEndpoint())) {
-            modifiedExistingCluster.setHsEndpoint(updatedCluster.getHsEndpoint());
-        }
-        if (StringUtils.isNotBlank(updatedCluster.getRangerEndpoint())) {
-            modifiedExistingCluster.setRangerEndpoint(updatedCluster.getRangerEndpoint());
-        }
     }
 
     private void findUpdatedAndNewCustomProps(Cluster updatedCluster, Cluster existingCluster,
-                                              PropertiesIgnoreCase updatedProps, PropertiesIgnoreCase newProps) {
+                                              PropertiesIgnoreCase updatedProps, PropertiesIgnoreCase newProps,
+                                              PropertiesIgnoreCase deletedProps) {
         Properties existingClusterCustomProps = existingCluster.getCustomProperties();
         Properties updatedClusterCustomProps = updatedCluster.getCustomProperties();
-        for (String property : updatedClusterCustomProps.stringPropertyNames()) {
-            if (existingClusterCustomProps.getProperty(property) != null) {
+        for (String property : existingClusterCustomProps.stringPropertyNames()) {
+            if (updatedClusterCustomProps.containsKey(property)){
                 updatedProps.setProperty(property, updatedClusterCustomProps.getProperty(property));
+                updatedClusterCustomProps.remove(property);
             } else {
-                newProps.setProperty(property, updatedClusterCustomProps.getProperty(property));
+                deletedProps.setProperty(property, existingClusterCustomProps.getProperty(property));
             }
         }
-        List<String> existingClusterTags = existingCluster.getTags();
-        existingClusterTags.addAll(updatedCluster.getTags());
-        updatedCluster.setTags(existingClusterTags);
+        for (String property : updatedClusterCustomProps.stringPropertyNames()) {
+            newProps.setProperty(property, updatedClusterCustomProps.getProperty(property));
+        }
     }
 
-    private void validateUpdate(PropertiesIgnoreCase properties, Cluster updatedCluster) throws BeaconException {
+    private void validateUpdate(Cluster existingCluster, Cluster updatedCluster, PropertiesIgnoreCase properties)
+            throws BeaconException {
         LOG.debug("Validation begin updated cluster.");
-        validateExclusionProp(properties);
+        validateExclusionProp(existingCluster, properties);
+        ClusterValidator clusterValidator = new ClusterValidator();
+        clusterValidator.validateClusterInfo(updatedCluster, true);
         validateEndPoints(updatedCluster);
         ValidationUtil.validateEncryptionAlgorithmType(updatedCluster);
         LOG.debug("Validation completed updated cluster.");
     }
 
-    private void validatePairingAndUpdateStatus(Cluster modifiedExistingCluster) throws BeaconException {
-        List<String> peers = modifiedExistingCluster.getPeers();
+    private void validatePairingAndUpdateStatus(Cluster updatedCluster) throws BeaconException {
+        List<String> peers = updatedCluster.getPeers();
         if (peers.size() == 0) {
             LOG.info("No peer for cluster [{}] found, skipping the pairing status validation",
-                    modifiedExistingCluster.getName());
+                    updatedCluster.getName());
             return;
         }
-        Set<String> toBeSuspendedPeers = new HashSet<String>();
-        Set<String> toBePairedBackPeers = new HashSet<String>();
+        Set<String> toBeSuspendedPeers = new HashSet<>();
+        Set<String> toBePairedBackPeers = new HashSet<>();
         for (String peer: peers) {
             Cluster remoteCluster = null;
             try {
                 remoteCluster = ClusterHelper.getActiveCluster(peer);
-                ValidationUtil.validateClusterPairing(modifiedExistingCluster, remoteCluster);
+                ValidationUtil.validateClusterPairing(updatedCluster, remoteCluster);
                 toBePairedBackPeers.add(remoteCluster.getName());
             } catch (ValidationException e){
                 LOG.error("Validation for existing pairing for remote cluster{} failed, will suspend the pairing "
@@ -492,21 +484,29 @@ public class ClusterResource extends AbstractResourceManager {
             }
         }
         if (!toBeSuspendedPeers.isEmpty()) {
-            clusterDao.movePairStatusForClusters(modifiedExistingCluster, toBeSuspendedPeers, ClusterStatus.PAIRED,
+            clusterDao.movePairStatusForClusters(updatedCluster, toBeSuspendedPeers, ClusterStatus.PAIRED,
                     ClusterStatus.SUSPENDED);
         }
         if (!toBePairedBackPeers.isEmpty()) {
-            clusterDao.movePairStatusForClusters(modifiedExistingCluster, toBePairedBackPeers, ClusterStatus.SUSPENDED,
+            clusterDao.movePairStatusForClusters(updatedCluster, toBePairedBackPeers, ClusterStatus.SUSPENDED,
                     ClusterStatus.PAIRED);
         }
     }
 
-    void validateExclusionProp(PropertiesIgnoreCase properties) throws ValidationException {
+    void validateExclusionProp(Cluster existingCluster, PropertiesIgnoreCase properties) throws ValidationException {
         List<String> exclusionProps = ClusterProperties.updateExclusionProps();
         for (String prop : exclusionProps) {
             if (properties.getPropertyIgnoreCase(prop) != null) {
                 throw new ValidationException("Property [{}] is not allowed to be updated.", prop);
             }
+        }
+        if (properties.containsKey(ClusterProperties.LOCAL.getName())) {
+            boolean isLocal = Boolean.valueOf(properties.getPropertyIgnoreCase(ClusterProperties.LOCAL.getName()));
+            if (isLocal != existingCluster.isLocal()) {
+                throw new ValidationException("Property [{}] is not allowed to be updated.",
+                        ClusterProperties.LOCAL.getName());
+            }
+
         }
     }
 

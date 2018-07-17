@@ -38,7 +38,8 @@ public class ClusterPropertiesExecutor extends BaseExecutor {
      */
     enum ClusterPropertiesQuery {
         GET_CLUSTER_PROP,
-        UPDATE_CLUSTER_PROP
+        UPDATE_CLUSTER_PROP,
+        DELETE_CLUSTER_PROP
     }
 
     private ClusterPropertiesBean bean;

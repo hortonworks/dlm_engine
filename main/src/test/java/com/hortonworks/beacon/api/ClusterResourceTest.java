@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.api;
 
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.ClusterProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -53,6 +54,14 @@ public class ClusterResourceTest {
         for (String prop : exclusionProps) {
             properties.put(prop, prop);
         }
-        resource.validateExclusionProp(properties);
+        resource.validateExclusionProp(null, properties);
+    }
+    @Test(expectedExceptions = ValidationException.class)
+    public void testValidateExclusionIsLocalProp() throws Exception {
+        Cluster cluster = new Cluster();
+        cluster.setLocal(false);
+        PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
+        properties.setProperty(ClusterProperties.LOCAL.getName(), "true");
+        resource.validateExclusionProp(cluster, properties);
     }
 }

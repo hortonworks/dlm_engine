@@ -29,10 +29,10 @@ import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterDao;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
-import com.hortonworks.beacon.replication.fs.HDFSReplicationTest;
 import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
 import com.hortonworks.beacon.service.BeaconStoreService;
 import com.hortonworks.beacon.service.ServiceManager;
+import com.hortonworks.beacon.tools.BeaconDBSetup;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
@@ -76,7 +76,7 @@ public class FSDRUtilsTest {
     public void init() throws Exception {
         RequestContext.setInitialValue();
         ServiceManager.getInstance().initialize(Collections.singletonList(BeaconStoreService.class.getName()), null);
-        HDFSReplicationTest.createDBSchema();
+        BeaconDBSetup.setupDB();
         for (String[] sourceAttr : sourceAttrs) {
             sourceClusterProps.setProperty(sourceAttr[0], sourceAttr[1]);
         }

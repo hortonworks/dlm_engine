@@ -26,7 +26,6 @@ import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.client.entity.Notification;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.Retry;
-import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
@@ -46,8 +45,6 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.File;
-
 import java.util.Collections;
 import java.util.Date;
 import java.util.Properties;
@@ -61,7 +58,7 @@ public class StoreCleanupServiceTest {
 
     @BeforeClass
     public void setupClass() throws Exception {
-        createDBSchema();
+        BeaconDBSetup.setupDB();
         ServiceManager.getInstance().initialize(Collections.singletonList(BeaconStoreService.class.getName()), null);
     }
 
@@ -89,13 +86,6 @@ public class StoreCleanupServiceTest {
 
     private void createInstanceJobs(String instanceId, int i) {
         StoreHelper.insertJobInstance(instanceId, 5);
-    }
-
-    public void createDBSchema() throws Exception {
-        String currentDir = System.getProperty("user.dir");
-        File hsqldbFile = new File(currentDir, "../src/sql/tables_hsqldb.sql");
-        BeaconConfig.getInstance().getDbStore().setSchemaDirectory(hsqldbFile.getParent());
-        BeaconDBSetup.setupDB();
     }
 
     private void savePolicy(String name) throws BeaconStoreException {

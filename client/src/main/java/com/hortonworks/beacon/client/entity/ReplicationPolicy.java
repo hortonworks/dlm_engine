@@ -385,7 +385,7 @@ public class ReplicationPolicy extends Entity {
         PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
         properties.putIfNotNull(ReplicationPolicyFields.ID.getName(), policyId);
         properties.put(ReplicationPolicyFields.NAME.getName(), name);
-        properties.put(ReplicationPolicyFields.DESCRIPTION.getName(), description);
+        properties.putIfNotNull(ReplicationPolicyFields.DESCRIPTION.getName(), description);
         properties.putIfNotNull(ReplicationPolicyFields.TYPE.getName(), type);
         properties.putIfNotNull(ReplicationPolicyFields.EXECUTIONTYPE.getName(), executionType);
         properties.putIfNotNull(ReplicationPolicyFields.SOURCEDATASET.getName(), sourceDataset);

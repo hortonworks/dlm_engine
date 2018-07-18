@@ -22,7 +22,6 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
-import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.scheduler.internal.AdminJob;
 import com.hortonworks.beacon.service.ServiceManager;
@@ -39,7 +38,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.File;
 import java.util.Arrays;
 
 /**
@@ -58,15 +56,8 @@ public class QuartzSchedulerTest {
 
     @BeforeClass
     public void setUp() throws Exception {
-        createDBSchema();
-        serviceManager.initialize(Arrays.asList(BeaconQuartzScheduler.class.getName()), null);
-    }
-
-    public void createDBSchema() throws Exception {
-        String currentDir = System.getProperty("user.dir");
-        File hsqldbFile = new File(currentDir, "../src/sql/tables_hsqldb.sql");
-        BeaconConfig.getInstance().getDbStore().setSchemaDirectory(hsqldbFile.getParent());
         BeaconDBSetup.setupDB();
+        serviceManager.initialize(Arrays.asList(BeaconQuartzScheduler.class.getName()), null);
     }
 
     @AfterMethod

@@ -22,7 +22,6 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
-import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.service.BeaconStoreService;
@@ -36,7 +35,6 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -64,7 +62,7 @@ public class QuartzTriggerListenerTest {
 
     @BeforeClass
     public void setup() throws Exception {
-        createDBSchema();
+        BeaconDBSetup.setupDB();
         ServiceManager.getInstance().initialize(DEFAULT_SERVICES, DEPENDENT_SERVICES);
     }
 
@@ -83,13 +81,6 @@ public class QuartzTriggerListenerTest {
         Thread.sleep(5*1000);
         exists = scheduler.checkExists(POLICY_ID, BeaconQuartzScheduler.START_NODE_GROUP);
         Assert.assertFalse(exists);
-    }
-
-    private void createDBSchema() throws Exception {
-        String currentDir = System.getProperty("user.dir");
-        File hsqldbFile = new File(currentDir, "../src/sql/tables_hsqldb.sql");
-        BeaconConfig.getInstance().getDbStore().setSchemaDirectory(hsqldbFile.getParent());
-        BeaconDBSetup.setupDB();
     }
 
     private List<ReplicationJobDetails> getReplicationJob() {

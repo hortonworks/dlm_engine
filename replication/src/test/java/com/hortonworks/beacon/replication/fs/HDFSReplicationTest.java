@@ -26,7 +26,6 @@ import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
@@ -121,7 +120,7 @@ public class HDFSReplicationTest {
         }
 
         // Empty table creation, not actual data is populated.
-        createDBSchema();
+        BeaconDBSetup.setupDB();
         RequestContext.get().startTransaction();
         Cluster sourceCluster = ClusterBuilder.buildCluster(sourceClusterProps, SOURCE);
         clusterDao.submitCluster(sourceCluster);
@@ -180,13 +179,6 @@ public class HDFSReplicationTest {
     @AfterClass
     public void teardown() {
         RequestContext.get().clear();
-    }
-
-    public static void createDBSchema() throws Exception {
-        String currentDir = System.getProperty("user.dir");
-        File hsqldbFile = new File(currentDir, "../src/sql/tables_hsqldb.sql");
-        BeaconConfig.getInstance().getDbStore().setSchemaDirectory(hsqldbFile.getParent());
-        BeaconDBSetup.setupDB();
     }
 
     @Test

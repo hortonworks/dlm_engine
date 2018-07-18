@@ -527,8 +527,7 @@ public class BeaconWebClient implements BeaconClient {
                 } else {
                     response = builder.method(operation.method, ClientResponse.class);
                 }
-                Response.StatusType status = response.getStatusInfo();
-                LOG.debug("API response status code: {}, reason: {}", status.getStatusCode(), status.getReasonPhrase());
+                LOG.debug("API response status code: {}", response.getStatus());
                 return response;
             } catch (ClientHandlerException e) {
                 throw new BeaconClientException(e, "Failed to connect to {}", service.getURI());

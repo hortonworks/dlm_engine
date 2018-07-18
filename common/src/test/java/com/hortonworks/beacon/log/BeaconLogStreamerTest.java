@@ -34,6 +34,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -100,11 +101,15 @@ public class BeaconLogStreamerTest{
     }
 
     @Test
-    public void testLogStartEndTime() throws BeaconException {
-        String startStr = "2017-04-24T02:00:57";
-        String endStr = "2017-04-24T03:24:20";
+    public void testLogStartEndTime() throws Exception {
+        String startStr = "2017-04-24T07:30:57";
+        String endStr = "2017-04-24T08:54:20";
+        SimpleDateFormat currentDataFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        SimpleDateFormat utcDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        utcDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         String filterBy = "policyname:fspolicy";
-        String logString = logRetrieval.getPolicyLogs(filterBy, startStr, endStr, 10, 5);
+        String logString = logRetrieval.getPolicyLogs(filterBy, utcDateFormat.format(currentDataFormat.parse(startStr)),
+                utcDateFormat.format(currentDataFormat.parse(endStr)), 10, 5);
         assertNotNull(logString);
         assertTrue(logString.contains("POLICYNAME[fspolicy]"));
         List<String> logLines = getLogLines(logString);
@@ -114,9 +119,10 @@ public class BeaconLogStreamerTest{
         assertEquals(logLines.get(0), logMessages[3][0]);
 
         //end time filtering
-        startStr = "2017-04-23T06:30:00";
-        endStr = "2017-04-24T03:22:20";
-        logString = logRetrieval.getPolicyLogs(filterBy, startStr, endStr, 10, 4);
+        startStr = "2017-04-24T00:00:00";
+        endStr = "2017-04-24T08:52:20";
+        logString = logRetrieval.getPolicyLogs(filterBy, utcDateFormat.format(currentDataFormat.parse(startStr)),
+                utcDateFormat.format(currentDataFormat.parse(endStr)), 10, 4);
         assertNotNull(logString);
         assertTrue(logString.contains("POLICYNAME[fspolicy]"));
         logLines = getLogLines(logString);

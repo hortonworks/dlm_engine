@@ -160,8 +160,8 @@
     <properties>
         <beacon.services/>
         <beacon.data.dir/>
-        <beacon.driver>org.hsqldb.jdbcDriver</beacon.driver>
-        <beacon.url>jdbc:hsqldb:mem:quartz</beacon.url>
+        <beacon.driver>org.apache.derby.jdbc.EmbeddedDriver</beacon.driver>
+        <beacon.url>jdbc:derby:memory:memdatabase;create=true</beacon.url>
         <beacon.user>beacon</beacon.user>
         <beacon.password>beacon</beacon.password>
         <beacon.quartz.prefix>QUARTZ_</beacon.quartz.prefix>

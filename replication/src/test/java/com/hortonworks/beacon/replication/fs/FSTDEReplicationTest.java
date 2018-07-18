@@ -32,6 +32,7 @@ import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.service.BeaconStoreService;
 import com.hortonworks.beacon.service.ServiceManager;
+import com.hortonworks.beacon.tools.BeaconDBSetup;
 import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -107,7 +108,7 @@ public class FSTDEReplicationTest {
         }
 
         // Empty table creation, not actual data is populated.
-        HDFSReplicationTest.createDBSchema();
+        BeaconDBSetup.setupDB();
         RequestContext.setInitialValue();
         RequestContext.get().startTransaction();
         Cluster sourceCluster = ClusterBuilder.buildCluster(sourceClusterProps, SOURCE);

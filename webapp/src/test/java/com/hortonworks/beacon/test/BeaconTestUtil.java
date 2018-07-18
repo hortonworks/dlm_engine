@@ -22,11 +22,7 @@
 
 package com.hortonworks.beacon.test;
 
-import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.tools.BeaconDBSetup;
-
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -38,13 +34,6 @@ import java.util.Properties;
 public final class BeaconTestUtil {
 
     private BeaconTestUtil() {
-    }
-
-    static void createDBSchema() throws Exception {
-        String currentDir = System.getProperty("user.dir");
-        File hsqldbFile = new File(currentDir, "../src/sql/tables_hsqldb.sql");
-        BeaconConfig.getInstance().getDbStore().setSchemaDirectory(hsqldbFile.getParent());
-        BeaconDBSetup.setupDB();
     }
 
     static Properties getProperties(String propFile) throws IOException {

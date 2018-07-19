@@ -122,6 +122,14 @@ public final class RequestContext {
         context.set(new RequestContext());
     }
 
+    public void closeEntityManager() {
+        if (entityManager != null) {
+            BeaconStoreService service = Services.get().getService(BeaconStoreService.class);
+            service.closeEntityManager(entityManager);
+        }
+        entityManager = null;
+    }
+
     public Timer startTimer(String methodName) {
         Timer timer = new Timer();
         methodTimers.put(methodName, timer);

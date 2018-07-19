@@ -124,6 +124,7 @@ public class QuartzJobListener extends JobListenerSupport {
             LOG.error("Error while processing jobToBeExecuted", e);
         } finally {
             RequestContext.get().rollbackTransaction();
+            RequestContext.get().closeEntityManager();
         }
     }
 

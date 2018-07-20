@@ -70,7 +70,8 @@ public class BeaconEventsTest {
         ServiceManager.getInstance().initialize(Arrays.asList(BeaconStoreService.class.getName()), null);
         executor = mock(EventsExecutor.class);
         systemEventBean = BeaconEvents.createEventsBean(Events.STARTED, EventEntityType.SYSTEM);
-        clusterEventBean = BeaconEvents.createEventsBean(Events.SUBMITTED, EventEntityType.CLUSTER, createCluster());
+        clusterEventBean = BeaconEvents.createEventsBean(Events.SUBMITTED, null, EventEntityType.CLUSTER,
+                createCluster());
 
         policyEventBean = BeaconEvents.createEventsBean(Events.SUBMITTED, EventEntityType.POLICY,
                 createPolicyBean(), getEventInfo());

@@ -28,6 +28,7 @@ import com.hortonworks.beacon.events.event.BeaconStoppedEvent;
 import com.hortonworks.beacon.events.event.ClusterEntityDeletedEvent;
 import com.hortonworks.beacon.events.event.ClusterEntityPairedEvent;
 import com.hortonworks.beacon.events.event.ClusterEntitySubmittedEvent;
+import com.hortonworks.beacon.events.event.ClusterEntitySuspendedEvent;
 import com.hortonworks.beacon.events.event.ClusterEntityUnPairedEvent;
 import com.hortonworks.beacon.events.event.PolicyDeletedEvent;
 import com.hortonworks.beacon.events.event.PolicyInstanceDeletedEvent;
@@ -60,10 +61,10 @@ final class EventHandler {
         return beaconEvent;
     }
 
-    static BeaconEvent getEvents(Events event, EventEntityType entityType, Cluster cluster) {
+    static BeaconEvent getEvents(Events event, String eventMessage, EventEntityType entityType, Cluster cluster) {
         BeaconEvent beaconEvent = null;
         if (entityType == EventEntityType.CLUSTER) {
-            beaconEvent = getClusterEvent(event, cluster);
+            beaconEvent = getClusterEvent(event, eventMessage, cluster);
         }
         return beaconEvent;
     }
@@ -101,7 +102,7 @@ final class EventHandler {
         return beaconEvent;
     }
 
-    private static BeaconEvent getClusterEvent(Events event, Cluster cluster) {
+    private static BeaconEvent getClusterEvent(Events event, String eventMessage, Cluster cluster) {
         BeaconEvent beaconEvent;
         switch (event) {
             case SUBMITTED:
@@ -111,10 +112,13 @@ final class EventHandler {
                 beaconEvent = new ClusterEntityDeletedEvent(event, cluster);
                 break;
             case PAIRED:
-                beaconEvent = new ClusterEntityPairedEvent(event, cluster);
+                beaconEvent = new ClusterEntityPairedEvent(event, eventMessage, cluster);
                 break;
             case UNPAIRED:
                 beaconEvent = new ClusterEntityUnPairedEvent(event, cluster);
+                break;
+            case SUSPENDED:
+                beaconEvent = new ClusterEntitySuspendedEvent(event, eventMessage, cluster);
                 break;
             default:
                 throw new IllegalArgumentException(

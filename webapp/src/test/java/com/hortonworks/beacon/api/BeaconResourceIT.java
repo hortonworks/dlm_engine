@@ -323,6 +323,13 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         // Make Sure that the getEntity returns the pair status message
         verifyPairStatusMessage(TARGET_CLUSTER, SOURCE_CLUSTER);
 
+        //Make sure we have an event for cluster pairing going to 'SUSPENDED' state
+        EventsResult events = targetClient.getAllEvents();
+        EventsResult.EventInstance expectedEvent = new EventsResult.EventInstance();
+        expectedEvent.event = Events.SUSPENDED.getName();
+        expectedEvent.eventType = EventEntityType.CLUSTER.getName();
+        assertExists(events, expectedEvent);
+
         //Added some delay to allow policy instance execution.
         Thread.sleep(15000);
 
@@ -334,6 +341,13 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
         //Make sure the cluster pair is in 'PAIRED' state.
         verifyClusterPairStatus(getTargetBeaconServer(), ClusterStatus.PAIRED);
+
+        //Make sure we have an event for cluster pairing going to 'PAIRED' state
+        events = targetClient.getAllEvents();
+        expectedEvent = new EventsResult.EventInstance();
+        expectedEvent.event = Events.PAIRED.getName();
+        expectedEvent.eventType = EventEntityType.CLUSTER.getName();
+        assertExists(events, expectedEvent);
 
         //Added some delay to allow policy instance execution.
         Thread.sleep(15000);

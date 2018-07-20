@@ -419,13 +419,16 @@ GET api/beacon/cluster/list
          "peersInfo": [
                     {
                         "clusterName": "default$c2",
-                        "pairStatus": "PAIRED"
+                        "pairStatus": "PAIRED",
+                        "statusMessage": null
                     }
                 ],
           "tags": ["test", "dlm"]
          }
         ]
 }
+
+*Note:* statusMessage: this field will contain a message stating the reason for the current state, when the 'pairStatus' is set to 'SUSPENDED'
 
 GET api/beacon/cluster/status/:cluster-name
 -------------------------------------------
@@ -476,7 +479,8 @@ GET api/beacon/cluster/getEntity/:cluster-name
    "peersInfo": [
                {
                    "clusterName": "targetCluster",
-                   "pairStatus": "PAIRED"
+                   "pairStatus": "PAIRED",
+                   "statusMessage": null
                }
    ],
    "customProperties":{
@@ -487,6 +491,8 @@ GET api/beacon/cluster/getEntity/:cluster-name
 }
 
 *Note:* peers:"c1, c2" is the list of remote clusters with which this cluster has been paired for replication purposes.
+
+*Note:* statusMessage: this field will contain a message stating the reason for the current state, when the 'pairStatus' is set to 'SUSPENDED'
 
 DELETE api/beacon/cluster/delete/:cluster-name
 ----------------------------------------------

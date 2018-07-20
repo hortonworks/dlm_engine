@@ -64,6 +64,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
     }
 
     public void validateClusterInfo(Cluster entity, boolean update) throws BeaconException {
+        BeaconCluster beaconCluster = new BeaconCluster(entity);
         if (entity.isLocal()) {
             if (!update) {
                 validateLocalCluster(entity.getName());
@@ -71,7 +72,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
             validateCustomSetup(entity);
             boolean knoxProxyEnabled = BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled();
 
-            if (knoxProxyEnabled && StringUtils.isBlank(entity.getKnoxGatewayURL())) {
+            if (knoxProxyEnabled && StringUtils.isBlank(beaconCluster.getKnoxGatewayURL())) {
                 LOG.error("Knox proxy URL is empty when knox proxy is enabled in local cluster {}",
                         entity.getName());
             }
@@ -136,8 +137,9 @@ public class ClusterValidator extends EntityValidator<Cluster> {
     }
 
     public void validateHiveInterface(Cluster entity) throws BeaconException {
-        LOG.debug("Validating Hive end point - HS2:{}, HMS:{}", entity.getHsEndpoint(), entity.getHmsEndpoint());
-        if (!ClusterHelper.isHiveEnabled(entity)) {
+        BeaconCluster beaconCluster = new BeaconCluster(entity);
+        LOG.debug("Validating Hive end point - HS2:{}, HMS:{}", entity.getHsEndpoint(), beaconCluster.getHmsEndpoint());
+        if (!ClusterHelper.isHiveEnabled(beaconCluster)) {
             return;
         }
 

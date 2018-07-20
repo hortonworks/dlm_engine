@@ -26,6 +26,7 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Cluster.ClusterFields;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
@@ -55,8 +56,9 @@ public final class HivePolicyHelper {
     public static Properties buildHiveReplicationProperties(final ReplicationPolicy policy,
                                                             String hiveActionType) throws BeaconException {
         Cluster sourceCluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
+        BeaconCluster beaconSourceCluster = new BeaconCluster(sourceCluster);
         Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
-
+        BeaconCluster beaconTargetCluster = new BeaconCluster(targetCluster);
         String dataLake = targetCluster.getCustomProperties().getProperty(ClusterFields.CLOUDDATALAKE.getName());
         Boolean isDataLake = Boolean.valueOf(dataLake);
         if (!isDataLake && (StringUtils.isBlank(sourceCluster.getHsEndpoint())
@@ -75,7 +77,7 @@ public final class HivePolicyHelper {
         map.put(HiveDRProperties.TARGET_DATASET.getName(), policy.getTargetDataset());
         map.put(HiveDRProperties.SOURCE_CLUSTER_NAME.getName(), policy.getSourceCluster());
         map.put(HiveDRProperties.SOURCE_HIVE_SERVER_AUTHENTICATION.getName(),
-                sourceCluster.getHiveServerAuthentication());
+                beaconSourceCluster.getHiveServerAuthentication());
         map.put(HiveDRProperties.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName(),
                 sourceCluster.getCustomProperties().getProperty(BeaconConstants.HIVE_PRINCIPAL));
         map.put(HiveDRProperties.SOURCE_HMS_KERBEROS_PRINCIPAL.getName(),
@@ -88,7 +90,7 @@ public final class HivePolicyHelper {
                 targetCluster.getCustomProperties().getProperty(
                         BeaconConstants.HMS_PRINCIPAL));
         map.put(HiveDRProperties.TARGET_HIVE_SERVER_AUTHENTICATION.getName(),
-                targetCluster.getHiveServerAuthentication());
+                beaconTargetCluster.getHiveServerAuthentication());
 
         if (customProp.containsKey(HiveDRProperties.DISTCP_MAX_MAPS.getName())) {
             map.put(BeaconConstants.DISTCP_OPTIONS+"m",
@@ -117,8 +119,8 @@ public final class HivePolicyHelper {
         }
         if (ClusterHelper.isCloudEncryptionEnabled(targetCluster)) {
             map.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(),
-                    targetCluster.getHiveCloudEncryptionAlgorithm());
-            map.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), targetCluster.getHiveCloudEncryptionKey());
+                    beaconTargetCluster.getHiveCloudEncryptionAlgorithm());
+            map.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), beaconTargetCluster.getHiveCloudEncryptionKey());
         } else if (PolicyHelper.isCloudEncryptionEnabled(policy)) {
             map.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(), policy.getCloudEncryptionAlgorithm());
             map.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), policy.getCloudEncryptionKey());

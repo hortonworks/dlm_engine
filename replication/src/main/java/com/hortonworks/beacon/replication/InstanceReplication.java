@@ -28,6 +28,7 @@ import com.hortonworks.beacon.client.entity.Cluster.ClusterFields;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
@@ -277,6 +278,7 @@ public abstract class InstanceReplication implements BeaconJob {
         String targetCN = properties.getProperty(HiveDRProperties.TARGET_CLUSTER_NAME.getName());
         Cluster sourceCluster = ClusterHelper.getActiveCluster(sourceCN);
         Cluster targetCluster = ClusterHelper.getActiveCluster(targetCN);
+        BeaconCluster beaconSourceCluster = new BeaconCluster(sourceCluster);
         if (ClusterHelper.isHiveEnabled(sourceCluster.getHsEndpoint())) {
             properties.setProperty(HiveDRProperties.SOURCE_HS2_URI.getName(), sourceCluster.getHsEndpoint());
         }
@@ -305,7 +307,8 @@ public abstract class InstanceReplication implements BeaconJob {
                 String jdbcURL = HiveDRUtils.getKnoxProxiedURL(sourceCluster);
 
                 LOG.debug("Rewriting source endpoint URL to knox proxied endpoint: {}", jdbcURL);
-                properties.setProperty(ClusterFields.KNOX_GATEWAY_URL.getName(), sourceCluster.getKnoxGatewayURL());
+                properties.setProperty(ClusterFields.KNOX_GATEWAY_URL.getName(),
+                        beaconSourceCluster.getKnoxGatewayURL());
 
                 properties.setProperty(HiveDRProperties.SOURCE_HS2_URI.getName(), jdbcURL);
             }

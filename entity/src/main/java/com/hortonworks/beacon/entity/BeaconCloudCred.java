@@ -202,20 +202,22 @@ public class BeaconCloudCred extends CloudCred {
         Properties props = new Properties();
         boolean hiveClusterEncOn = false;
         Cluster targetCluster = null;
+        BeaconCluster beaconCluster = null;
         boolean isHiveHCFSTarget = false;
         if (policy.getType().equalsIgnoreCase(ReplicationType.HIVE.getName())) {
             targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
-            isHiveHCFSTarget = PolicyHelper.isDatasetHCFS(targetCluster.getHiveWarehouseLocation());
+            beaconCluster = new BeaconCluster(targetCluster);
+            isHiveHCFSTarget = PolicyHelper.isDatasetHCFS(beaconCluster.getHiveWarehouseLocation());
         }
         // For a Hive target HCFS cluster, try getting enc details from Cluster, if absent, fall back to policy.
         if (isHiveHCFSTarget) {
-            if (StringUtils.isNotBlank(targetCluster.getHiveCloudEncryptionAlgorithm())) {
+            if (StringUtils.isNotBlank(beaconCluster.getHiveCloudEncryptionAlgorithm())) {
                 props.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(),
-                          targetCluster.getHiveCloudEncryptionAlgorithm());
+                          beaconCluster.getHiveCloudEncryptionAlgorithm());
                 hiveClusterEncOn = true;
             }
-            if (StringUtils.isNotBlank(targetCluster.getHiveCloudEncryptionKey())) {
-                props.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), targetCluster.getHiveCloudEncryptionKey());
+            if (StringUtils.isNotBlank(beaconCluster.getHiveCloudEncryptionKey())) {
+                props.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), beaconCluster.getHiveCloudEncryptionKey());
             }
         }
         if (!hiveClusterEncOn) {

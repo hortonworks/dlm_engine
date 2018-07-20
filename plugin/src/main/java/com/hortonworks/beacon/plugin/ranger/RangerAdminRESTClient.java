@@ -27,6 +27,7 @@ import com.google.gson.GsonBuilder;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.PropertiesUtil;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.util.DateUtil;
@@ -190,10 +191,10 @@ public class RangerAdminRESTClient {
         }
 
         boolean shouldProxy = BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled();
-
+        BeaconCluster beaconSourceCluster = new BeaconCluster(dataset.getSourceCluster());
         if (shouldProxy) {
             sourceRangerEndpoint =
-                    KnoxTokenUtils.getKnoxProxiedURL(dataset.getSourceCluster().getKnoxGatewayURL(),
+                    KnoxTokenUtils.getKnoxProxiedURL(beaconSourceCluster.getKnoxGatewayURL(),
                             "ranger");
         }
         LOG.info("Ranger endpoint for cluster " + dataset.getSourceCluster().getName() + " is " + sourceRangerEndpoint);
@@ -236,7 +237,7 @@ public class RangerAdminRESTClient {
         WebResource webResource = rangerClient.resource(url);
         if (shouldProxy) {
             Cookie cookie =
-                    new Cookie("hadoop-jwt", getSSOToken(dataset.getSourceCluster().getKnoxGatewayURL()));
+                    new Cookie("hadoop-jwt", getSSOToken(beaconSourceCluster.getKnoxGatewayURL()));
 
             WebResource.Builder builder = webResource.getRequestBuilder().cookie(cookie);
             clientResp = builder.get(ClientResponse.class);
@@ -275,9 +276,10 @@ public class RangerAdminRESTClient {
 
         boolean shouldProxy = BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled();
 
+        BeaconCluster beaconSourceCluster = new BeaconCluster(dataset.getSourceCluster());
         if (shouldProxy) {
             sourceRangerEndpoint =
-                    KnoxTokenUtils.getKnoxProxiedURL(dataset.getSourceCluster().getKnoxGatewayURL(),
+                    KnoxTokenUtils.getKnoxProxiedURL(beaconSourceCluster.getKnoxGatewayURL(),
                             "ranger");
         }
         LOG.info("Ranger endpoint for cluster " + dataset.getSourceCluster().getName() + " is " + sourceRangerEndpoint);
@@ -320,7 +322,7 @@ public class RangerAdminRESTClient {
         WebResource webResource = rangerClient.resource(url);
         if (shouldProxy) {
             Cookie cookie =
-                    new Cookie("hadoop-jwt", getSSOToken(dataset.getSourceCluster().getKnoxGatewayURL()));
+                    new Cookie("hadoop-jwt", getSSOToken(beaconSourceCluster.getKnoxGatewayURL()));
 
             WebResource.Builder builder = webResource.getRequestBuilder().cookie(cookie);
             clientResp = builder.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
@@ -577,7 +579,9 @@ public class RangerAdminRESTClient {
 
         if (shouldProxy) {
             targetRangerEndpoint =
-                    KnoxTokenUtils.getKnoxProxiedURL(dataset.getTargetCluster().getKnoxGatewayURL(), "ranger");
+                    KnoxTokenUtils.getKnoxProxiedURL(
+
+                            new BeaconCluster(dataset.getTargetCluster()).getKnoxGatewayURL(), "ranger");
         }
 
         String url = targetRangerEndpoint + (uri.startsWith("/") ? uri : ("/" + uri));
@@ -597,10 +601,11 @@ public class RangerAdminRESTClient {
         MultiPart multipartEntity=null;
         try {
             multipartEntity = formDataMultiPart.bodyPart(filePartPolicies).bodyPart(filePartServiceMap);
+            BeaconCluster beaconTargetCluster = new BeaconCluster(dataset.getTargetCluster());
             try {
                 if (shouldProxy) {
                     Cookie cookie =
-                            new Cookie("hadoop-jwt", getSSOToken(dataset.getTargetCluster().getKnoxGatewayURL()));
+                            new Cookie("hadoop-jwt", getSSOToken(beaconTargetCluster.getKnoxGatewayURL()));
 
                     WebResource.Builder builder = webResource.getRequestBuilder().cookie(cookie);
                     clientResp = builder.accept(MediaType.APPLICATION_JSON).type(MediaType.MULTIPART_FORM_DATA)
@@ -647,7 +652,7 @@ public class RangerAdminRESTClient {
     private synchronized Client getRangerClient(Cluster cluster, boolean shouldProxy) throws BeaconException {
         Client ret = null;
         String rangerEndpoint = shouldProxy
-                ? KnoxTokenUtils.getKnoxProxiedURL(cluster.getKnoxGatewayURL(), "ranger")
+                ? KnoxTokenUtils.getKnoxProxiedURL(new BeaconCluster(cluster).getKnoxGatewayURL(), "ranger")
                 :  cluster.getRangerEndpoint();
         Properties clusterProperties = cluster.getCustomProperties();
         ClientConfig config = new DefaultClientConfig();

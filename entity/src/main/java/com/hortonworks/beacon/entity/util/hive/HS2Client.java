@@ -26,6 +26,7 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
@@ -82,7 +83,8 @@ public class HS2Client implements HiveMetadataClient, HiveServerClient {
         Engine engine = BeaconConfig.getInstance().getEngine();
 
         initializeDriveClass();
-        this.knoxGatewayURL = cluster.getKnoxGatewayURL();
+        BeaconCluster beaconCluster = new BeaconCluster(cluster);
+        this.knoxGatewayURL = beaconCluster.getKnoxGatewayURL();
         if (cluster.isLocal() || !engine.isKnoxProxyEnabled()) {
             this.connectionString = HiveDRUtils.getHS2ConnectionUrl(cluster.getHsEndpoint());
         } else {

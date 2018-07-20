@@ -24,6 +24,7 @@ package com.hortonworks.beacon.scheduler;
 
 import com.hortonworks.beacon.ExecutionType;
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
@@ -356,7 +357,8 @@ public final class StoreHelper {
         }
         String sourceCluster = policyBean.getSourceCluster();
         Cluster cluster = ClusterHelper.getActiveCluster(sourceCluster);
-        return new SyncStatusJob(cluster.getBeaconEndpoint(), cluster.getKnoxGatewayURL(), policyBean.getName(),
+        return new SyncStatusJob(cluster.getBeaconEndpoint(),
+                new BeaconCluster(cluster).getKnoxGatewayURL(), policyBean.getName(),
                 status);
     }
 

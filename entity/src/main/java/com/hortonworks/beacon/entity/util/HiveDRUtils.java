@@ -30,6 +30,7 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -236,7 +237,8 @@ public final class HiveDRUtils {
 
     public static  String getKnoxProxiedURL(Cluster cluster) throws BeaconException {
         Engine engine = BeaconConfig.getInstance().getEngine();
-        String srcKnoxURL = cluster.getKnoxGatewayURL();
+        BeaconCluster beaconCluster = new BeaconCluster(cluster);
+        String srcKnoxURL = beaconCluster.getKnoxGatewayURL();
         URI knoxUri = null;
         try {
             knoxUri = new URI(srcKnoxURL);

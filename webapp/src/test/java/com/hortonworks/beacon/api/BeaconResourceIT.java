@@ -472,7 +472,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject jsonObject = new JSONObject(message);
         assertEquals(jsonObject.getString("name"), SOURCE_CLUSTER);
         assertEquals(jsonObject.getString("beaconEndpoint"), getSourceBeaconServer());
-        assertEquals(jsonObject.getString("entityType"), "CLUSTER");
     }
 
     @Test(dependsOnMethods = "testPairCluster")

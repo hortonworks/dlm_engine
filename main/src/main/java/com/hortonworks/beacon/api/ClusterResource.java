@@ -486,10 +486,21 @@ public class ClusterResource extends AbstractResourceManager {
         if (!toBeSuspendedPeers.isEmpty()) {
             clusterDao.movePairStatusForClusters(updatedCluster, toBeSuspendedPeers, ClusterStatus.PAIRED,
                     ClusterStatus.SUSPENDED);
+            for (String peer: toBeSuspendedPeers) {
+                String message = "Pairing between cluster " + updatedCluster.getName() + " and cluster " + peer
+                        + " is suspended as the pairing validation failed after an update to cluster info for cluster "
+                        + updatedCluster.getName();
+                BeaconEvents.createEvents(Events.SUSPENDED, message, EventEntityType.CLUSTER, updatedCluster);
+            }
         }
         if (!toBePairedBackPeers.isEmpty()) {
             clusterDao.movePairStatusForClusters(updatedCluster, toBePairedBackPeers, ClusterStatus.SUSPENDED,
                     ClusterStatus.PAIRED);
+            for (String peer: toBePairedBackPeers) {
+                String message = "cluster " + updatedCluster.getName() + " and cluster " + peer
+                        + " are paired back after an update to cluster info for cluster " + updatedCluster.getName();
+                BeaconEvents.createEvents(Events.PAIRED, message, EventEntityType.CLUSTER, updatedCluster);
+            }
         }
     }
 

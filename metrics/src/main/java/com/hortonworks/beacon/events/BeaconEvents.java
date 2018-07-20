@@ -42,7 +42,11 @@ public final class BeaconEvents {
     }
 
     public static void createEvents(Events event, EventEntityType entityType, Cluster cluster) {
-        persistEvents(createEventsBean(event, entityType, cluster));
+        createEvents(event, null, entityType, cluster);
+    }
+
+    public static void createEvents(Events event, String eventMessage, EventEntityType entityType, Cluster cluster) {
+        persistEvents(createEventsBean(event, eventMessage, entityType, cluster));
     }
 
     public static void createEvents(Events event, EventEntityType entityType, PolicyBean bean, EventInfo eventInfo) {
@@ -58,8 +62,8 @@ public final class BeaconEvents {
         return beaconEvent.getEventBean();
     }
 
-    static EventBean createEventsBean(Events event, EventEntityType entityType, Cluster cluster) {
-        BeaconEvent beaconEvent = EventHandler.getEvents(event, entityType, cluster);
+    static EventBean createEventsBean(Events event, String eventMessage, EventEntityType entityType, Cluster cluster) {
+        BeaconEvent beaconEvent = EventHandler.getEvents(event, eventMessage, entityType, cluster);
         return beaconEvent.getEventBean();
     }
 

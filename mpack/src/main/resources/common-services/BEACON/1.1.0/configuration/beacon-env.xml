@@ -337,7 +337,7 @@
   </property>
   <property>
     <name>beacon_store_max_connections</name>
-    <value>10</value>
+    <value>20</value>
     <description>Beacon Store Max Connections</description>
     <display-name>Beacon Store Max Connections</display-name>
   </property>
@@ -402,7 +402,7 @@
   </property>
   <property>
     <name>beacon_quartz_thread_pool</name>
-    <value>10</value>
+    <value>1000</value>
     <description>Number of threads for running replication jobs.</description>
     <display-name>Beacon Scheduler Threads</display-name>
   </property>

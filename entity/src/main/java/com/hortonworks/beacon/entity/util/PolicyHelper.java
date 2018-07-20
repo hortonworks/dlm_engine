@@ -25,6 +25,7 @@ package com.hortonworks.beacon.entity.util;
 import com.hortonworks.beacon.EncryptionAlgorithmType;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -58,7 +59,8 @@ public final class PolicyHelper {
         }
         String remoteClusterName = getRemoteClusterName(policy);
         Cluster remoteCluster = ClusterHelper.getActiveCluster(remoteClusterName);
-        return remoteCluster.getKnoxGatewayURL();
+        BeaconCluster beaconRemoteCluster =  new BeaconCluster(remoteCluster);
+        return beaconRemoteCluster.getKnoxGatewayURL();
     }
 
     public static String getRemoteClusterName(final ReplicationPolicy policy) throws BeaconException {

@@ -48,7 +48,7 @@ public class Cluster extends Entity {
     private List<String> tags;
     private List<String> peers;
     private List<PeerInfo> peersInfo;
-    private Properties customProperties = new Properties();
+    protected Properties customProperties = new Properties();
     private String user;
 
     /**
@@ -91,6 +91,23 @@ public class Cluster extends Entity {
     }
 
     public Cluster() {
+    }
+
+    public Cluster(Cluster cluster) {
+        this.name = cluster.name;
+        this.version = cluster.version;
+        this.description = cluster.description;
+        this.fsEndpoint = cluster.fsEndpoint;
+        this.hsEndpoint = cluster.hsEndpoint;
+        this.beaconEndpoint = cluster.beaconEndpoint;
+        this.atlasEndpoint = cluster.atlasEndpoint;
+        this.rangerEndpoint = cluster.rangerEndpoint;
+        this.local = cluster.local;
+        this.tags = cluster.tags;
+        this.peers = cluster.peers;
+        this.peersInfo = cluster.peersInfo;
+        this.customProperties = cluster.customProperties;
+        this.user = cluster.user;
     }
 
     public Cluster(Builder builder) {
@@ -224,7 +241,8 @@ public class Cluster extends Entity {
 
     public String getBeaconEndpoint() {
         if (BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled()) {
-            return KnoxTokenUtils.getKnoxProxiedURL(getKnoxGatewayURL(), "beacon");
+            return KnoxTokenUtils.getKnoxProxiedURL(customProperties
+                    .getProperty(ClusterFields.KNOX_GATEWAY_URL.getName()), "beacon");
         }
         return beaconEndpoint;
     }
@@ -304,34 +322,6 @@ public class Cluster extends Entity {
 
     public void setUser(String user) {
         this.user = user;
-    }
-
-    public String getHmsEndpoint() {
-        return customProperties.getProperty(ClusterFields.HMSENDPOINT.getName());
-    }
-
-    public String getHiveCloudEncryptionAlgorithm() {
-        return customProperties.getProperty(ClusterFields.HIVE_CLOUD_ENCRYPTION_ALGORITHM.getName());
-    }
-
-    public String getHiveCloudEncryptionKey() {
-        return customProperties.getProperty(ClusterFields.HIVE_CLOUD_ENCRYPTION_KEY.getName());
-    }
-
-    public String getHiveWarehouseLocation() {
-        return customProperties.getProperty(ClusterFields.HIVE_WAREHOUSE.getName());
-    }
-
-    public String getHiveMetastoreKerberosPrincipal() {
-        return customProperties.getProperty(ClusterFields.HIVE_METASTORE_PRINCIPAL.getName());
-    }
-
-    public String getHiveServerAuthentication() {
-        return customProperties.getProperty(ClusterFields.HIVE_SERVER_AUTHENTICATION.getName());
-    }
-
-    public String getKnoxGatewayURL() {
-        return customProperties.getProperty(ClusterFields.KNOX_GATEWAY_URL.getName());
     }
 
     public PropertiesIgnoreCase asProperties() {

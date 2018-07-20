@@ -26,6 +26,7 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.ClusterStatus;
@@ -104,7 +105,7 @@ public final class ClusterHelper {
         return StringUtils.isNotBlank(hsEndPoint);
     }
 
-    public static boolean isHiveEnabled(Cluster cluster) {
+    public static boolean isHiveEnabled(BeaconCluster cluster) {
         return StringUtils.isNotBlank(cluster.getHsEndpoint()) || StringUtils.isNotBlank(cluster.getHmsEndpoint());
     }
 
@@ -195,7 +196,8 @@ public final class ClusterHelper {
     }
 
     public static boolean isCloudEncryptionEnabled(Cluster cluster) {
-        return StringUtils.isNotBlank(cluster.getHiveCloudEncryptionAlgorithm());
+        BeaconCluster beaconCluster = new BeaconCluster(cluster);
+        return StringUtils.isNotBlank(beaconCluster.getHiveCloudEncryptionAlgorithm());
     }
 
     public static void validateIfClustersPaired(String sourceCluster, String targetCluster) throws BeaconException {

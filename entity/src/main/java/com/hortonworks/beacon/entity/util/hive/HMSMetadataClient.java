@@ -23,6 +23,7 @@ package com.hortonworks.beacon.entity.util.hive;
 
 import com.hortonworks.beacon.HiveServerAuthenticationType;
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
@@ -47,16 +48,17 @@ public class HMSMetadataClient implements HiveMetadataClient {
     private static final Logger LOG = LoggerFactory.getLogger(HMSMetadataClient.class);
 
     public HMSMetadataClient(Cluster cluster) throws BeaconException {
+        BeaconCluster beaconCluster = new BeaconCluster(cluster);
         this.clusterName = cluster.getName();
         HiveConf hiveConf = new HiveConf();
-        hiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, cluster.getHmsEndpoint());
+        hiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, beaconCluster.getHmsEndpoint());
         hiveConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);
-        if (HiveServerAuthenticationType.valueOf(cluster.getHiveServerAuthentication())
+        if (HiveServerAuthenticationType.valueOf(beaconCluster.getHiveServerAuthentication())
                 == HiveServerAuthenticationType.KERBEROS
-                && StringUtils.isNotEmpty(cluster.getHiveMetastoreKerberosPrincipal())) {
+                && StringUtils.isNotEmpty(beaconCluster.getHiveMetastoreKerberosPrincipal())) {
             hiveConf.setVar(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL, "true");
             hiveConf.setVar(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL,
-                    cluster.getHiveMetastoreKerberosPrincipal());
+                    beaconCluster.getHiveMetastoreKerberosPrincipal());
         }
         try {
             client = new HiveMetaStoreClient(hiveConf);

@@ -23,6 +23,7 @@ package com.hortonworks.beacon.entity.util.hive;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 
 /**
@@ -55,11 +56,12 @@ public final class HiveClientFactory {
     }
 
     public static HiveMetadataClient getMetadataClient(Cluster cluster) throws BeaconException {
+        BeaconCluster beaconCluster = new BeaconCluster(cluster);
         if (hiveMetadataClient != null) {
             return hiveMetadataClient;
         }
 
-        if (cluster.getHmsEndpoint() != null) {
+        if (beaconCluster.getHmsEndpoint() != null) {
             return new HMSMetadataClient(cluster);
         }
         if (cluster.getHsEndpoint() != null) {

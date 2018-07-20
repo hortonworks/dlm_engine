@@ -34,6 +34,7 @@ import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.StatusResult;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.ClusterProperties;
 import com.hortonworks.beacon.entity.ClusterValidator;
 import com.hortonworks.beacon.entity.EntityValidatorFactory;
@@ -334,7 +335,7 @@ public class ClusterResource extends AbstractResourceManager {
             }
             if (!isInternalPairing) {
                 BeaconWebClient remoteClient = new BeaconWebClient(remoteCluster.getBeaconEndpoint(),
-                        remoteCluster.getKnoxGatewayURL());
+                        new BeaconCluster(remoteCluster).getKnoxGatewayURL());
                 pairClustersInRemote(remoteClient, remoteClusterName, localClusterName);
             }
             BeaconEvents.createEvents(Events.PAIRED, EventEntityType.CLUSTER,
@@ -371,7 +372,7 @@ public class ClusterResource extends AbstractResourceManager {
             }
             if (!isInternalUnpairing) {
                 BeaconWebClient remoteClient = new BeaconWebClient(remoteCluster.getBeaconEndpoint(),
-                        remoteCluster.getKnoxGatewayURL());
+                        new BeaconCluster(remoteCluster).getKnoxGatewayURL());
                 unpairClustersInRemote(remoteClient, remoteClusterName, localClusterName);
             }
             BeaconEvents.createEvents(Events.UNPAIRED, EventEntityType.CLUSTER,

@@ -23,6 +23,7 @@
 package com.hortonworks.beacon.client.entity;
 
 import com.hortonworks.beacon.api.PropertiesIgnoreCase;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 import java.util.List;
 
@@ -47,6 +48,7 @@ public abstract class Entity {
         SUSPENDEDFORINTERVENTION
     }
 
+    @JsonIgnore
     public EntityType getEntityType() {
         for (EntityType type : EntityType.values()) {
             if (type.getEntityClass().equals(getClass())) {

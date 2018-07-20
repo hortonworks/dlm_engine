@@ -35,6 +35,7 @@ import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
@@ -121,7 +122,9 @@ public final class ValidationUtil {
         } else if (isLocalHAEnbaled) {
             validateNameserviceConfig(localCustomProps, remoteCustomProps);
         }
-        if (ClusterHelper.isHiveEnabled(localCluster)
+        BeaconCluster beaconLocalCluster = new BeaconCluster(localCluster);
+        BeaconCluster beaconRemoteCluster = new BeaconCluster(remoteCluster);
+        if (ClusterHelper.isHiveEnabled(beaconLocalCluster)
                 && !(Boolean.valueOf(remoteCluster.getCustomProperties().getProperty(
                     Cluster.ClusterFields.CLOUDDATALAKE.getName())))
                 && (ClusterHelper.isHighlyAvailableHive(localCluster.getHsEndpoint())
@@ -134,7 +137,7 @@ public final class ValidationUtil {
             LOG.warn("Ranger is not enabled in either {} or {} cluster", localCluster.getName(),
                 remoteCluster.getName());
         }
-        if (ClusterHelper.isHiveEnabled(localCluster) != ClusterHelper.isHiveEnabled(remoteCluster)) {
+        if (ClusterHelper.isHiveEnabled(beaconLocalCluster) != ClusterHelper.isHiveEnabled(beaconRemoteCluster)) {
             LOG.warn("Hive is not enabled in either {} or {} cluster", localCluster.getName(),
                 remoteCluster.getName());
         }
@@ -481,7 +484,7 @@ public final class ValidationUtil {
             throws BeaconException {
         Cluster sourceCluster  = ClusterHelper.getActiveCluster(policy.getSourceCluster());
         Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
-        boolean tdeOn = isTDEEnabled(sourceCluster, sourceCluster.getHiveWarehouseLocation());
+        boolean tdeOn = isTDEEnabled(sourceCluster, new BeaconCluster(sourceCluster).getHiveWarehouseLocation());
         boolean encOn = ClusterHelper.isCloudEncryptionEnabled(targetCluster);
         if (!encOn) {
             encOn = !EncryptionAlgorithmType.NONE.equals(PolicyHelper.getCloudEncryptionAlgorithm(policy));
@@ -514,11 +517,12 @@ public final class ValidationUtil {
 
     public static void validateEncryptionAlgorithmType(Cluster cluster) throws ValidationException {
         Properties cloudEncProps = new Properties();
-        if (cluster.getHiveCloudEncryptionAlgorithm() != null) {
-            cloudEncProps.put(CLOUD_ENCRYPTIONALGORITHM.getName(), cluster.getHiveCloudEncryptionAlgorithm());
+        BeaconCluster beaconCluster = new BeaconCluster(cluster);
+        if (beaconCluster.getHiveCloudEncryptionAlgorithm() != null) {
+            cloudEncProps.put(CLOUD_ENCRYPTIONALGORITHM.getName(), beaconCluster.getHiveCloudEncryptionAlgorithm());
         }
-        if (cluster.getHiveCloudEncryptionKey() != null) {
-            cloudEncProps.put(CLOUD_ENCRYPTIONKEY.getName(), cluster.getHiveCloudEncryptionKey());
+        if (beaconCluster.getHiveCloudEncryptionKey() != null) {
+            cloudEncProps.put(CLOUD_ENCRYPTIONKEY.getName(), beaconCluster.getHiveCloudEncryptionKey());
         }
         ValidationUtil.validateEncryptionAlgorithmType(cloudEncProps, true);
     }
@@ -720,11 +724,12 @@ public final class ValidationUtil {
             } else {
                 validateHiveTargetDataSetName(targetDataset);
             }
-            boolean isHCFS = PolicyHelper.isDatasetHCFS(cluster.getHiveWarehouseLocation());
+            BeaconCluster beaconCluster = new BeaconCluster(cluster);
+            boolean isHCFS = PolicyHelper.isDatasetHCFS(beaconCluster.getHiveWarehouseLocation());
             if (isHCFS) {
                 if (validateCloud) {
                     validateEncryptionAlgorithmType(policy);
-                    validateWriteToPolicyCloudPath(policy, cluster.getHiveWarehouseLocation());
+                    validateWriteToPolicyCloudPath(policy, beaconCluster.getHiveWarehouseLocation());
                 }
                 ensureClusterTDECompatibilityForHive(policy);
             } else {

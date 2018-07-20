@@ -28,6 +28,7 @@ import com.hortonworks.beacon.client.BeaconWebClient;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.CloudCred.Config;
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.PeerInfo;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.CloudCredList;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
@@ -48,6 +49,7 @@ import com.hortonworks.beacon.test.PluginTest;
 import com.hortonworks.beacon.util.ClusterStatus;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.StringFormat;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
@@ -318,6 +320,9 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         //Make sure the cluster pair is in 'SUSPENDED' state.
         verifyClusterPairStatus(getTargetBeaconServer(), ClusterStatus.SUSPENDED);
 
+        // Make Sure that the getEntity returns the pair status message
+        verifyPairStatusMessage(TARGET_CLUSTER, SOURCE_CLUSTER);
+
         //Added some delay to allow policy instance execution.
         Thread.sleep(15000);
 
@@ -338,6 +343,21 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
         //delete policy at the end
         targetClient.deletePolicy(policyName, false);
+    }
+
+    private void verifyPairStatusMessage(String localClusterName, String remoteClusterName)
+            throws BeaconClientException{
+        Cluster localCluster =  targetClient.getCluster(localClusterName);
+        List<PeerInfo> peerInfoList = localCluster.getPeersInfo();
+        for (PeerInfo peerInfo: peerInfoList) {
+            if (peerInfo.getClusterName().equalsIgnoreCase(remoteClusterName)) {
+                assertTrue(StringUtils.isNotBlank(peerInfo.getStatusMessage()));
+                return;
+            }
+        }
+        throw new BeaconClientException(new Exception("Could not find a matching peerInfo for peer:"
+                + remoteClusterName));
+
     }
 
     @Test(dependsOnMethods = "testPairCluster")

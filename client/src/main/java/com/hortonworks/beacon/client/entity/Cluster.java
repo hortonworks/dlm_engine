@@ -25,6 +25,7 @@ package com.hortonworks.beacon.client.entity;
 import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.util.KnoxTokenUtils;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import java.util.List;
 import java.util.Properties;
@@ -32,6 +33,8 @@ import java.util.Properties;
 /**
  * The cluster contains the definition of different endpoints which are used by Beacon like HDFS, HS2 and others.
  */
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Cluster extends Entity {
     private String name;
     private int version;

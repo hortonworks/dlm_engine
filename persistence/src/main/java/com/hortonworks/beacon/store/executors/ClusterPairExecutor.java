@@ -72,6 +72,7 @@ public class ClusterPairExecutor extends BaseExecutor {
                 query.setParameter("pairedClusterName", bean.getPairedClusterName());
                 query.setParameter("pairedClusterVersion", bean.getPairedClusterVersion());
                 query.setParameter("status", bean.getStatus());
+                query.setParameter("statusMessage", bean.getStatusMessage());
                 query.setParameter("lastModifiedTime", bean.getLastModifiedTime());
                 break;
             case EXIST_CLUSTER_PAIR:
@@ -103,8 +104,9 @@ public class ClusterPairExecutor extends BaseExecutor {
     public void updateStatus() throws BeaconStoreException {
         Query query = getQuery(ClusterPairQuery.UPDATE_CLUSTER_PAIR_STATUS);
         int executeUpdate = query.executeUpdate();
-        LOG.info("Cluster [local: {}, remote: {}] pair status: [{}] updated for [{}] records.",
-                bean.getClusterName(), bean.getPairedClusterName(), executeUpdate, bean.getStatus());
+        LOG.info("Cluster [local: {}, remote: {}] pair status: [{}] updated for [{}] records with message [{}]",
+                bean.getClusterName(), bean.getPairedClusterName(), bean.getStatus(), executeUpdate,
+                bean.getStatusMessage());
     }
 
     public void pairCluster() throws BeaconStoreException {

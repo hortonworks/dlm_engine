@@ -29,6 +29,7 @@ public class PeerInfo {
 
     private String clusterName;
     private String pairStatus;
+    private String statusMessage;
 
     public PeerInfo() {
     }
@@ -49,11 +50,20 @@ public class PeerInfo {
         this.pairStatus = pairStatus;
     }
 
+    public String getStatusMessage() {
+        return statusMessage;
+    }
+
+    public void setStatusMessage(String statusMessage) {
+        this.statusMessage = statusMessage;
+    }
+
     @Override
     public String toString() {
         return "PeerInfo {"
                 + "clusterName='" + clusterName + '\''
-                + ", pairStatus=" + pairStatus
+                + ", pairStatus=" + pairStatus + '\''
+                + ", statusMessage='" + statusMessage + '\''
                 + '}';
     }
 }

@@ -129,6 +129,7 @@ public final class ClusterDao {
                         peerInfo.setClusterName(clusterKey.getName());
                     }
                     peerInfo.setPairStatus(pairBean.getStatus());
+                    peerInfo.setStatusMessage(pairBean.getStatusMessage());
                     peersInfo.add(peerInfo);
                 }
             }
@@ -193,6 +194,7 @@ public final class ClusterDao {
                 if (peerClusters.contains(pairedClusterName)) {
                     pairBean.setStatus(toStatus.name());
                     pairBean.setLastModifiedTime(lastModifiedTime);
+                    pairBean.setStatusMessage("Cluster pair status changed after validation during cluster update.");
                     ClusterPairExecutor executor = new ClusterPairExecutor(pairBean);
                     executor.updateStatus();
                     LOG.info("Moving the cluster pair status for clusters [{}] and [{}] from [{}] to [{}]",

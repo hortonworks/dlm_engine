@@ -45,7 +45,7 @@ import java.util.Date;
                 + "(b.clusterName = :clusterName AND b.clusterVersion = :clusterVersion) OR "
                 + "(b.pairedClusterName = :pairedClusterName AND b.pairedClusterVersion = :pairedClusterVersion)"),
         @NamedQuery(name = "UPDATE_CLUSTER_PAIR_STATUS", query = "update ClusterPairBean b set b.status = :status, "
-                + "b.lastModifiedTime = :lastModifiedTime "
+                + "b.statusMessage = :statusMessage, b.lastModifiedTime = :lastModifiedTime "
                 + "where (b.clusterName = :clusterName AND b.clusterVersion = :clusterVersion) AND "
                 + "(b.pairedClusterName = :pairedClusterName AND b.pairedClusterVersion = :pairedClusterVersion)"),
         @NamedQuery(name = "EXIST_CLUSTER_PAIR", query = "select OBJECT(b) from ClusterPairBean b "
@@ -73,6 +73,9 @@ public class ClusterPairBean {
 
     @Column(name = "status")
     private String status;
+
+    @Column(name = "status_message")
+    private String statusMessage;
 
     @Column(name = "last_modified_time")
     private java.sql.Timestamp lastModifiedTime;
@@ -123,6 +126,14 @@ public class ClusterPairBean {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getStatusMessage() {
+        return statusMessage;
+    }
+
+    public void setStatusMessage(String statusMessage) {
+        this.statusMessage = statusMessage;
     }
 
     public Date getLastModifiedTime() {

@@ -47,6 +47,7 @@ import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import com.hortonworks.beacon.service.Services;
+import com.hortonworks.beacon.store.bean.ClusterPairBean;
 import com.hortonworks.beacon.util.ClusterStatus;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -63,11 +64,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
-import java.util.Set;
 
 /**
  * Beacon cluster resource management operations as REST API. Root resource (exposed at "myresource" path).
@@ -461,47 +460,46 @@ public class ClusterResource extends AbstractResourceManager {
 
     private void validatePairingAndUpdateStatus(Cluster updatedCluster) throws BeaconException {
         List<String> peers = updatedCluster.getPeers();
-        if (peers.size() == 0) {
+        if (peers.isEmpty()) {
             LOG.info("No peer for cluster [{}] found, skipping the pairing status validation",
                     updatedCluster.getName());
             return;
         }
-        Set<String> toBeSuspendedPeers = new HashSet<>();
-        Set<String> toBePairedBackPeers = new HashSet<>();
+        List<ClusterPairBean> clusterPairBeans = clusterDao.getPairedCluster(updatedCluster);
         for (String peer: peers) {
             Cluster remoteCluster = null;
+            ClusterPairBean clusterPairBean = null;
             try {
+                clusterPairBean = getClusterPairBean(clusterPairBeans, peer);
                 remoteCluster = ClusterHelper.getActiveCluster(peer);
                 ValidationUtil.validateClusterPairing(updatedCluster, remoteCluster);
-                toBePairedBackPeers.add(remoteCluster.getName());
+                if (!ClusterStatus.PAIRED.name().equals(clusterPairBean.getStatus())) {
+                    clusterDao.updatePairStatus(clusterPairBean, ClusterStatus.PAIRED);
+                    BeaconEvents.createEvents(Events.PAIRED, EventEntityType.CLUSTER, updatedCluster);
+                }
             } catch (ValidationException e){
                 LOG.error("Validation for existing pairing for remote cluster{} failed, will suspend the pairing "
                         + "status", peer, e);
-                toBeSuspendedPeers.add(peer);
+                clusterDao.updatePairStatus(clusterPairBean, ClusterStatus.SUSPENDED, e.getMessage());
+                String message = "Pairing between cluster " + updatedCluster.getName() + " and cluster " + peer
+                        + " is suspended due to " + e.getMessage();
+                BeaconEvents.createEvents(Events.SUSPENDED, message, EventEntityType.CLUSTER, updatedCluster);
             } catch (BeaconException e) {
                 LOG.warn("Exception while Validating for existing pairing for remote cluster{}", peer, e);
                 throw e;
             }
         }
-        if (!toBeSuspendedPeers.isEmpty()) {
-            clusterDao.movePairStatusForClusters(updatedCluster, toBeSuspendedPeers, ClusterStatus.PAIRED,
-                    ClusterStatus.SUSPENDED);
-            for (String peer: toBeSuspendedPeers) {
-                String message = "Pairing between cluster " + updatedCluster.getName() + " and cluster " + peer
-                        + " is suspended as the pairing validation failed after an update to cluster info for cluster "
-                        + updatedCluster.getName();
-                BeaconEvents.createEvents(Events.SUSPENDED, message, EventEntityType.CLUSTER, updatedCluster);
+    }
+
+    private ClusterPairBean getClusterPairBean(List<ClusterPairBean> clusterPairBeans, String peer)
+            throws BeaconException {
+        for(ClusterPairBean clusterPairBean: clusterPairBeans) {
+            if (clusterPairBean.getClusterName().equalsIgnoreCase(peer)
+                    || clusterPairBean.getPairedClusterName().equalsIgnoreCase(peer)) {
+                return clusterPairBean;
             }
         }
-        if (!toBePairedBackPeers.isEmpty()) {
-            clusterDao.movePairStatusForClusters(updatedCluster, toBePairedBackPeers, ClusterStatus.SUSPENDED,
-                    ClusterStatus.PAIRED);
-            for (String peer: toBePairedBackPeers) {
-                String message = "cluster " + updatedCluster.getName() + " and cluster " + peer
-                        + " are paired back after an update to cluster info for cluster " + updatedCluster.getName();
-                BeaconEvents.createEvents(Events.PAIRED, message, EventEntityType.CLUSTER, updatedCluster);
-            }
-        }
+        throw new BeaconException("Unable to find Cluster pair info for peer:" + peer);
     }
 
     void validateExclusionProp(Cluster existingCluster, PropertiesIgnoreCase properties) throws ValidationException {

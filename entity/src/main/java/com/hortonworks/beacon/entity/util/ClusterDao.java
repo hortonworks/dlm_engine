@@ -47,7 +47,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 
 import static com.hortonworks.beacon.entity.util.ClusterHelper.convertToList;
 import static com.hortonworks.beacon.entity.util.ClusterHelper.convertToString;
@@ -168,7 +167,7 @@ public final class ClusterDao {
         }
     }
 
-    private List<ClusterPairBean> getPairedCluster(Cluster cluster) {
+    public List<ClusterPairBean> getPairedCluster(Cluster cluster) {
         ClusterPairBean bean = new ClusterPairBean();
         bean.setClusterName(cluster.getName());
         bean.setClusterVersion(cluster.getVersion());
@@ -183,25 +182,21 @@ public final class ClusterDao {
         executor.retireCluster();
     }
 
-    public void movePairStatusForClusters(Cluster cluster, Set<String> peerClusters, ClusterStatus fromStatus,
-                                           ClusterStatus toStatus) throws BeaconStoreException {
-        List<ClusterPairBean> pairedCluster = getPairedCluster(cluster);
+    public void updatePairStatus(ClusterPairBean clusterPairBean, ClusterStatus updatedStatus)
+            throws BeaconStoreException {
+        updatePairStatus(clusterPairBean, updatedStatus, null);
+    }
+
+    public void updatePairStatus(ClusterPairBean clusterPairBean, ClusterStatus updatedStatus, String statusChangeCause)
+            throws BeaconStoreException {
         Date lastModifiedTime = new Date();
-        for (ClusterPairBean pairBean : pairedCluster) {
-            String pairedClusterName = cluster.getName().equals(pairBean.getClusterName())
-                    ? pairBean.getPairedClusterName() :pairBean.getClusterName();
-            if (fromStatus.name().equals(pairBean.getStatus())) {
-                if (peerClusters.contains(pairedClusterName)) {
-                    pairBean.setStatus(toStatus.name());
-                    pairBean.setLastModifiedTime(lastModifiedTime);
-                    pairBean.setStatusMessage("Cluster pair status changed after validation during cluster update.");
-                    ClusterPairExecutor executor = new ClusterPairExecutor(pairBean);
-                    executor.updateStatus();
-                    LOG.info("Moving the cluster pair status for clusters [{}] and [{}] from [{}] to [{}]",
-                            cluster.getName(), pairedClusterName, fromStatus.name(), toStatus.name());
-                }
-            }
+        clusterPairBean.setStatus(updatedStatus.name());
+        clusterPairBean.setLastModifiedTime(lastModifiedTime);
+        if (statusChangeCause != null) {
+            clusterPairBean.setStatusMessage(statusChangeCause);
         }
+        ClusterPairExecutor executor = new ClusterPairExecutor(clusterPairBean);
+        executor.updateStatus();
     }
 
     public ClusterStatus getPairedClusterStatus(String cluster, String pairedCluster) throws BeaconException {

@@ -40,6 +40,7 @@ import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInsta
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -69,10 +70,13 @@ public class RecoveryService implements BeaconService {
                 // Trigger job with (policy id and offset)
                 LOG.info("Recovering instanceId: [{}], current offset: [{}]", recoverInstance, offset);
                 boolean recoveryStatus = scheduler.recoverPolicyInstance(policyId, offset, recoverInstance);
+                LOG.info("Recovered instanceId: [{}], recovery status: [{}]", recoverInstance, recoveryStatus);
                 if (!recoveryStatus) {
                     handleRecoveryFailure(instance.getPolicyId(), instance.getInstanceId());
+                } else {
+                    LOG.info("Marking instanceId: [{}] as killed", instance.getInstanceId());
+                    markInstanceKilled(instance.getInstanceId());
                 }
-                LOG.info("Recovered instanceId: [{}], request status: [{}]", recoverInstance, recoveryStatus);
             }
         } finally {
             RequestContext.get().rollbackTransaction();
@@ -112,5 +116,17 @@ public class RecoveryService implements BeaconService {
         bean.setRetirementTime(policyBean.getRetirementTime());
         PolicyInstanceExecutor instanceExecutor = new PolicyInstanceExecutor(bean);
         instanceExecutor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_STATUS_RETIRE);
+    }
+
+    private static void markInstanceKilled(String instanceId) throws BeaconException {
+        RequestContext.get().startTransaction();
+        PolicyInstanceBean bean = new PolicyInstanceBean();
+        bean.setInstanceId(instanceId);
+        bean.setEndTime(new Date());
+        bean.setStatus(JobStatus.KILLED.name());
+        bean.setMessage("Another instance got triggered before recovery");
+        PolicyInstanceExecutor instanceExecutor = new PolicyInstanceExecutor(bean);
+        instanceExecutor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_COMPLETE);
+        RequestContext.get().commitTransaction();
     }
 }

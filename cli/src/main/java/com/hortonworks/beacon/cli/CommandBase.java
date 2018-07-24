@@ -131,8 +131,8 @@ public abstract class CommandBase {
                 if (configFileIS != null) {
                     configFileIS.close();
                 }
-            } catch (IOException e) {
-                //ignore
+            } catch (Throwable t) {
+                // Do nothing
             }
         }
     }

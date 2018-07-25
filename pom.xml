@@ -536,11 +536,10 @@
                 <version>${openjpa.version}</version>
             </dependency>
             <dependency>
-                <groupId>commons-dbcp</groupId>
-                <artifactId>commons-dbcp</artifactId>
-                <version>1.4</version>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-dbcp2</artifactId>
+                <version>2.5.0</version>
             </dependency>
-
             <dependency>
                 <groupId>javax.servlet.jsp</groupId>
                 <artifactId>jsp-api</artifactId>
@@ -978,7 +977,6 @@
         <annotations.version>3.0.1</annotations.version>
         <sdk.aws.version>1.10.6</sdk.aws.version>
         <activation.version>1.2.0</activation.version>
-
         <beacon.schemadirectory>../src/sql</beacon.schemadirectory>
     </properties>
 </project>

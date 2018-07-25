@@ -53,7 +53,7 @@ public final class BeaconStoreService implements BeaconService {
         int maxConn = dbStore.getMaxConnections();
 
         String url = appendJDBCParameters(dbStore);
-        String dataSource = "org.apache.commons.dbcp.BasicDataSource";
+        String dataSource = "org.apache.commons.dbcp2.BasicDataSource";
         String connProps = StringFormat.format("DriverClassName={},Url={},Username={},MaxActive={}"
                         + ",MaxIdle={},MinIdle={},MaxWait={}",
                 driver, url, user, maxConn, dbStore.getMaxIdleConnections(), dbStore.getMinIdleConnections(),

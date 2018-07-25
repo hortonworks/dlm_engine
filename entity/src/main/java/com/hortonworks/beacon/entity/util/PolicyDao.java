@@ -81,9 +81,9 @@ public final class PolicyDao {
         policy.setStatus(bean.getStatus());
     }
 
-    public void updatePolicyStatus(String name, String type, String status) {
-        PolicyBean bean = new PolicyBean(name);
-        bean.setType(type);
+    public void updatePolicyStatus(String policyId, String status) {
+        PolicyBean bean = new PolicyBean();
+        bean.setId(policyId);
         bean.setStatus(status);
         bean.setLastModifiedTime(new Date());
         PolicyExecutor executor = new PolicyExecutor(bean);

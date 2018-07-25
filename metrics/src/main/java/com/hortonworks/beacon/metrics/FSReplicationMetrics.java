@@ -39,8 +39,8 @@ import java.io.IOException;
 public class FSReplicationMetrics {
 
     private static final Logger LOG = LoggerFactory.getLogger(FSReplicationMetrics.class);
-    private static final String COUNTER_GROUP = "org.apache.hadoop.tools.mapred.CopyMapper$Counter";
-    private static final String JOB_COUNTER_GROUP = "org.apache.hadoop.mapreduce.JobCounter";
+    public static final String COUNTER_GROUP = "org.apache.hadoop.tools.mapred.CopyMapper$Counter";
+    public static final String JOB_COUNTER_GROUP = "org.apache.hadoop.mapreduce.JobCounter";
     private static final String TOTAL_LAUNCHED_MAPS = "TOTAL_LAUNCHED_MAPS";
     private static final String NUM_KILLED_MAPS = "NUM_KILLED_MAPS";
     private static final String NUM_FAILED_MAPS = "NUM_FAILED_MAPS";

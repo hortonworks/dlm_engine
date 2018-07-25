@@ -22,58 +22,139 @@
 
 package com.hortonworks.beacon;
 
+import com.hortonworks.beacon.api.HdfsAdminFactory;
 import com.hortonworks.beacon.api.LocalBeaconClient;
 import com.hortonworks.beacon.api.ResourceBaseTest;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
 import com.hortonworks.beacon.entity.util.hive.HiveServerClient;
-import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.metrics.FSReplicationMetrics;
+import com.hortonworks.beacon.replication.fs.DistCpFactory;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.BeaconStoreService;
 import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.tools.BeaconDBSetup;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
-import org.apache.commons.lang.RandomStringUtils;
 import org.apache.hadoop.fs.FileSystem;
-import org.mockito.Mock;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.client.HdfsAdmin;
+import org.apache.hadoop.hdfs.protocol.EncryptionZone;
+import org.apache.hadoop.hdfs.protocol.EncryptionZoneIterator;
+import org.apache.hadoop.mapreduce.CounterGroup;
+import org.apache.hadoop.mapreduce.Counters;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.JobStatus;
+import org.apache.hadoop.mapreduce.TaskReport;
+import org.apache.hadoop.mapreduce.TaskType;
+import org.apache.hadoop.tools.DistCp;
+import org.mockito.Matchers;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Test data generator for local testing.
  */
 public class LocalTestDataGenerator extends TestDataGenerator {
-    private BeaconClient client = new LocalBeaconClient();
-
-    @Mock
-    private FileSystem sourceFs;
-    @Mock
-    private FileSystem targetFs;
-
-    @Mock
-    private HiveMetadataClient hiveMetadataClient;
-
-    @Mock
-    private HiveServerClient hiveServerClient;
 
     @Override
-    public void init() throws BeaconException {
+    public void init() throws Exception {
         MockitoAnnotations.initMocks(this);
-        FileSystemClientFactory.setFileSystem(sourceFs);
-        HiveClientFactory.setHiveMetadataClient(hiveMetadataClient);
-        HiveClientFactory.setHiveServerClient(hiveServerClient);
-        BeaconConfig.getInstance();
         BeaconDBSetup.setupDB();
         List<String> defaultServices = Arrays.asList(BeaconStoreService.class.getName());
         List<String> dependentServices = Arrays.asList(BeaconQuartzScheduler.class.getName());
         ServiceManager.getInstance().initialize(defaultServices, dependentServices);
+        initCustomMocks();
 
+    }
+
+    private void initCustomMocks() throws Exception {
+        targetFs = mock(DistributedFileSystem.class);
+        sourceFs = mock(DistributedFileSystem.class);
+        targetBeaconClient = new LocalBeaconClient();
+        localBeaconClient = mock(LocalBeaconClient.class);
+        FileSystemClientFactory.setFileSystem(targetFs);
+        hiveMetadataClient = mock(HiveMetadataClient.class);
+        HiveServerClient hiveServerClient = mock(HiveServerClient.class);
+        HiveClientFactory.setHiveMetadataClient(hiveMetadataClient);
+        HiveClientFactory.setHiveServerClient(hiveServerClient);
+        BeaconClient sourceClient = mock(LocalBeaconClient.class);
+        BeaconClientFactory.setBeaconClient(sourceClient);
+        HdfsAdmin hdfsAdmin = mock(HdfsAdmin.class);
+        HdfsAdminFactory.setHdfsAdmin(hdfsAdmin);
+        RemoteIterator<EncryptionZone> remoteIterator = mock(EncryptionZoneIterator.class);
+        when(remoteIterator.hasNext()).thenReturn(false);
+        when(hdfsAdmin.listEncryptionZones()).thenReturn(remoteIterator);
+        DistCp distCp = mock(DistCp.class);
+        final Job job = mock(Job.class);
+        when(distCp.createAndSubmitJob()).thenReturn(job);
+        when(job.isComplete()).then(new Answer<Boolean>() {
+            @Override
+            public Boolean answer(InvocationOnMock invocation) throws Throwable {
+                Thread.sleep(200);
+                return true;
+            }
+        });
+        when(job.getJobState()).thenReturn(JobStatus.State.RUNNING).thenReturn(JobStatus.State.SUCCEEDED);
+        final boolean[] killed = {false};
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                killed[0] = true;
+                return null;
+            }
+        }).when(job).killJob();
+        when(job.isSuccessful()).then(new Answer<Boolean>() {
+            @Override
+            public Boolean answer(InvocationOnMock invocation) throws Throwable {
+                return !killed[0];
+            }
+        });
+        when(job.isSuccessful()).thenReturn(true);
+        org.apache.hadoop.mapreduce.JobStatus jobStatus = mock(org.apache.hadoop.mapreduce.JobStatus.class);
+        CounterGroup counterGroup = mock(CounterGroup.class);
+        Counters counters = mock(Counters.class);
+        when(job.getCounters()).thenReturn(counters);
+        when(job.getCounters().getGroup(FSReplicationMetrics.COUNTER_GROUP)).thenReturn(counterGroup);
+        Iterator iterator = mock(Iterator.class);
+        when(counterGroup.iterator()).thenReturn(iterator);
+        when(counterGroup.iterator().hasNext()).thenReturn(false);
+        when(job.getCounters().getGroup(FSReplicationMetrics.JOB_COUNTER_GROUP)).thenReturn(null);
+        when(job.getStatus()).thenReturn(jobStatus);
+        when(job.getStatus().getMapProgress()).thenReturn(1f);
+        TaskReport taskReport = mock(TaskReport.class);
+        TaskReport[] taskReports = new TaskReport[1];
+        taskReports[0] = taskReport;
+        when(job.getTaskReports(TaskType.MAP)).thenReturn(taskReports);
+        DistCpFactory.setDistCp(distCp);
+        when(hiveMetadataClient.getDatabaseLocation(Matchers.anyString()))
+                .thenReturn(new Path(getRandomString("hive")));
+        Statement statement = mock(Statement.class);
+        when(hiveServerClient.createStatement()).thenReturn(statement);
+        final ResultSet resultSet = mock(ResultSet.class);
+        when(statement.executeQuery(Matchers.anyString())).thenAnswer(new Answer<ResultSet>() {
+            @Override
+            public ResultSet answer(InvocationOnMock invocation) throws Throwable {
+                Thread.sleep(100);
+                return resultSet;
+            }
+        });
     }
 
     @Override
@@ -81,11 +162,11 @@ public class LocalTestDataGenerator extends TestDataGenerator {
         Cluster cluster = new Cluster();
         cluster.setLocal(isLocal);
         cluster.setName(clusterType.getClusterName(isLocal));
-        cluster.setDescription(randomString("description"));
+        cluster.setDescription(getRandomString("description"));
         if (isLocal) {
             cluster.setFsEndpoint("file:///");
         } else {
-            cluster.setFsEndpoint("hdfs://local-" + clusterType);
+            cluster.setFsEndpoint("hdfs://local-" + clusterType +"/");
         }
         cluster.setHsEndpoint("jdbc:hive2://local-" + clusterType);
         cluster.setBeaconEndpoint("http://beacon-" + cluster);
@@ -98,7 +179,14 @@ public class LocalTestDataGenerator extends TestDataGenerator {
 
     @Override
     public BeaconClient getClient(ResourceBaseTest.ClusterType clusterType) {
-        return client;
+        switch (clusterType) {
+            case SOURCE:
+                return localBeaconClient;
+            case TARGET:
+                return targetBeaconClient;
+            default:
+                throw new IllegalStateException("Unhandled cluster type " + clusterType);
+        }
     }
 
     @Override
@@ -113,7 +201,8 @@ public class LocalTestDataGenerator extends TestDataGenerator {
         }
     }
 
-    private String randomString(String prefix) {
-        return prefix + RandomStringUtils.randomAlphanumeric(10);
+    @Override
+    public void createFSMocks(String path) throws IOException {
+        when(targetFs.exists(new Path(path))).thenReturn(true);
     }
 }

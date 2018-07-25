@@ -25,13 +25,27 @@ package com.hortonworks.beacon;
 import com.hortonworks.beacon.api.ResourceBaseTest;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.hadoop.fs.FileSystem;
+
+import java.io.IOException;
+import java.util.Calendar;
 
 /**
  * test data generator interface for local and ambari based cluster.
  */
 public abstract class TestDataGenerator {
+
+    protected BeaconClient localBeaconClient;
+
+    protected BeaconClient targetBeaconClient;
+
+    protected FileSystem sourceFs;
+    protected FileSystem targetFs;
+
+    protected HiveMetadataClient hiveMetadataClient;
 
     public static TestDataGenerator getTestDataGenerator() {
         if (System.getProperty("beacon.test.local", "true").equals("true")) {
@@ -40,11 +54,66 @@ public abstract class TestDataGenerator {
         return new AmbariBasedTestDataGenerator();
     }
 
-    public abstract void init() throws BeaconException;
+    public abstract void init() throws Exception;
 
     public abstract Cluster getCluster(ResourceBaseTest.ClusterType clusterType, boolean isLocal);
 
     public abstract BeaconClient getClient(ResourceBaseTest.ClusterType clusterType);
 
     public abstract FileSystem getFileSystem(ResourceBaseTest.ClusterType clusterType);
+
+    public abstract void createFSMocks(String path) throws IOException;
+
+    private void populateCustomProperties(ReplicationPolicy policy) {
+        policy.getCustomProperties().setProperty("distcpMaxMaps", "1");
+        policy.getCustomProperties().setProperty("distcpMapBandwidth", "10");
+        policy.getCustomProperties().setProperty("sourceSnapshotRetentionAgeLimit", "10");
+        policy.getCustomProperties().setProperty("sourceSnapshotRetentionNumber", "1");
+        policy.getCustomProperties().setProperty("targetSnapshotRetentionAgeLimit", "10");
+        policy.getCustomProperties().setProperty("targetSnapshotRetentionNumber", "1");
+        policy.getCustomProperties().setProperty("tags", "owner=producer@xyz.com,component=sales");
+        policy.getCustomProperties().setProperty("retryAttempts", "0");
+        policy.getCustomProperties().setProperty("retryDelay", "120");
+        policy.getCustomProperties().setProperty("user", System.getProperty("user.name"));
+    }
+
+    public ReplicationPolicy getPolicy() {
+        return getPolicy(getRandomString("Policy"), getRandomString("Path"), "FS", 120,
+                getCluster(ResourceBaseTest.ClusterType.SOURCE, false).getName(),
+                getCluster(ResourceBaseTest.ClusterType.TARGET, true).getName());
+    }
+
+    public ReplicationPolicy getPolicy(String policyName, String replicationPath) {
+        return getPolicy(policyName, replicationPath, "FS", 120,
+                getCluster(ResourceBaseTest.ClusterType.SOURCE, false).getName(),
+                getCluster(ResourceBaseTest.ClusterType.TARGET, true).getName());
+    }
+
+    public ReplicationPolicy getPolicy(String policyName, String replicationPath, String type) {
+        return getPolicy(policyName, replicationPath, type, 120,
+                getCluster(ResourceBaseTest.ClusterType.SOURCE, false).getName(),
+                getCluster(ResourceBaseTest.ClusterType.TARGET, true).getName());
+    }
+
+    public ReplicationPolicy getPolicy(String policyName, String replicationPath, String type, int frequency,
+                                       String sourceCluster, String targetCluster) {
+        ReplicationPolicy policy = new ReplicationPolicy();
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.SECOND, 1);
+        policy.setStartTime(calendar.getTime());
+        policy.setName(policyName);
+        policy.setDescription("Beacon test policy");
+        policy.setType(type);
+        policy.setFrequencyInSec(frequency);
+        policy.setSourceDataset(replicationPath);
+        policy.setTargetDataset(replicationPath);
+        policy.setTargetCluster(targetCluster);
+        policy.setSourceCluster(sourceCluster);
+        populateCustomProperties(policy);
+        return policy;
+    }
+
+    public String getRandomString(String prefix) {
+        return prefix + RandomStringUtils.randomAlphanumeric(15);
+    }
 }

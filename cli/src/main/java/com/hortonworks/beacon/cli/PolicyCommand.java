@@ -25,11 +25,10 @@ package com.hortonworks.beacon.cli;
 
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
-import com.hortonworks.beacon.client.entity.Entity;
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
+import com.hortonworks.beacon.client.resource.StatusResult;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -111,8 +110,10 @@ public class PolicyCommand extends CommandBase {
     }
 
     private void printPolicy() throws BeaconClientException {
-        ReplicationPolicy policy = client.getPolicy(policyName);
-        System.out.println(ReflectionToStringBuilder.toString(policy, ToStringStyle.MULTI_LINE_STYLE));
+        PolicyList policyList = client.getPolicy(policyName);
+        for(PolicyList.PolicyElement policyElement : policyList.getElements()) {
+            System.out.println(ReflectionToStringBuilder.toString(policyElement, ToStringStyle.MULTI_LINE_STYLE));
+        }
     }
 
     private void fetchLogsById(String policyId) throws BeaconClientException {
@@ -185,8 +186,8 @@ public class PolicyCommand extends CommandBase {
     }
 
     private void printStatus() throws BeaconClientException {
-        Entity.EntityStatus entityStatus = client.getPolicyStatus(policyName);
-        printResult("Status of policy " + policyName, entityStatus);
+        StatusResult statusResult = client.getPolicyStatus(policyName);
+        printResult("Status of policy " + policyName, statusResult.getStatus());
     }
 
     private void listPolicies() throws BeaconClientException {

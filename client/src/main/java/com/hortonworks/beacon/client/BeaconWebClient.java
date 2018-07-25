@@ -25,8 +25,6 @@ package com.hortonworks.beacon.client;
 import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.client.entity.Entity;
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.CloudCredList;
 import com.hortonworks.beacon.client.resource.ClusterList;
@@ -351,12 +349,12 @@ public class BeaconWebClient implements BeaconClient {
     }
 
     @Override
-    public Entity.EntityStatus getClusterStatus(String clusterName) throws BeaconClientException {
+    public StatusResult getClusterStatus(String clusterName) throws BeaconClientException {
         return getEntityStatus(API.CLUSTER_STATUS, clusterName);
     }
 
     @Override
-    public Entity.EntityStatus getPolicyStatus(String policyName) throws BeaconClientException {
+    public StatusResult getPolicyStatus(String policyName) throws BeaconClientException {
         return getEntityStatus(API.POLICY_STATUS, policyName);
     }
 
@@ -366,8 +364,8 @@ public class BeaconWebClient implements BeaconClient {
     }
 
     @Override
-    public ReplicationPolicy getPolicy(String policyName) throws BeaconClientException {
-        return getEntity(API.POLICY_GET, policyName, ReplicationPolicy.class);
+    public PolicyList getPolicy(String policyName) throws BeaconClientException {
+        return getEntity(API.POLICY_GET, policyName, PolicyList.class);
     }
 
     @Override
@@ -634,10 +632,10 @@ public class BeaconWebClient implements BeaconClient {
         return clientResponse;
     }
 
-    private Entity.EntityStatus getEntityStatus(API operation, String entityName) throws BeaconClientException {
+    private StatusResult getEntityStatus(API operation, String entityName) throws BeaconClientException {
         ClientResponse clientResponse = new ResourceBuilder().path(entityName).call(operation);
         StatusResult statusResult = getResponse(clientResponse, StatusResult.class);
-        return statusResult.getStatus();
+        return statusResult;
     }
 
     private <T> T getEntity(API operation, String entityName, Class<T> aClass) throws BeaconClientException {

@@ -25,8 +25,8 @@ package com.hortonworks.beacon.cli;
 import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.entity.CloudCred;
-import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
+import com.hortonworks.beacon.client.resource.StatusResult;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeClass;
@@ -39,6 +39,7 @@ import java.util.ArrayList;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -78,7 +79,8 @@ public class BeaconCLITest {
         cli.processCommand("-cluster -list".split(" "));
         verify(beaconClient).getClusterList("name", "name", "ASC", 0, 10);
 
-        when(beaconClient.getClusterStatus("src")).thenReturn(Entity.EntityStatus.SUBMITTED);
+        StatusResult statusResult = mock(StatusResult.class);
+        when(beaconClient.getClusterStatus("src")).thenReturn(statusResult);
         cli.processCommand("-cluster src -status".split(" "));
         verify(beaconClient).getClusterStatus("src");
 
@@ -109,8 +111,8 @@ public class BeaconCLITest {
 
         cli.processCommand("-policy -list".split(" "));
         verify(beaconClient).getPolicyList("name", "name", null, "ASC", 0, 10);
-
-        when(beaconClient.getPolicyStatus("firstpolicy")).thenReturn(Entity.EntityStatus.SUBMITTED);
+        StatusResult statusResult = mock(StatusResult.class);
+        when(beaconClient.getPolicyStatus("firstpolicy")).thenReturn(statusResult);
         cli.processCommand("-policy firstpolicy -status".split(" "));
         verify(beaconClient).getPolicyStatus("firstpolicy");
 

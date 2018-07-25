@@ -45,7 +45,6 @@ import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.DefaultFilter;
-import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpConstants;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.slf4j.Logger;
@@ -296,7 +295,8 @@ public class HDFSReplication extends FSReplication {
                     || org.apache.hadoop.mapred.JobStatus.State.PREP.getValue() == jobStatus.getRunState()) {
                 ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
                 try {
-                    new DistCp(getConfiguration(), getDistCpOptions(null, null, false));
+                    DistCpFactory.getINSTANCE().getDistCp(getConfiguration(),
+                            getDistCpOptions(null, null, false));
                     handlePostSubmit(timer, jobContext, ReplicationMetrics.JobType.MAIN);
                     performPostReplJobExecution(jobContext, job,
                             getFSReplicationName(sourceFs, sourceStagingUri),

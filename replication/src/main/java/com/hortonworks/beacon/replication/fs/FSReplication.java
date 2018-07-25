@@ -87,7 +87,7 @@ public abstract class FSReplication extends InstanceReplication {
         ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
         try {
             LOG.info("Started DistCp with source path: {} target path: {}", sourceStagingUri, targetStagingUri);
-            DistCp distCp = new DistCp(conf, options);
+            DistCp distCp = DistCpFactory.getINSTANCE().getDistCp(conf, options);
             if (jobContext.shouldInterrupt().get()) {
                 throw new InterruptedException("before job submit");
             }

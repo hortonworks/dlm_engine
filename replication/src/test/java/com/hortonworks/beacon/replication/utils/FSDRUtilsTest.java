@@ -124,12 +124,6 @@ public class FSDRUtilsTest {
         FSSnapshotUtils.isSnapShotsAvailable(cluster.getName(), null);
     }
 
-    @Test(expectedExceptions = BeaconException.class, expectedExceptionsMessageRegExp =
-            "isSnapShotsAvailable: /apps/beacon/snapshot-replication/sourceDir is not fully qualified path")
-    public void testIsSnapShotsAvailableNotFullPath() throws Exception {
-        FSSnapshotUtils.isSnapShotsAvailable(cluster.getName(), sourceDir);
-    }
-
     @AfterClass
     public void cleanup() throws Exception {
         MiniHDFSClusterUtil.cleanupDfs(miniDFSCluster, baseDir);

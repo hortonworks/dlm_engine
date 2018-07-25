@@ -815,7 +815,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(list.size(), 2);
     }
 
-    @Test(dependsOnMethods = "testPairCluster")
+    @Test(dependsOnMethods = {"testPairCluster", "testSubmitCluster"})
     public void testScheduleSuspendAndResumePolicy() throws Exception {
         String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
         srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));

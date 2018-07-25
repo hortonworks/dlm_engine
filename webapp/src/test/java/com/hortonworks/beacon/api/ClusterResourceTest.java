@@ -41,19 +41,19 @@ public class ClusterResourceTest extends ResourceBaseTest {
     @Test
     public void testSubmitCluster() throws Exception {
         sourceCluster = testDataGenerator.getCluster(ClusterType.SOURCE, true);
-        sourceClient.submitCluster(sourceCluster.getName(), sourceCluster.asProperties());
+        targetClient.submitCluster(sourceCluster.getName(), sourceCluster.asProperties());
         targetCluster = testDataGenerator.getCluster(ClusterType.TARGET, false);
-        sourceClient.submitCluster(targetCluster.getName(), targetCluster.asProperties());
+        targetClient.submitCluster(targetCluster.getName(), targetCluster.asProperties());
     }
 
     @Test(dependsOnMethods = "testSubmitCluster")
     public void testPairCluster() throws Exception {
-        sourceClient.pairClusters(targetCluster.getName(), true);
+        targetClient.pairClusters(targetCluster.getName(), true);
     }
 
     @Test(dependsOnMethods = "testSubmitCluster")
     public void testListClustersBeforePairing() throws Exception{
-        ClusterList clusterListWithAllDetails = sourceClient.getClusterList("all", "name", "asc", 0, 10);
+        ClusterList clusterListWithAllDetails = targetClient.getClusterList("all", "name", "asc", 0, 10);
         Assert.assertEquals(2, clusterListWithAllDetails.getClusters().length);
         Assert.assertNotNull(clusterListWithAllDetails.getClusters()[0].getPeers());
         Assert.assertTrue(clusterListWithAllDetails.getClusters()[0].getPeers().size() == 0);
@@ -62,56 +62,56 @@ public class ClusterResourceTest extends ResourceBaseTest {
 
     @Test(dependsOnMethods = {"testListClustersBeforePairing", "testPairCluster"})
     public void testListClustersPostPairing() throws Exception {
-        ClusterList clusterListWithAllDetails = sourceClient.getClusterList("all", "name", "asc", 0, 10);
+        ClusterList clusterListWithAllDetails = targetClient.getClusterList("all", "name", "asc", 0, 10);
         Assert.assertEquals(2, clusterListWithAllDetails.getClusters().length);
         Assert.assertTrue(clusterListWithAllDetails.getClusters()[0].getPeers().size() != 0);
         Cluster[] clusters = clusterListWithAllDetails.getClusters();
         Assert.assertEquals(sourceCluster.getName(), clusters[1].getPeers().get(0));
         Assert.assertEquals(targetCluster.getName(), clusters[0].getPeers().get(0));
         Assert.assertEquals(1, clusters[0].getCustomProperties().size());
-        ClusterList clusterListWithJustName = sourceClient.getClusterList("name", "name", "asc", 0, 10);
+        ClusterList clusterListWithJustName = targetClient.getClusterList("name", "name", "asc", 0, 10);
         clusters = clusterListWithJustName.getClusters();
         Assert.assertEquals(0, clusters[0].getCustomProperties().size());
-        ClusterList clusterList = sourceClient.getClusterList("peers,tags,peersInfo", "name", "asc", 0, 10);
+        ClusterList clusterList = targetClient.getClusterList("peers,tags,peersInfo", "name", "asc", 0, 10);
         Assert.assertEquals(2, clusterList.getClusters().length);
         clusters = clusterList.getClusters();
         Assert.assertEquals(sourceCluster.getName(), clusters[1].getPeers().get(0));
         Assert.assertEquals(targetCluster.getName(), clusters[0].getPeers().get(0));
         Assert.assertEquals(0, clusters[0].getCustomProperties().size());
-        ClusterList clusterListWithoutAnyFields = sourceClient.getClusterList("", "name", "asc", 0, 10);
+        ClusterList clusterListWithoutAnyFields = targetClient.getClusterList("", "name", "asc", 0, 10);
         Assert.assertEquals(2, clusterListWithoutAnyFields.getClusters().length);
         Assert.assertEquals(0, clusters[0].getCustomProperties().size());
     }
 
     @Test(dependsOnMethods = {"testPairCluster"})
     public void testGetClusterInfo() throws Exception {
-        Cluster cluster = sourceClient.getCluster(sourceCluster.getName());
+        Cluster cluster = targetClient.getCluster(sourceCluster.getName());
         Assert.assertEquals(sourceCluster.getName(), cluster.getName());
         Assert.assertEquals("testVal", cluster.getCustomProperties().getProperty("testKey"));
     }
 
     @Test(dependsOnMethods = "testSubmitCluster")
     public void testClusterStatus() throws Exception {
-        Entity.EntityStatus statusResult = sourceClient.getClusterStatus(sourceCluster.getName());
+        Entity.EntityStatus statusResult = targetClient.getClusterStatus(sourceCluster.getName()).getStatus();
         Assert.assertEquals(Entity.EntityStatus.SUBMITTED, statusResult);
     }
 
 
     @Test(dependsOnMethods = {"testPairCluster"})
     public void testUnpairCluster() throws Exception {
-        sourceClient.unpairClusters(targetCluster.getName(), true);
+        targetClient.unpairClusters(targetCluster.getName(), true);
     }
 
     @Test(dependsOnMethods = {"testPairCluster", "testGetClusterInfo",
             "testClusterStatus", "testListClustersPostPairing" })
     public void testDeleteCluster() throws Exception {
         deleteClusters();
-        ClusterList clusterList = sourceClient.getClusterList("name", "name", "asc", 0, 10);
+        ClusterList clusterList = targetClient.getClusterList("name", "name", "asc", 0, 10);
         Assert.assertEquals(0, clusterList.getClusters().length);
     }
 
     private void deleteClusters() throws BeaconClientException {
-        sourceClient.deleteCluster(sourceCluster.getName());
-        sourceClient.deleteCluster(targetCluster.getName());
+        targetClient.deleteCluster(sourceCluster.getName());
+        targetClient.deleteCluster(targetCluster.getName());
     }
 }

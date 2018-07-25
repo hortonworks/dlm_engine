@@ -303,8 +303,14 @@ public class PolicyResource extends AbstractResourceManager {
         }
     }
 
-
-
+    /**
+     * sync the policy in remote beacon cluster.
+     * @param policyName
+     * @param update True when policy has been updated on the source cluster,
+     *               false when policy has been created on the source cluster.
+     * @param requestProperties
+     * @return
+     */
     @POST
     @Path("sync/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
@@ -613,7 +619,7 @@ public class PolicyResource extends AbstractResourceManager {
             BeaconScheduler scheduler = getScheduler();
             scheduler.schedulePolicy(jobs, false, policy.getPolicyId(), policy.getStartTime(), policy.getEndTime(),
                     policy.getFrequencyInSec());
-            policyDao.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.RUNNING.name());
+            policyDao.updatePolicyStatus(policy.getPolicyId(), JobStatus.RUNNING.name());
             BeaconEvents.createEvents(Events.SCHEDULED, EventEntityType.POLICY,
                     policyDao.getPolicyBean(policy), getEventInfo(policy, false));
             RequestContext.get().commitTransaction();
@@ -679,7 +685,7 @@ public class PolicyResource extends AbstractResourceManager {
             if (policyStatus.equalsIgnoreCase(JobStatus.RUNNING.name())) {
                 BeaconScheduler scheduler = getScheduler();
                 scheduler.suspendPolicy(policy.getPolicyId());
-                policyDao.updatePolicyStatus(policy.getName(), policy.getType(),
+                policyDao.updatePolicyStatus(policy.getPolicyId(),
                         JobStatus.SUSPENDED.name());
                 syncPolicyStatusInRemote(policy, JobStatus.SUSPENDED.name());
             } else {
@@ -716,7 +722,7 @@ public class PolicyResource extends AbstractResourceManager {
                 BeaconScheduler scheduler = getScheduler();
                 scheduler.resumePolicy(policy.getPolicyId());
                 String status = Entity.EntityStatus.RUNNING.name();
-                policyDao.updatePolicyStatus(policy.getName(), policy.getType(),
+                policyDao.updatePolicyStatus(policy.getPolicyId(),
                         JobStatus.RUNNING.name());
                 syncPolicyStatusInRemote(policy, status);
             } else {
@@ -906,9 +912,10 @@ public class PolicyResource extends AbstractResourceManager {
             }
             PolicyInstanceBean latestInstance = policyDao.getInstanceForRerun(activePolicy.getPolicyId());
             status = latestInstance.getStatus();
-            // Last should be FAILED/KILLED for rerun the last instance.
-            if (status != null && (JobStatus.FAILED.name().equalsIgnoreCase(status)
-                    || JobStatus.KILLED.name().equalsIgnoreCase(status))) {
+            /**
+             * For rerun to proceed last should be one of {@link JobStatus#getAllowedRerunStatus()}
+             */
+            if (status != null && JobStatus.getAllowedRerunStatus().contains(JobStatus.valueOf(status))) {
                 BeaconScheduler scheduler = getScheduler();
                 boolean isRerun = scheduler.rerunPolicyInstance(activePolicy.getPolicyId(),
                         String.valueOf(latestInstance.getCurrentOffset()), latestInstance.getInstanceId());
@@ -926,8 +933,9 @@ public class PolicyResource extends AbstractResourceManager {
                 }
             } else {
                 throw BeaconWebException.newAPIException(
-                    "Policy instance is not in FAILED/KILLED state. Last instance: {} status: {}.",
-                    latestInstance.getInstanceId(), status);
+                    "Policy instance is not in {} state. Last instance: {} status: {}.",
+                        JobStatus.getAllowedRerunStatus(),
+                        latestInstance.getInstanceId(), status);
             }
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
@@ -973,7 +981,7 @@ public class PolicyResource extends AbstractResourceManager {
 
         try {
             //TODO Check is there any sync status job scheduled. removed them and update it.
-            BeaconWebClient remoteClient = new BeaconWebClient(remoteBeaconEndpoint,
+            BeaconClient remoteClient = BeaconClientFactory.getBeaconClient(remoteBeaconEndpoint,
                     PolicyHelper.getRemoteKnoxBaseURL(policy));
             remoteClient.syncPolicyStatus(policy.getName(), status, true);
             checkAndDeleteSyncStatus(policy.getName());
@@ -1143,7 +1151,7 @@ public class PolicyResource extends AbstractResourceManager {
             if (isCompletionStatus) {
                 policyDao.updateCompletionStatus(policy.getPolicyId(), status.toUpperCase());
             } else {
-                policyDao.updatePolicyStatus(policy.getName(), policy.getType(), status);
+                policyDao.updatePolicyStatus(policy.getPolicyId(), status);
             }
             RequestContext.get().commitTransaction();
             return new APIResult(APIResult.Status.SUCCEEDED, "Update status succeeded");

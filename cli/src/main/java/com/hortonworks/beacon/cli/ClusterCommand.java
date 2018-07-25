@@ -26,9 +26,9 @@ package com.hortonworks.beacon.cli;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
+import com.hortonworks.beacon.client.resource.StatusResult;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -127,8 +127,8 @@ public class ClusterCommand extends CommandBase {
     }
 
     private void printStatus() throws BeaconClientException {
-        Entity.EntityStatus entityStatus = client.getClusterStatus(clusterName);
-        printResult("Cluster " + clusterName + "'", entityStatus);
+        StatusResult statusResult = client.getClusterStatus(clusterName);
+        printResult("Cluster " + clusterName + "'", statusResult.getStatus());
     }
 
     private void listClusters() throws BeaconClientException {

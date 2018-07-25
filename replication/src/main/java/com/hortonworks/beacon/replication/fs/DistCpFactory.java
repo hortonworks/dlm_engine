@@ -20,47 +20,38 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.job;
+package com.hortonworks.beacon.replication.fs;
 
-import java.util.Arrays;
-import java.util.List;
+import com.google.common.annotations.VisibleForTesting;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.DistCp;
+import org.apache.hadoop.tools.DistCpOptions;
 
 /**
- * Status for Beacon policy and policy instances.
+ * Factory for creating instance of {@link DistCp}.
  */
-public enum JobStatus {
-    RUNNING,
-    FAILED,
-    SUCCESS,
-    SUBMITTED,
-    DELETED,
-    SUSPENDED,
-    KILLED,
-    SKIPPED,
-    FAILED_ADMIN,
+public final class DistCpFactory {
+    public static final DistCpFactory INSTANCE = new DistCpFactory();
 
-    // Final status for policy
-    SUCCEEDED,
-    SUCCEEDEDWITHSKIPPED,
-    FAILEDWITHSKIPPED,
-    SUSPENDEDFORINTERVENTION;
+    private static DistCp distCp;
 
-
-    public static List<String> getCompletionStatus() {
-        return Arrays.asList(
-                JobStatus.SUCCEEDED.name(),
-                JobStatus.FAILED.name(),
-                JobStatus.SUCCEEDEDWITHSKIPPED.name(),
-                JobStatus.FAILEDWITHSKIPPED.name(),
-                JobStatus.SUSPENDEDFORINTERVENTION.name()
-        );
+    private DistCpFactory() {
     }
 
-    public static List<JobStatus> getAllowedRerunStatus() {
-        return Arrays.asList(
-                JobStatus.FAILED,
-                JobStatus.KILLED,
-                JobStatus.FAILED_ADMIN
-        );
+    public static DistCpFactory getINSTANCE() {
+        return INSTANCE;
+    }
+
+    @VisibleForTesting
+    public static void setDistCp(DistCp distCp) {
+        DistCpFactory.distCp = distCp;
+    }
+
+    public DistCp getDistCp(Configuration conf, DistCpOptions options) throws Exception {
+        if (distCp != null) {
+            return distCp;
+        } else {
+            return new DistCp(conf, options);
+        }
     }
 }

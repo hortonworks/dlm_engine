@@ -26,15 +26,14 @@ package com.hortonworks.beacon.client;
 import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.client.entity.Entity;
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.CloudCredList;
 import com.hortonworks.beacon.client.resource.ClusterList;
-import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
+import com.hortonworks.beacon.client.resource.StatusResult;
 import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.ServerVersionResult;
 import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
+import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.EventsResult;
 import com.hortonworks.beacon.client.result.FileListResult;
@@ -50,7 +49,7 @@ public interface BeaconClient {
     ClusterList getClusterList(String fields, String orderBy, String sortOrder,
                                Integer offset, Integer numResults) throws BeaconClientException;
 
-    Entity.EntityStatus getClusterStatus(String clusterName) throws BeaconClientException;
+    StatusResult getClusterStatus(String clusterName) throws BeaconClientException;
 
     Cluster getCluster(String clusterName) throws BeaconClientException;
 
@@ -67,9 +66,9 @@ public interface BeaconClient {
     PolicyList getPolicyList(String fields, String orderBy, String filterBy, String sortOrder,
                              Integer offset, Integer numResults) throws BeaconClientException;
 
-    Entity.EntityStatus getPolicyStatus(String policyName) throws BeaconClientException;
+    StatusResult getPolicyStatus(String policyName) throws BeaconClientException;
 
-    ReplicationPolicy getPolicy(String policyName) throws BeaconClientException;
+    PolicyList getPolicy(String policyName) throws BeaconClientException;
 
     void deletePolicy(String policyName,
             boolean isInternalSyncDelete) throws BeaconClientException;

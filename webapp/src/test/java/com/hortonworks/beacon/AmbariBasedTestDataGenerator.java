@@ -50,4 +50,9 @@ public class AmbariBasedTestDataGenerator extends TestDataGenerator {
     public FileSystem getFileSystem(ResourceBaseTest.ClusterType clusterType) {
         return null;
     }
+
+    @Override
+    public void createFSMocks(String path) {
+        //Do nothing
+    }
 }

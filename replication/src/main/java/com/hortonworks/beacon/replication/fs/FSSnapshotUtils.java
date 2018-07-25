@@ -72,11 +72,6 @@ public final class FSSnapshotUtils {
             throw new BeaconException("isSnapShotsAvailable: Path cannot be null or empty");
         }
         LOG.debug("Validating if dir: {} is snapshotable.", path.toString());
-        URI pathUri = path.toUri();
-        if (pathUri.getAuthority() == null) {
-            LOG.error("{} is not fully qualified path", path);
-            throw new BeaconException("isSnapShotsAvailable: {} is not fully qualified path", path);
-        }
         Cluster cluster = ClusterHelper.getActiveCluster(clusterName);
         return SnapshotListing.get().isSnapshottable(cluster.getName(), cluster.getFsEndpoint(),
                 path.toUri().getPath());

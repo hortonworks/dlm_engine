@@ -28,8 +28,6 @@ import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.client.entity.Entity;
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.CloudCredList;
 import com.hortonworks.beacon.client.resource.ClusterList;
@@ -37,6 +35,7 @@ import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.ServerVersionResult;
+import com.hortonworks.beacon.client.resource.StatusResult;
 import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
 import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.EventsResult;
@@ -49,6 +48,8 @@ public class LocalBeaconClient implements BeaconClient {
 
 
     private ClusterResource clusterResource = new ClusterResource();
+
+    private PolicyResource policyResource = new PolicyResource();
 
     @Override
     public void submitCluster(final String clusterName, final PropertiesIgnoreCase properties)
@@ -90,13 +91,13 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public Entity.EntityStatus getClusterStatus(final String clusterName) throws BeaconClientException {
-        return new ClientResource<Entity.EntityStatus>(
+    public StatusResult getClusterStatus(final String clusterName) throws BeaconClientException {
+        return new ClientResource<StatusResult>(
 
         ) {
             @Override
-            Entity.EntityStatus api() throws BeaconWebException {
-                return clusterResource.status(clusterName).getStatus();
+            StatusResult api() throws BeaconWebException {
+                return clusterResource.status(clusterName);
             }
         }.call();
     }
@@ -128,9 +129,14 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public void submitAndScheduleReplicationPolicy(String policyName, PropertiesIgnoreCase properties)
+    public void submitAndScheduleReplicationPolicy(final String policyName, final PropertiesIgnoreCase properties)
             throws BeaconClientException {
-
+        new ClientResource<APIResult>() {
+            @Override
+            APIResult api() throws BeaconWebException {
+                return policyResource.submitAndSchedule(policyName, "false", properties);
+            }
+        }.call();
     }
 
     @Override
@@ -139,19 +145,36 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public PolicyList getPolicyList(String fields, String orderBy, String filterBy, String sortOrder, Integer offset,
-                                    Integer numResults) throws BeaconClientException {
-        return null;
+    public PolicyList getPolicyList(final String fields, final String orderBy, final String filterBy,
+                                    final String sortOrder, final Integer offset,
+                                    final Integer numResults) throws BeaconClientException {
+        return new ClientResource<PolicyList>() {
+            @Override
+            PolicyList api() throws BeaconWebException {
+                return policyResource.list(fields, orderBy, filterBy, sortOrder,
+                        offset, numResults, 3);
+            }
+        }.call();
     }
 
     @Override
-    public Entity.EntityStatus getPolicyStatus(String policyName) throws BeaconClientException {
-        return null;
+    public StatusResult getPolicyStatus(final String policyName) throws BeaconClientException {
+        return new ClientResource<StatusResult>() {
+            @Override
+            StatusResult api() throws BeaconWebException {
+                return policyResource.status(policyName);
+            }
+        }.call();
     }
 
     @Override
-    public ReplicationPolicy getPolicy(String policyName) throws BeaconClientException {
-        return null;
+    public PolicyList getPolicy(final String policyName) throws BeaconClientException {
+        return new ClientResource<PolicyList>() {
+            @Override
+            PolicyList api() throws BeaconWebException {
+                return policyResource.definition(policyName, "false");
+            }
+        }.call();
     }
 
     @Override
@@ -160,17 +183,34 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public void updatePolicy(String policyName, PropertiesIgnoreCase properties) throws BeaconClientException {
+    public void updatePolicy(final String policyName, final PropertiesIgnoreCase properties)
+            throws BeaconClientException {
+        new ClientResource<APIResult>() {
+            @Override
+            APIResult api() throws BeaconWebException {
+                return policyResource.update(policyName, properties);
+            }
+        }.call();
     }
 
     @Override
-    public void suspendPolicy(String policyName) throws BeaconClientException {
-
+    public void suspendPolicy(final String policyName) throws BeaconClientException {
+        new ClientResource<APIResult>() {
+            @Override
+            APIResult api() throws BeaconWebException {
+                return policyResource.suspend(policyName);
+            }
+        }.call();
     }
 
     @Override
-    public void resumePolicy(String policyName) throws BeaconClientException {
-
+    public void resumePolicy(final String policyName) throws BeaconClientException {
+        new ClientResource<APIResult>() {
+            @Override
+            APIResult api() throws BeaconWebException {
+                return policyResource.resume(policyName);
+            }
+        }.call();
     }
 
     @Override
@@ -187,9 +227,7 @@ public class LocalBeaconClient implements BeaconClient {
     @Override
     public void unpairClusters(final String remoteClusterName, final boolean isInternalunpairing)
             throws BeaconClientException {
-        new ClientResource<APIResult>(
-
-        ) {
+        new ClientResource<APIResult>() {
             @Override
             APIResult api() throws BeaconWebException {
                 return clusterResource.unPair(remoteClusterName, isInternalunpairing);
@@ -198,29 +236,50 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public void syncPolicy(String policyName, PropertiesIgnoreCase policyDefinition, boolean update)
+    public void syncPolicy(final String policyName, final PropertiesIgnoreCase policyDefinition, final boolean update)
+            throws BeaconClientException {
+        new ClientResource<APIResult>() {
+            @Override
+            APIResult api() throws BeaconWebException {
+                return policyResource.syncPolicy(policyName, update, policyDefinition);
+            }
+        }.call();
+    }
+
+    @Override
+    public void syncPolicyStatus(final String policyName, final String status, boolean isInternalStatusSync)
             throws BeaconClientException {
     }
 
     @Override
-    public void syncPolicyStatus(String policyName, String status, boolean isInternalStatusSync)
-            throws BeaconClientException {
-
+    public PolicyInstanceList listPolicyInstances(final String policyName) throws BeaconClientException {
+        return new ClientResource<PolicyInstanceList>() {
+            @Override
+            PolicyInstanceList api() throws BeaconWebException {
+                return policyResource.listPolicyInstances(policyName, "", "startTime",
+                        "DESC", 0, 10, "false");
+            }
+        }.call();
     }
 
     @Override
-    public PolicyInstanceList listPolicyInstances(String policyName) throws BeaconClientException {
-        return null;
+    public void abortPolicyInstance(final String policyName) throws BeaconClientException {
+        new ClientResource<APIResult>() {
+            @Override
+            APIResult api() throws BeaconWebException {
+                return policyResource.abortPolicyInstance(policyName);
+            }
+        }.call();
     }
 
     @Override
-    public void abortPolicyInstance(String policyName) throws BeaconClientException {
-
-    }
-
-    @Override
-    public void rerunPolicyInstance(String policyName) throws BeaconClientException {
-
+    public void rerunPolicyInstance(final String policyName) throws BeaconClientException {
+        new ClientResource<APIResult>() {
+            @Override
+            APIResult api() throws BeaconWebException {
+                return policyResource.rerunPolicyInstance(policyName);
+            }
+        }.call();
     }
 
     @Override

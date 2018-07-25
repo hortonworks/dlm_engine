@@ -120,9 +120,8 @@ public class PolicyExecutor extends BaseExecutor {
                 query.setParameter("id", bean.getId());
                 break;
             case UPDATE_STATUS:
-                query.setParameter("name", bean.getName());
+                query.setParameter("id", bean.getId());
                 query.setParameter("status", bean.getStatus());
-                query.setParameter("policyType", bean.getType());
                 query.setParameter("lastModifiedTime", bean.getLastModifiedTime());
                 break;
             case UPDATE_JOBS:

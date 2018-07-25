@@ -24,15 +24,21 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.TestDataGenerator;
 import com.hortonworks.beacon.client.BeaconClient;
-import com.hortonworks.beacon.exceptions.BeaconException;
-import org.apache.commons.lang.RandomStringUtils;
+import com.hortonworks.beacon.client.BeaconClientException;
 import org.apache.hadoop.fs.FileSystem;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 
 /**
  * Base class for tests.
  */
 public abstract class ResourceBaseTest {
+
+    protected static final String SOURCE_DIR = "/apps/beacon/replication/sourceDir/";
+
+    private static final String SOURCE_CLUSTER_NAME = "cluster-src";
+    private static final String TARGET_CLUSTER_NAME = "cluster-tgt";
+
     /**
      * Enum for source/target.
      */
@@ -43,7 +49,7 @@ public abstract class ResourceBaseTest {
                 if (isLocal) {
                     return "cluster-local";
                 } else {
-                    return randomString("cluster");
+                    return SOURCE_CLUSTER_NAME;
                 }
             }
         },
@@ -51,31 +57,54 @@ public abstract class ResourceBaseTest {
             @Override
             public String getClusterName(boolean isLocal) {
                 if (isLocal) {
-                    return "cluster-target";
+                    return "cluster-local";
                 } else {
-                    return randomString("cluster");
+                    return TARGET_CLUSTER_NAME;
                 }
             }
         };
 
         public abstract String getClusterName(boolean isLocal);
 
-        public String randomString(String prefix) {
-            return prefix + RandomStringUtils.randomAlphanumeric(10);
-        }
     }
 
     protected TestDataGenerator testDataGenerator;
 
     protected BeaconClient sourceClient;
+    protected BeaconClient targetClient;
     protected FileSystem sourceFs;
+    protected FileSystem targetFs;
 
     @BeforeClass
-    public void setup() throws BeaconException {
+    public void setup() throws Exception {
         System.setProperty("beacon.test.local", "true");
         testDataGenerator = TestDataGenerator.getTestDataGenerator();
-        sourceClient = testDataGenerator.getClient(ClusterType.SOURCE);
-        sourceFs = testDataGenerator.getFileSystem(ClusterType.SOURCE);
         testDataGenerator.init();
+        sourceClient = testDataGenerator.getClient(ClusterType.SOURCE);
+        targetClient = testDataGenerator.getClient(ClusterType.TARGET);
+        sourceFs = testDataGenerator.getFileSystem(ClusterType.SOURCE);
+        targetFs = testDataGenerator.getFileSystem(ClusterType.TARGET);
+    }
+
+    /**
+     * Interface for implementing any condition.
+     */
+    public interface Condition {
+        boolean exit() throws BeaconClientException;
+    }
+
+
+    protected void waitOnCondition(long timeout, String message, Condition condition)
+            throws InterruptedException, BeaconClientException {
+        long currentTime = System.currentTimeMillis();
+        while (System.currentTimeMillis() < currentTime + timeout) {
+            if (condition.exit()) {
+                return;
+            }
+            Thread.sleep(100);
+        }
+        if (!condition.exit()) {
+            Assert.fail("Timed out waiting for "+ message);
+        }
     }
 }

@@ -20,47 +20,45 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.job;
+package com.hortonworks.beacon.api;
 
-import java.util.Arrays;
-import java.util.List;
+import com.google.common.annotations.VisibleForTesting;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import org.apache.hadoop.hdfs.client.HdfsAdmin;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
- * Status for Beacon policy and policy instances.
+ * Factory for creating {@link HdfsAdmin}.
  */
-public enum JobStatus {
-    RUNNING,
-    FAILED,
-    SUCCESS,
-    SUBMITTED,
-    DELETED,
-    SUSPENDED,
-    KILLED,
-    SKIPPED,
-    FAILED_ADMIN,
+public final class HdfsAdminFactory {
 
-    // Final status for policy
-    SUCCEEDED,
-    SUCCEEDEDWITHSKIPPED,
-    FAILEDWITHSKIPPED,
-    SUSPENDEDFORINTERVENTION;
+    private static final HdfsAdminFactory INSTANCE = new HdfsAdminFactory();
 
+    private static HdfsAdmin hdfsAdmin;
 
-    public static List<String> getCompletionStatus() {
-        return Arrays.asList(
-                JobStatus.SUCCEEDED.name(),
-                JobStatus.FAILED.name(),
-                JobStatus.SUCCEEDEDWITHSKIPPED.name(),
-                JobStatus.FAILEDWITHSKIPPED.name(),
-                JobStatus.SUSPENDEDFORINTERVENTION.name()
-        );
+    public static HdfsAdminFactory getInstance() {
+        return INSTANCE;
     }
 
-    public static List<JobStatus> getAllowedRerunStatus() {
-        return Arrays.asList(
-                JobStatus.FAILED,
-                JobStatus.KILLED,
-                JobStatus.FAILED_ADMIN
-        );
+    @VisibleForTesting
+    public static void setHdfsAdmin(HdfsAdmin hdfsAdmin) {
+        HdfsAdminFactory.hdfsAdmin = hdfsAdmin;
+    }
+
+    public HdfsAdmin createHDFSAdmin(String fsEndPoint, String clusterName) throws BeaconException {
+        if (hdfsAdmin != null) {
+            return hdfsAdmin;
+        }
+        try {
+            return new HdfsAdmin(new URI(fsEndPoint),
+                    ClusterHelper.getHAConfigurationOrDefault(clusterName));
+        } catch (URISyntaxException |  BeaconException | IOException e) {
+            throw new BeaconException(e);
+        }
+
     }
 }

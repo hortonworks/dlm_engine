@@ -36,7 +36,10 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * Class to implement java util properties IgnoreCase.
@@ -90,7 +93,20 @@ public class PropertiesIgnoreCase extends Properties implements MessageBodyReade
         if (value == null) {
             value = getProperty(key.toLowerCase());
         }
-        return value;
+        if (value != null) {
+            return value;
+        }
+
+        // Not matching with the actual key/lower case then
+        Set<Entry<Object, Object>> s = entrySet();
+        Iterator<Entry<Object, Object>> it = s.iterator();
+        while (it.hasNext()) {
+            Entry<Object, Object> entry = it.next();
+            if (key.equalsIgnoreCase((String) entry.getKey())) {
+                return (String) entry.getValue();
+            }
+        }
+        return null;
     }
 
     @Override

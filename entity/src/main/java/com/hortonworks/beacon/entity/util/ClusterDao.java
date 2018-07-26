@@ -134,7 +134,7 @@ public final class ClusterDao {
             }
         }
         cluster.setPeers(peers);
-        cluster.setPeersInfo(!peersInfo.isEmpty() ? peersInfo : null);
+        cluster.setPeersInfo(peersInfo);
         return cluster;
     }
 

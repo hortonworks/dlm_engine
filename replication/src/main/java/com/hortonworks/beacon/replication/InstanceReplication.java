@@ -270,7 +270,7 @@ public abstract class InstanceReplication implements BeaconJob {
                     RequestContext.get().clear();
                 }
             }
-        }, 0, replicationMetricsInterval, TimeUnit.MILLISECONDS);
+        }, 0, replicationMetricsInterval, TimeUnit.SECONDS);
     }
 
     protected void initializeProperties() throws BeaconException {

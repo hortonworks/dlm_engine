@@ -182,6 +182,7 @@ public class HiveExport extends InstanceReplication {
             throw new BeaconException(e.getMessage());
         } finally {
             timer.shutdown();
+            captureHiveReplicationMetrics(jobContext, HiveActionType.EXPORT, sourceStatement);
             close(res);
             close(sourceStatement);
         }

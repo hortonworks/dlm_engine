@@ -54,6 +54,8 @@
                       com.hortonworks.beacon.store.bean.EventBean;
                       com.hortonworks.beacon.store.bean.CloudCredBean)"></property>
 
+            <property name="openjpa.ConnectionRetainMode" value="on-demand"/>
+            <property name="openjpa.FlushBeforeQueries" value="true"/>
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>
             <property name="openjpa.ReadLockLevel" value="read"/>
@@ -100,6 +102,8 @@
                       com.hortonworks.beacon.store.bean.EventBean;
                       com.hortonworks.beacon.store.bean.CloudCredBean)"></property>
 
+            <property name="openjpa.ConnectionRetainMode" value="on-demand"/>
+            <property name="openjpa.FlushBeforeQueries" value="true"/>
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>
             <property name="openjpa.ReadLockLevel" value="read"/>
@@ -146,6 +150,8 @@
                       com.hortonworks.beacon.store.bean.EventBean;
                       com.hortonworks.beacon.store.bean.CloudCredBean)"></property>
 
+            <property name="openjpa.ConnectionRetainMode" value="on-demand"/>
+            <property name="openjpa.FlushBeforeQueries" value="true"/>
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="version"/>
             <property name="openjpa.ReadLockLevel" value="read"/>

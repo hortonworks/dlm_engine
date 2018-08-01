@@ -54,6 +54,9 @@ public class HiveReplicationMetrics {
 
         if (queryLog.size()!=0) {
             ParseHiveQueryLogV2 pq = new ParseHiveQueryLogV2();
+            if (LOG.isDebugEnabled()) {
+                printHiveQueryLog(queryLog);
+            }
             pq.parseQueryLog(queryLog, actionType);
             if (HiveActionType.EXPORT == actionType) {
                 parseExportMetrics(jobContext, pq);
@@ -69,6 +72,12 @@ public class HiveReplicationMetrics {
             loadExportMetrics(jobContext);
             loadImportMetrics(jobContext);
             loadProgressPercentage(jobContext, HiveActionType.IMPORT);
+        }
+    }
+
+    private void printHiveQueryLog(List<String> queryLogList) {
+        for (String queryLogMessage: queryLogList) {
+            LOG.debug(queryLogMessage);
         }
     }
 

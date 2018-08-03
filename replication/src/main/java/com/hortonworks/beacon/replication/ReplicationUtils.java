@@ -155,7 +155,7 @@ public final class ReplicationUtils {
                 boolean sameQuery = oldMetrics.getJobId().equalsIgnoreCase(newMetrics.getJobId());
                 if (sameQuery) {
                     return (oldMetrics.getProgress().getJobProgress()
-                            < newMetrics.getProgress().getJobProgress());
+                            <= newMetrics.getProgress().getJobProgress());
                 }
             }
         } catch (Throwable t) {

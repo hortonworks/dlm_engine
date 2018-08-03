@@ -40,6 +40,9 @@ public class FileListResult extends APIResult {
     public long totalResults;
 
     @XmlElement
+    public long results;
+
+    @XmlElement
     public FileList[] fileList;
 
     public FileListResult() {
@@ -54,7 +57,7 @@ public class FileListResult extends APIResult {
     }
 
     private void setFileListCollection(FileList[] fileList, int size) {
-        this.totalResults = size;
+        this.results = size;
         this.fileList = fileList;
     }
 
@@ -80,6 +83,9 @@ public class FileListResult extends APIResult {
         }
     }
 
+    public void setTotalResults(long totalResults) {
+        this.totalResults = totalResults;
+    }
 
     /**
      * File List.

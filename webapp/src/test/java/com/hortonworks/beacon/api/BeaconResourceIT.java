@@ -1029,6 +1029,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject jsonObject = new JSONObject(response);
         assertEquals(jsonObject.getString("status"), APIResult.Status.SUCCEEDED.name());
         assertEquals("Success", jsonObject.getString("message"));
+        assertEquals(Integer.parseInt(jsonObject.getString("results")), 2);
         assertEquals(Integer.parseInt(jsonObject.getString("totalResults")), 2);
         JSONArray jsonArray = new JSONArray(jsonObject.getString("fileList"));
         assertEquals(jsonArray.getJSONObject(0).get("pathSuffix"), data1);

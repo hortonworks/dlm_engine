@@ -1520,6 +1520,7 @@ GET api/beacon/file/list
     "status": "SUCCEEDED",
     "message": "Success",
     "requestId": "128028301@qtp-160945458-0",
+    "results": 2,
     "totalResults": 2,
     "fileList": [
         {

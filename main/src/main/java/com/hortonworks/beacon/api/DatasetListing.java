@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -66,6 +67,9 @@ final class DatasetListing {
         try {
             FileSystem fs = FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration());
             FileStatus []fileStatuses = fs.listStatus(new Path(dataset));
+            int total = fileStatuses.length;
+            int copyTill = total > 5000 ? 5000 : total;
+            fileStatuses = Arrays.copyOfRange(fileStatuses, 0, copyTill);
             if (fileStatuses.length==0) {
                 fileListResult = new FileListResult(APIResult.Status.SUCCEEDED, "Empty");
             } else {
@@ -101,7 +105,7 @@ final class DatasetListing {
                 fileLists[index++] = fileList;
             }
             fileListResult.setCollection(fileLists);
-
+            fileListResult.setTotalResults(total);
         } catch (IOException ioe) {
             LOG.error("Exception occurred while accessing file status : {}", ioe);
             throw new BeaconException("Exception occurred while accessing file status : ", ioe);

@@ -99,6 +99,8 @@ public class DatasetListingTest extends PowerMockTestCase {
 
         DatasetListing datasetListing = new DatasetListing();
         FileListResult fileListResult = datasetListing.listFiles(cluster, path);
+        Assert.assertEquals(fileListResult.results, 2);
+        Assert.assertEquals(fileListResult.totalResults, 2);
         Assert.assertEquals(fileListResult.fileList[0].isEncrypted, true);
         Assert.assertEquals(fileListResult.fileList[0].encryptionKeyName, keyName);
         Assert.assertEquals(fileListResult.fileList[0].snapshottable, false);

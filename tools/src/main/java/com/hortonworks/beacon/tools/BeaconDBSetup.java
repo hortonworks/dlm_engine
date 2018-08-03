@@ -67,6 +67,7 @@ public final class BeaconDBSetup {
         {
             add("0.1");
             add("0.2");
+            add("1.1.2");
         }
     };
     private static final String SCHEMA_VERSION = SCHEMA_VERSIONS.get(SCHEMA_VERSIONS.size()-1);

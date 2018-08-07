@@ -69,6 +69,7 @@ public class HiveReplicationMetricsTest {
         Assert.assertEquals(progress.getExportCompleted(), 4);
         Assert.assertEquals(progress.getImportTotal(), 4);
         Assert.assertEquals(progress.getImportCompleted(), 0);
+        Assert.assertEquals(progress.getJobProgress(), 10.0f);
 
         hiveReplicationMetrics.obtainJobMetrics(jobContext, bootstrapLoad,
                 HiveActionType.IMPORT);
@@ -79,6 +80,7 @@ public class HiveReplicationMetricsTest {
         Assert.assertEquals(progress.getExportCompleted(), 4);
         Assert.assertEquals(progress.getImportTotal(), 4);
         Assert.assertEquals(progress.getImportCompleted(), 4);
+        Assert.assertEquals(progress.getJobProgress(), 100.0f);
     }
 
     @Test

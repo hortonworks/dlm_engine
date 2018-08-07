@@ -28,8 +28,13 @@ import com.hortonworks.beacon.client.BeaconWebClient;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.client.resource.PolicyInstanceList;
+import com.hortonworks.beacon.client.result.EventsResult;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
+import com.hortonworks.beacon.util.ClusterStatus;
+import com.hortonworks.beacon.util.StringFormat;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
@@ -68,6 +73,7 @@ import java.util.Arrays;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 /**
  * Base class for setup and teardown IT test cluster.
@@ -535,4 +541,76 @@ public class BeaconIntegrationTest {
         assertTrue(jsonObject.getString("message").contains("removed successfully"));
     }
 
+    protected void verifyLatestPolicyInstanceStatus(BeaconClient client, String policyName, JobStatus jobStatus)
+            throws Exception {
+        PolicyInstanceList instances = client.listPolicyInstances(policyName);
+        for (int i = 0; i < instances.getElements().length; i++) {
+            JobStatus status = JobStatus.valueOf(instances.getElements()[i].status);
+            if (status == jobStatus) {
+                return;
+            } else if (status == JobStatus.RUNNING) {
+                continue;
+            }
+        }
+        throw new Exception("Expected " + jobStatus);
+    }
+
+    protected void verifyClusterPairStatus(String beaconServer, ClusterStatus clusterStatus)
+            throws JSONException, IOException {
+        String peersInfoAPI = beaconServer + BASE_API + "cluster/list?fields=peersInfo";
+        HttpURLConnection conn = sendRequest(peersInfoAPI, null, GET);
+        int responseCode = conn.getResponseCode();
+        assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream, "should not be null.");
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        String cluster = jsonObject.getString("cluster");
+        JSONArray jsonArray = new JSONArray(cluster);
+        JSONObject cluster1 = jsonArray.getJSONObject(0);
+        JSONObject cluster2 = jsonArray.getJSONObject(1);
+
+        String peersInfoC1 = cluster1.getString("peersInfo");
+        JSONArray jsonArrayPeersInfoc1 = new JSONArray(peersInfoC1);
+        JSONObject peersInfo1 = jsonArrayPeersInfoc1.getJSONObject(0);
+        assertEquals(peersInfo1.getString("pairStatus"),  clusterStatus.name());
+
+        String peersInfoC2 = cluster2.getString("peersInfo");
+        JSONArray jsonArrayPeersInfoc2 = new JSONArray(peersInfoC2);
+        JSONObject peersInfo2 = jsonArrayPeersInfoc2.getJSONObject(0);
+        assertEquals(peersInfo2.getString("pairStatus"), clusterStatus.name());
+    }
+
+    protected void updateCluster(String cluster, String beaconServer, Properties properties) throws IOException {
+        String api = BASE_API + "cluster/" + cluster;
+
+        StringBuilder data = new StringBuilder();
+        for (String property : properties.stringPropertyNames()) {
+            data.append(property).append("=").append(properties.getProperty(property))
+                    .append(System.lineSeparator());
+        }
+        HttpURLConnection conn = sendRequest(beaconServer + api, data.toString(), PUT);
+        int responseCode = conn.getResponseCode();
+        assertEquals(responseCode, Response.Status.OK.getStatusCode());
+    }
+
+    protected void assertExists(EventsResult events, EventsResult.EventInstance expectedEvent) {
+        if (events != null) {
+            for (EventsResult.EventInstance event : events.getEvents()) {
+                if (equals(event.event, expectedEvent.event)
+                        && equals(event.eventType, expectedEvent.eventType)
+                        && equals(event.syncEvent, expectedEvent.syncEvent)) {
+                    return;
+                }
+            }
+        }
+        fail(StringFormat.format("Didn't find {} in {}", expectedEvent, events));
+    }
+
+    private boolean equals(Object actual, Object expected) {
+        if (expected != null) {
+            return actual.equals(expected);
+        }
+        return true;
+    }
 }

@@ -23,8 +23,16 @@
 package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.client.BeaconClientException;
+import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.PeerInfo;
+import com.hortonworks.beacon.client.result.EventsResult;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.events.EventEntityType;
+import com.hortonworks.beacon.events.Events;
+import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.test.BeaconIntegrationTest;
+import com.hortonworks.beacon.util.ClusterStatus;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -33,6 +41,7 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
@@ -141,4 +150,94 @@ public class IndependentAPIIT extends BeaconIntegrationTest {
         String api = BASE_API + "cluster/delete/" + TARGET_CLUSTER;
         deleteClusterAndValidate(api, getSourceBeaconServer(), TARGET_CLUSTER);
     }
+
+    @Test
+    public void testPairClusterSuspendAndBackToPaired() throws Exception {
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
+
+        //pair the clusters
+        targetClient.pairClusters(SOURCE_CLUSTER, false);
+
+        String policyName = "pairCluster-SUCCESS-FAILED-SUCCESS-policy";
+
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, "dir1"));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        submitAndSchedule(policyName, 10, replicationPath, replicationPath, new Properties());
+
+        // Added some delay to allow policy instance execution.
+        Thread.sleep(15000);
+
+        // Verify policy instance status to be SUCCESS
+        verifyLatestPolicyInstanceStatus(targetClient, policyName, JobStatus.SUCCESS);
+
+        //Update the cluster to make only one cluster Kerberized.
+        Properties properties = new Properties();
+        String nnPricipal = "nnAdmin" + BeaconConstants.DOT_SEPARATOR + getTargetBeaconServerHostName();
+        properties.put(BeaconConstants.NN_PRINCIPAL, nnPricipal);
+        updateCluster(SOURCE_CLUSTER, getTargetBeaconServer(), properties);
+
+        //Make sure the cluster pair is in 'SUSPENDED' state.
+        verifyClusterPairStatus(getTargetBeaconServer(), ClusterStatus.SUSPENDED);
+
+        // Make Sure that the getEntity returns the pair status message
+        verifyPairStatusMessage(TARGET_CLUSTER, SOURCE_CLUSTER);
+
+        //Make sure we have an event for cluster pairing going to 'SUSPENDED' state
+        EventsResult events = targetClient.getAllEvents();
+        EventsResult.EventInstance expectedEvent = new EventsResult.EventInstance();
+        expectedEvent.event = Events.SUSPENDED.getName();
+        expectedEvent.eventType = EventEntityType.CLUSTER.getName();
+        assertExists(events, expectedEvent);
+
+        //Added some delay to allow policy instance execution.
+        Thread.sleep(15000);
+
+        //The policy instance status should be in 'FAILED' state as the cluster pair is in 'SUSPENDED' state.
+        verifyLatestPolicyInstanceStatus(targetClient, policyName, JobStatus.FAILED);
+
+        //Now update the other cluster as well
+        updateCluster(TARGET_CLUSTER, getTargetBeaconServer(), properties);
+
+        //Make sure the cluster pair is in 'PAIRED' state.
+        verifyClusterPairStatus(getTargetBeaconServer(), ClusterStatus.PAIRED);
+
+        //Make sure we have an event for cluster pairing going to 'PAIRED' state
+        events = targetClient.getAllEvents();
+        expectedEvent = new EventsResult.EventInstance();
+        expectedEvent.event = Events.PAIRED.getName();
+        expectedEvent.eventType = EventEntityType.CLUSTER.getName();
+        assertExists(events, expectedEvent);
+
+        //Added some delay to allow policy instance execution.
+        Thread.sleep(15000);
+
+        //The policy instance status should be back to 'SUCCESS' as the cluster pair is back to 'PAIRED' state.
+        verifyLatestPolicyInstanceStatus(targetClient, policyName, JobStatus.SUCCESS);
+
+        //delete policy at the end
+        targetClient.deletePolicy(policyName, false);
+    }
+
+    private void verifyPairStatusMessage(String localClusterName, String remoteClusterName)
+            throws BeaconClientException{
+        Cluster localCluster =  targetClient.getCluster(localClusterName);
+        List<PeerInfo> peerInfoList = localCluster.getPeersInfo();
+        for (PeerInfo peerInfo: peerInfoList) {
+            if (peerInfo.getClusterName().equalsIgnoreCase(remoteClusterName)) {
+                assertTrue(StringUtils.isNotBlank(peerInfo.getStatusMessage()));
+                return;
+            }
+        }
+        throw new BeaconClientException(new Exception("Could not find a matching peerInfo for peer:"
+                + remoteClusterName));
+
+    }
 }
+

@@ -299,6 +299,6 @@
         <!-- log4j properties -->
         <beacon.log.level>DEBUG</beacon.log.level>
         <beacon.hive.log.level>DEBUG</beacon.hive.log.level>
-        <beacon.log.dir>target/logs/</beacon.log.dir>
+        <beacon.log.dir>target/beacon-logs</beacon.log.dir>
     </properties>
 </project>

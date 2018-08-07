@@ -73,9 +73,6 @@ public class RecoveryService implements BeaconService {
                 LOG.info("Recovered instanceId: [{}], recovery status: [{}]", recoverInstance, recoveryStatus);
                 if (!recoveryStatus) {
                     handleRecoveryFailure(instance.getPolicyId(), instance.getInstanceId());
-                } else {
-                    LOG.info("Marking instanceId: [{}] as killed", instance.getInstanceId());
-                    markInstanceKilled(instance.getInstanceId());
                 }
             }
         } finally {
@@ -95,8 +92,12 @@ public class RecoveryService implements BeaconService {
         PolicyExecutor executor = new PolicyExecutor(policyBean);
         policyBean = executor.getPolicy(PolicyQuery.GET_POLICY_BY_ID);
         if (policyBean.getStatus().equalsIgnoreCase(JobStatus.DELETED.name())) {
+            LOG.info("Marking instanceId: [{}] as deleted", instanceId);
             markInstancesDeleted(instanceId, policyBean);
             markInstanceJobDeleted(instanceId, policyBean);
+        } else {
+            LOG.info("Marking instanceId: [{}] as killed", instanceId);
+            markInstanceKilled(instanceId);
         }
         RequestContext.get().commitTransaction();
     }
@@ -119,14 +120,12 @@ public class RecoveryService implements BeaconService {
     }
 
     private static void markInstanceKilled(String instanceId) throws BeaconException {
-        RequestContext.get().startTransaction();
         PolicyInstanceBean bean = new PolicyInstanceBean();
         bean.setInstanceId(instanceId);
-        bean.setEndTime(new Date());
+        bean.setRetirementTime(new Date());
         bean.setStatus(JobStatus.KILLED.name());
         bean.setMessage("Another instance got triggered before recovery");
         PolicyInstanceExecutor instanceExecutor = new PolicyInstanceExecutor(bean);
         instanceExecutor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_COMPLETE);
-        RequestContext.get().commitTransaction();
     }
 }

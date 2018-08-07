@@ -54,9 +54,7 @@ public class HiveReplicationMetrics {
 
         if (queryLog.size()!=0) {
             ParseHiveQueryLogV2 pq = new ParseHiveQueryLogV2();
-            if (LOG.isDebugEnabled()) {
-                printHiveQueryLog(queryLog);
-            }
+            printHiveQueryLog(queryLog);
             pq.parseQueryLog(queryLog, actionType);
             if (HiveActionType.EXPORT == actionType) {
                 parseExportMetrics(jobContext, pq);
@@ -77,7 +75,7 @@ public class HiveReplicationMetrics {
 
     private void printHiveQueryLog(List<String> queryLogList) {
         for (String queryLogMessage: queryLogList) {
-            LOG.debug(queryLogMessage);
+            LOG.info(queryLogMessage);
         }
     }
 
@@ -126,7 +124,7 @@ public class HiveReplicationMetrics {
             total = (Long.parseLong(jobContext.getJobContextMap().get(ReplicationJobMetrics.EXPORT_TOTAL.getName())));
             completed = (Long.parseLong(jobContext.getJobContextMap().get(
                     ReplicationJobMetrics.EXPORT_COMPLETED.getName())));
-            exportProgress = Math.round(((float) completed/total) * 0.1 * 100.0);
+            exportProgress = Math.min(10, ((float) completed/total) * 0.1f * 100.0f);
             LOG.debug("Export progress: total: {}, completed: {}, progress: {}", total, completed, exportProgress);
         }
         progress += exportProgress;
@@ -134,11 +132,11 @@ public class HiveReplicationMetrics {
             total = Long.parseLong(jobContext.getJobContextMap().get(ReplicationJobMetrics.IMPORT_TOTAL.getName()));
             completed = (Long.parseLong(jobContext.getJobContextMap().get(
                     ReplicationJobMetrics.IMPORT_COMPLETED.getName())));
-            float importProgress = Math.round(((float) completed/total) * 0.9 * 100.0);
+            float importProgress = Math.min(90, ((float) completed/total) * 0.9f * 100.0f);
             LOG.debug("Import progress: total: {}, completed: {}, progress: {}", total, completed, importProgress);
             progress += importProgress;
         }
-        progress = Math.round(progress * 100.0f)/100.0f;
+        progress = Math.min(100, Math.round(progress * 100.0f)/100.0f);
         LOG.debug("Action Type: {}, Progress: {}", actionType.getType(), progress);
         jobProgress.setJobProgress(progress);
     }

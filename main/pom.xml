@@ -53,7 +53,7 @@
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>beacon-plugin</artifactId>
+            <artifactId>beacon-plugin-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>

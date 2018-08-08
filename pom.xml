@@ -214,6 +214,16 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.hortonworks.beacon</groupId>
+                <artifactId>beacon-plugin-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hortonworks.beacon</groupId>
+                <artifactId>beacon-ranger</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>4.9</version>

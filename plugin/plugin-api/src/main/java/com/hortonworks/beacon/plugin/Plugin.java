@@ -23,7 +23,6 @@
 package com.hortonworks.beacon.plugin;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-
 import org.apache.hadoop.fs.Path;
 
 /**

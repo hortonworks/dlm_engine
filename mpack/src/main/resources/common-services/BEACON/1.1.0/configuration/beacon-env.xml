@@ -367,7 +367,7 @@
   </property>
   <property>
     <name>beacon_store_validate_connection</name>
-    <value>false</value>
+    <value>true</value>
     <description>Beacon Store Validate Connection</description>
     <display-name>Beacon Store validate Connection</display-name>
   </property>

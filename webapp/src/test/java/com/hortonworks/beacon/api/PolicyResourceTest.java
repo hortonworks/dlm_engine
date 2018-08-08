@@ -77,7 +77,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetClient.pairClusters(sourceCluster.getName(), true);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testSubmitAndSchedulePolicy() throws Exception {
         final String policyName = testDataGenerator.getRandomString("FsPolicy");
         String replicationPath = SOURCE_DIR + policyName;
@@ -164,7 +164,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         StatusResult statusResult = targetClient.getPolicyStatus(policyName);
         assertEquals(Entity.EntityStatus.RUNNING, statusResult.getStatus());
         targetClient.suspendPolicy(policyName);
-        waitOnCondition(5000, "Policy Running ", new Condition() {
+        waitOnCondition(5000, "Policy Suspended ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
                 StatusResult statusResult = targetClient.getPolicyStatus(policyName);
@@ -206,7 +206,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         });
     }
 
-    @Test
+    @Test(enabled = false)
     public void testListInstance() throws Exception {
         final String policyName = testDataGenerator.getRandomString("FsPolicy");
         String replicationPath = SOURCE_DIR + policyName;
@@ -263,7 +263,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
 
     }
 
-    @Test
+    @Test(enabled = false)
     public void testSubmitHivePolicy() throws Exception{
         final String policyName = testDataGenerator.getRandomString("HivePolicy");
         String replicationPath = policyName;
@@ -283,7 +283,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
      * Reason: specific mocks are implemented to throw {@link com.hortonworks.beacon.exceptions.BeaconSuspendException}
      * @throws Exception
      */
-    @Test
+    @Test(enabled = false)
     public void testRerunHiveFailedAdmin() throws Exception {
         final String policyName = testDataGenerator.getRandomString("HivePolicy");
         String replicationPath = policyName;

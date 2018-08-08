@@ -55,7 +55,7 @@ public final class BeaconStoreService implements BeaconService {
         String url = appendJDBCParameters(dbStore);
         String dataSource = "org.apache.commons.dbcp2.BasicDataSource";
         String connProps = StringFormat.format("DriverClassName={},Url={},Username={},MaxActive={}"
-                        + ",MaxIdle={},MinIdle={},MaxWait={}",
+                        + ",MaxIdle={},MinIdle={},MaxWaitMillis={}",
                 driver, url, user, maxConn, dbStore.getMaxIdleConnections(), dbStore.getMinIdleConnections(),
                 dbStore.getMaxWaitMSecs());
 
@@ -86,7 +86,6 @@ public final class BeaconStoreService implements BeaconService {
                 if (dbStore.getConnectTimeoutMSecs() > 0) {
                     url = appendUrlParameter(url, "connectTimeout", dbStore.getConnectTimeoutMSecs());
                 }
-                url = appendUrlParameter(url, "autoReconnect", "true");
                 break;
 
             case POSTGRESQL:

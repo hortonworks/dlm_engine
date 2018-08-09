@@ -126,8 +126,14 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public void updateCluster(String clusterName, PropertiesIgnoreCase properties) throws BeaconClientException {
-
+    public void updateCluster(final String clusterName, final PropertiesIgnoreCase properties)
+            throws BeaconClientException {
+        new ClientResource<APIResult>() {
+            @Override
+            APIResult api() throws BeaconWebException {
+                return clusterResource.update(clusterName, properties);
+            }
+        }.call();
     }
 
     @Override

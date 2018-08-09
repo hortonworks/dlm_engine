@@ -249,7 +249,13 @@ public class ClusterResource extends AbstractResourceManager {
     private synchronized APIResult submitCluster(Cluster cluster) throws BeaconException {
         try {
             RequestContext.get().startTransaction();
-            validate(cluster);
+            // BUG-108819: Beacon doesn't validate the remote cluster anymore
+            if (cluster.isLocal()) {
+                validate(cluster);
+            } else {
+                ClusterValidator validator = new ClusterValidator();
+                validator.validateClusterExists(cluster.getName());
+            }
             ValidationUtil.validateEncryptionAlgorithmType(cluster);
             clusterDao.submitCluster(cluster);
             BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.CLUSTER, cluster);
@@ -401,8 +407,10 @@ public class ClusterResource extends AbstractResourceManager {
             updatedCluster.setPeers(existingCluster.getPeers());
             updatedCluster.setPeersInfo(existingCluster.getPeersInfo());
 
-            // Validation of the update request
-            validateUpdate(existingCluster, updatedCluster, properties);
+            // Validation of the update request for local cluster
+            if (updatedCluster.isLocal()) {
+                validateUpdate(existingCluster, updatedCluster, properties);
+            }
 
             // Prepare for cluster update into store
             PropertiesIgnoreCase updatedProps = new PropertiesIgnoreCase();
@@ -468,12 +476,16 @@ public class ClusterResource extends AbstractResourceManager {
         }
         List<ClusterPairBean> clusterPairBeans = clusterDao.getPairedCluster(updatedCluster);
         for (String peer: peers) {
-            Cluster remoteCluster = null;
+            Cluster pairedCluster = null;
             ClusterPairBean clusterPairBean = null;
             try {
                 clusterPairBean = getClusterPairBean(clusterPairBeans, peer);
-                remoteCluster = ClusterHelper.getActiveCluster(peer);
-                ValidationUtil.validateClusterPairing(updatedCluster, remoteCluster);
+                pairedCluster = ClusterHelper.getActiveCluster(peer);
+                if (updatedCluster.isLocal()) {
+                    ValidationUtil.validateClusterPairing(updatedCluster, pairedCluster);
+                } else {
+                    ValidationUtil.validateClusterPairing(pairedCluster, updatedCluster);
+                }
                 if (!ClusterStatus.PAIRED.name().equals(clusterPairBean.getStatus())) {
                     clusterDao.updatePairStatus(clusterPairBean, ClusterStatus.PAIRED);
                     BeaconEvents.createEvents(Events.PAIRED, EventEntityType.CLUSTER, updatedCluster);

@@ -132,7 +132,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
             fs.exists(new Path("/"));
         } catch (Exception e) {
             LOG.error("Invalid Filesystem server or port: {}", storageUrl, e);
-            throw new ValidationException(e, "Validating File system end point: {}", storageUrl);
+            throw new ValidationException(e, "Validation of file system end point [{}] failed.", storageUrl);
         }
     }
 
@@ -162,7 +162,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
         try {
             Cluster localCluster = ClusterHelper.getLocalCluster();
             if (localCluster != null) {
-                throw new ValidationException("Local cluster: {} already exists.", localCluster);
+                throw new ValidationException("Local cluster: {} already exists.", localCluster.getName());
             }
         } catch (NoSuchElementException e) {
             // nothing to do.
@@ -177,7 +177,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
         }
     }
 
-    private void validateClusterExists(String clusterName) throws BeaconException {
+    public void validateClusterExists(String clusterName) throws BeaconException {
         try {
             ClusterHelper.getActiveCluster(clusterName);
             throw new EntityAlreadyExistsException("Cluster entity already exists with name: {}", clusterName);

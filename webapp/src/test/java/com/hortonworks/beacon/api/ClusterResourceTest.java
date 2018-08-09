@@ -25,10 +25,26 @@ package com.hortonworks.beacon.api;
 import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Entity;
+import com.hortonworks.beacon.client.entity.PeerInfo;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.entity.exceptions.ValidationException;
+import com.hortonworks.beacon.util.ClusterStatus;
+import com.hortonworks.beacon.util.FileSystemClientFactory;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.junit.Assert;
 import org.testng.annotations.Test;
+import javax.ws.rs.core.Response;
+
+import java.util.List;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Test for cluster APIs.
@@ -40,6 +56,83 @@ public class ClusterResourceTest extends ResourceBaseTest {
     private Cluster targetCluster;
 
     @Test
+    public void testSubmitClusterInvalidLocal() throws Exception {
+        targetCluster = testDataGenerator.getCluster(ClusterType.TARGET, true);
+        targetCluster.setFsEndpoint("SomeRandomEndpoint:8020");
+        boolean expected = false;
+        try {
+            targetClient.submitCluster(targetCluster.getName(), targetCluster.asProperties());
+        } catch (BeaconClientException e) {
+            if (e.getStatus() == Response.Status.BAD_REQUEST.getStatusCode()) {
+                expected = true;
+            }
+        }
+        assertTrue(expected);
+    }
+
+    @Test(dependsOnMethods = "testSubmitClusterInvalidLocal")
+    public void testSubmitClusterInvalidRemoteAndPairFail() throws Exception {
+        targetCluster = testDataGenerator.getCluster(ClusterType.TARGET, true);
+        targetClient.submitCluster(targetCluster.getName(), targetCluster.asProperties());
+        FileSystem fileSystem = mock(DistributedFileSystem.class);
+        FileSystemClientFactory.setFileSystem(fileSystem);
+        when(fileSystem.exists(new Path("/"))).thenThrow(ValidationException.class);
+        sourceCluster = testDataGenerator.getCluster(ClusterType.SOURCE, false);
+        targetClient.submitCluster(sourceCluster.getName(), sourceCluster.asProperties());
+        boolean expected = false;
+        try {
+            targetClient.pairClusters(sourceCluster.getName(), false);
+        } catch (BeaconClientException e) {
+            if (e.getStatus() == Response.Status.BAD_REQUEST.getStatusCode()) {
+                expected = true;
+            }
+        }
+        assertTrue(expected);
+        targetClient.deleteCluster(sourceCluster.getName());
+        targetClient.deleteCluster(targetCluster.getName());
+        reset(fileSystem);
+    }
+
+    @Test(dependsOnMethods = "testSubmitClusterInvalidRemoteAndPairFail")
+    public void testUpdateClusterInvalidRemoteAndPairFail() throws Exception {
+        targetCluster = testDataGenerator.getCluster(ClusterType.TARGET, true);
+        sourceCluster = testDataGenerator.getCluster(ClusterType.SOURCE, false);
+
+        targetClient.submitCluster(targetCluster.getName(), targetCluster.asProperties());
+        targetClient.submitCluster(sourceCluster.getName(), sourceCluster.asProperties());
+
+        targetClient.pairClusters(sourceCluster.getName(), true);
+
+        Cluster sourceClusterRetrieved = targetClient.getCluster(sourceCluster.getName());
+        List<PeerInfo> peersInfo = sourceClusterRetrieved.getPeersInfo();
+        assertEquals(peersInfo.get(0).getPairStatus(), ClusterStatus.PAIRED.name());
+
+        FileSystem fileSystem = mock(DistributedFileSystem.class);
+        FileSystemClientFactory.setFileSystem(fileSystem);
+        when(fileSystem.exists(new Path("/"))).thenThrow(ValidationException.class);
+        String oldSourceFsEndpoint = sourceCluster.getFsEndpoint();
+        sourceCluster.setFsEndpoint("hdfs://SomeRandomInvalidFSEndpoint:8020");
+        targetClient.updateCluster(sourceCluster.getName(), sourceCluster.asProperties());
+
+        sourceClusterRetrieved = targetClient.getCluster(sourceCluster.getName());
+        peersInfo = sourceClusterRetrieved.getPeersInfo();
+        assertEquals(peersInfo.get(0).getPairStatus(), ClusterStatus.SUSPENDED.name());
+        reset(fileSystem);
+
+        sourceCluster.setFsEndpoint(oldSourceFsEndpoint);
+        targetClient.updateCluster(sourceCluster.getName(), sourceCluster.asProperties());
+
+        sourceClusterRetrieved = targetClient.getCluster(sourceCluster.getName());
+        peersInfo = sourceClusterRetrieved.getPeersInfo();
+        assertEquals(peersInfo.get(0).getPairStatus(), ClusterStatus.PAIRED.name());
+
+        targetClient.unpairClusters(sourceCluster.getName(), true);
+        targetClient.deleteCluster(sourceCluster.getName());
+        targetClient.deleteCluster(targetCluster.getName());
+
+    }
+
+    @Test(dependsOnMethods = "testUpdateClusterInvalidRemoteAndPairFail")
     public void testSubmitCluster() throws Exception {
         sourceCluster = testDataGenerator.getCluster(ClusterType.SOURCE, true);
         targetClient.submitCluster(sourceCluster.getName(), sourceCluster.asProperties());

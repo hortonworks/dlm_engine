@@ -36,6 +36,7 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.entity.BeaconCluster;
+import com.hortonworks.beacon.entity.ClusterValidator;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
@@ -104,9 +105,11 @@ public final class ValidationUtil {
     private ValidationUtil() {
     }
 
-    public static void validateClusterPairing(Cluster localCluster, Cluster remoteCluster) throws ValidationException {
+    public static void validateClusterPairing(Cluster localCluster, Cluster remoteCluster) throws BeaconException {
         Properties localCustomProps = localCluster.getCustomProperties();
         Properties remoteCustomProps = remoteCluster.getCustomProperties();
+        ClusterValidator clusterValidator = new ClusterValidator();
+        clusterValidator.validateClusterInfo(remoteCluster, false);
         if (ClusterHelper.isHDFSEnabled(localCluster)
                 != ClusterHelper.isHDFSEnabled(remoteCluster)) {
             LOG.error("HDFS is not enabled in either {} or {} cluster", localCluster.getName(),

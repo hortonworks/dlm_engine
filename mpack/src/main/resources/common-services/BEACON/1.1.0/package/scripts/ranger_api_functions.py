@@ -137,7 +137,7 @@ def update_user_role(ranger_url, user_name, user_role, admin_username_password):
       Logger.info(format("Successfully updated {user_name} user with role {user_role} in Ranger Admin"))
       return response_code
     else:
-      Logger.error(format("Unable update {user_name} user role with {user_role} in Ranger Admin"))
+      Logger.error(format("Unable to update {user_name} user role with {user_role} in Ranger Admin"))
       return None
   except urllib2.HTTPError, e:
     raise Fail("HTTPError while updating " + str(user_name) + " user role to " + str(user_role) + ". Reason = " + str(e.code))

@@ -25,6 +25,7 @@ package com.hortonworks.beacon.api;
 import com.hortonworks.beacon.TestDataGenerator;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
+import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import org.apache.hadoop.fs.FileSystem;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -106,5 +107,14 @@ public abstract class ResourceBaseTest {
         if (!condition.exit()) {
             Assert.fail("Timed out waiting for "+ message);
         }
+    }
+
+    protected PolicyInstanceList.InstanceElement getFirstInstance(BeaconClient client, String policyName)
+            throws BeaconClientException {
+        PolicyInstanceList policyInstanceList = client.listPolicyInstances(policyName);
+        if (policyInstanceList.getElements().length > 0) {
+            return policyInstanceList.getElements()[policyInstanceList.getElements().length - 1];
+        }
+        return null;
     }
 }

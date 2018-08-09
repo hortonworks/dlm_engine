@@ -22,7 +22,6 @@
 
 package com.hortonworks.beacon.api;
 
-import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Entity;
@@ -388,14 +387,6 @@ public class PolicyResourceTest extends ResourceBaseTest {
 
     }
 
-    private PolicyInstanceList.InstanceElement getFirstInstance(BeaconClient client, String policyName)
-            throws BeaconClientException {
-        PolicyInstanceList policyInstanceList = client.listPolicyInstances(policyName);
-        if (policyInstanceList.getElements().length > 0) {
-            return policyInstanceList.getElements()[policyInstanceList.getElements().length - 1];
-        }
-        return null;
-    }
 
     private void submitAndSchedulePolicy(String replicationPath, String policyName)
             throws IOException, BeaconClientException {

@@ -1218,7 +1218,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertTrue(jsonObject.getString("message").contains("[true]"));
     }
 
-    @Test(dependsOnMethods = "testPairCluster")
+    @Test(dependsOnMethods = {"testPairCluster", "testSubmitCluster"})
     public void testRerunPolicyInstance() throws Exception {
         final String policyName = getRandomString("rerun-policy");
         DistributedFileSystem srcFileSystem = srcDfsCluster.getFileSystem();

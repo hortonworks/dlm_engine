@@ -51,6 +51,8 @@ public class LocalBeaconClient implements BeaconClient {
 
     private PolicyResource policyResource = new PolicyResource();
 
+    private CloudCredResource cloudCredResource = new CloudCredResource();
+
     @Override
     public void submitCluster(final String clusterName, final PropertiesIgnoreCase properties)
             throws BeaconClientException {
@@ -308,8 +310,13 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public String submitCloudCred(CloudCred cloudCred) throws BeaconClientException {
-        return null;
+    public String submitCloudCred(final CloudCred cloudCred) throws BeaconClientException {
+        return new ClientResource<String>() {
+            @Override
+            String api() throws BeaconWebException {
+                return cloudCredResource.submit(cloudCred.asProperties()).getEntityId();
+            }
+        }.call();
     }
 
     @Override

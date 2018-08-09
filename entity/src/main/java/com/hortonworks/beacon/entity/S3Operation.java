@@ -26,6 +26,7 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.google.common.annotations.VisibleForTesting;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.hadoop.fs.s3a.S3AUtils;
@@ -46,6 +47,11 @@ public final class S3Operation {
 
     private static final String REGEX = "Cannot create enum from (.*) value!";
     private static final Pattern PATTERN = Pattern.compile(REGEX);
+
+    @VisibleForTesting
+    public S3Operation(AmazonS3Client amazonS3Client) {
+        this.amazonS3Client = amazonS3Client;
+    }
 
     public S3Operation() {
         amazonS3Client = new AmazonS3Client();

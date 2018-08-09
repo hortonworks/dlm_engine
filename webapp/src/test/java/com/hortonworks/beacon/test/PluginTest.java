@@ -83,6 +83,13 @@ public class PluginTest implements Plugin {
         }
 
         Cluster srcCluster = dataset.getSourceCluster();
+        /**
+         * Returning dummy path in case of cloud to hdfs replication as srcCluster will
+         * not be defined during policy creation.
+         */
+        if (srcCluster == null) {
+            return new Path("dummy");
+        }
         FileSystem sourceFs = FSUtils.getFileSystem(srcCluster.getFsEndpoint(), new Configuration());
         String name = new Path(dataset.getSourceDataSet()).getName();
         Path exportPath;
@@ -103,6 +110,13 @@ public class PluginTest implements Plugin {
             return;
         }
         Cluster targetCluster = dataset.getTargetCluster();
+        /**
+         * Returning in case of hdfs to cloud replication as tgtCluster will
+         * not be defined during policy creation.
+         */
+        if (targetCluster == null) {
+            return;
+        }
         Path targetPath = new Path(targetCluster.getFsEndpoint(), stagingPath);
         FileSystem targetFS = FSUtils.getFileSystem(targetCluster.getFsEndpoint(), new Configuration());
         try {

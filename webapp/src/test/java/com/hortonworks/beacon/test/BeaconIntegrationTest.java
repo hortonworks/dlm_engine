@@ -115,7 +115,6 @@ public class BeaconIntegrationTest {
         if (System.getProperty(sourceBeaconOpts) != null) {
             sourceJVMOptions.add(System.getProperty(sourceBeaconOpts));
         }
-
         targetJVMOptions.add(commonOptions + " -Dbeacon.log.filename=beacon-application.log." + TARGET_CLUSTER);
         String targetBeaconOpts = "target.beacon.server.opts";
         if (System.getProperty(targetBeaconOpts) != null) {

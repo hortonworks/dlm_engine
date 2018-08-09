@@ -56,6 +56,7 @@ import com.hortonworks.beacon.replication.fs.SnapshotListing;
 import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.FSUtils;
+import com.hortonworks.beacon.util.FileSystemClientFactory;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.util.StringFormat;
@@ -633,12 +634,7 @@ public final class ValidationUtil {
         String dataset = ReplicationPolicyBuilder.appendCloudSchema(cloudCred, getDataset(policy, dest),
                 SchemeType.HCFS_NAME);
         Configuration conf = getHCFSConfiguration(policy, dataset, new BeaconCloudCred(cloudCred));
-        Path cloudPath = new Path(dataset);
-        try {
-            return FileSystem.get(cloudPath.toUri(), conf);
-        } catch (IOException e) {
-            throw new BeaconException(e);
-        }
+        return FileSystemClientFactory.get().createFileSystem(dataset, conf);
     }
 
     private static String getDataset(ReplicationPolicy policy, Destination dest) {

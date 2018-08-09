@@ -189,7 +189,9 @@ public final class BeaconDBSetup {
     private void updateVersion(Connection connection, String schemaVersion) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             String updateVersion = UPDATE_SCHEMA_VERSION.replace(REPLACE_VERSION, schemaVersion);
+            LOGGER.info("Updated the current schema version to [{}]", schemaVersion);
             statement.executeUpdate(updateVersion);
+            connection.commit();
         } catch (SQLException e) {
             LOGGER.error(e.getMessage(), e);
             throw e;

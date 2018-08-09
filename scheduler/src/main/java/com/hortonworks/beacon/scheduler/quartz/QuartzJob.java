@@ -158,6 +158,7 @@ public class QuartzJob implements InterruptableJob {
             }
             retryDelay = Integer.parseInt(jobProperties.getProperty(FSDRProperties.RETRY_DELAY.getName()));
             Retry retry = new Retry(retryAttempts, retryDelay);
+            RequestContext.get().closeEntityManager();
             RetryReplicationJob.retry(retry, context, jobContext);
             setInstanceExecDetail(JobStatus.FAILED, ex.getMessage());
             throw new JobExecutionException(ex);

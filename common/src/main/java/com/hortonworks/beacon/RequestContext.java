@@ -76,6 +76,7 @@ public final class RequestContext {
     }
 
     public void startTransaction() {
+        closeEntityManager();
         entityManager = getEntityManager();
         entityManager.getTransaction().begin();
         transaction = true;

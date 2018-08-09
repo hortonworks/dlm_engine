@@ -59,8 +59,8 @@ public final class BeaconStoreService implements BeaconService {
                 driver, url, user, maxConn, dbStore.getMaxIdleConnections(), dbStore.getMinIdleConnections(),
                 dbStore.getMaxWaitMSecs());
 
-        dbStore.setValidateDbConn(isNotDerby(dbStore.getDBType()));
-        if (dbStore.isValidateDbConn()) {
+        boolean validateDBConn = (isNotDerby(dbStore.getDBType()));
+        if (validateDBConn) {
             connProps += ",TestOnBorrow=true,TestOnReturn=true,TestWhileIdle=true";
             connProps += ",ValidationQuery=" + BeaconConstants.VALIDATION_QUERY;
         }
@@ -107,7 +107,7 @@ public final class BeaconStoreService implements BeaconService {
         return urlBuilder.toString();
     }
 
-    private boolean isNotDerby(DbStore.DBType dbType) {
+    public static boolean isNotDerby(DbStore.DBType dbType) {
         return dbType != DbStore.DBType.DERBY;
     }
 

@@ -42,7 +42,6 @@ public class DbStore {
     private long maxWaitMSecs;
     private long connectTimeoutMSecs;
     private String schemaDirectory;
-    private boolean validateDbConn;
 
     /**
      * Enum for db type.
@@ -63,7 +62,6 @@ public class DbStore {
         setMaxWaitMSecs(o.maxWaitMSecs);
         setMinIdleConnections(o.getMinIdleConnections());
         setSchemaDirectory(o.getSchemaDirectory());
-        setValidateDbConn(o.isValidateDbConn());
     }
 
     public String getDriver() {
@@ -128,14 +126,6 @@ public class DbStore {
 
     public void setSchemaDirectory(String schemaDirectory) {
         this.schemaDirectory = schemaDirectory;
-    }
-
-    public boolean isValidateDbConn() {
-        return validateDbConn;
-    }
-
-    public void setValidateDbConn(boolean validateDbConn) {
-        this.validateDbConn = validateDbConn;
     }
 
     public String resolvePassword() throws BeaconException {

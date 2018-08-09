@@ -65,11 +65,6 @@ class BEACON110ServiceAdvisor(service_advisor.ServiceAdvisor):
     hive_site = self.getServicesSiteProperties(services, "hive-site")
     putHiveSiteProperty = self.putProperty(configurations, "hive-site", services)
 
-    beacon_server_hosts = self.getComponentHostNames(services, 'BEACON', 'BEACON_SERVER')
-    beacon_server_host = None
-    if len(beacon_server_hosts) > 0:
-      beacon_server_host = beacon_server_hosts[0]
-
     if 'forced-configurations' not in services:
       services["forced-configurations"] = []
 
@@ -88,11 +83,10 @@ class BEACON110ServiceAdvisor(service_advisor.ServiceAdvisor):
         # under these if constructions we are checking if beacon server hostname available,
         # if it's default db connection url with "localhost" or if schema name was changed or if db type was changed (only for db type change from default mysql to existing mysql)
         # or if protocol according to current db type differs with protocol in db connection url(other db types changes)
-        if beacon_server_host is not None:
-          if (beacon_db_connection_url and "//localhost" in beacon_db_connection_url) \
+        if (beacon_db_connection_url and "//localhost" in beacon_db_connection_url) \
             or old_schema_name or old_db_type or (protocol and beacon_db_connection_url \
             and not beacon_db_connection_url.startswith(protocol)):
-            db_connection = self.getBeaconDBConnectionString(beacon_database_type).format(beacon_server_host, beacon_store_db_name)
+            db_connection = self.getBeaconDBConnectionString(beacon_database_type).format("<db_host_name>", beacon_store_db_name)
             putbeaconEnvProperty('beacon_store_url', db_connection)
 
     knox_host = 'localhost'
@@ -134,28 +128,30 @@ class BEACON110ServiceAdvisor(service_advisor.ServiceAdvisor):
 
     if 'HIVE' in servicesList and 'beacon-env' in services['configurations'] \
             and 'set_hive_configs' in services['configurations']['beacon-env']['properties'] \
-            and services['configurations']['beacon-env']['properties']['set_hive_configs'] == 'true' \
-            and hive_site and not self.is_cloud_warehouse(hive_site['hive.metastore.warehouse.dir']):
-      putHiveSiteProperty('hive.metastore.dml.events', 'true')
-      putHiveSiteProperty('hive.repl.cm.enabled', 'true')
-      services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.metastore.dml.events'})
-      services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.repl.cm.enabled'})
-      # split existing values, append new one and merge back
-      listeners_delimiter = ","
-      listeners_values = set(['org.apache.hive.hcatalog.listener.DbNotificationListener'])
-      if hive_site and 'hive.metastore.transactional.event.listeners' in hive_site and hive_site['hive.metastore.transactional.event.listeners'] is not None:
-        listeners_values.update(
-          [item.strip() for item in hive_site['hive.metastore.transactional.event.listeners'].split(listeners_delimiter)
-           if item.strip() != ""]
-        )
-      listeners_property_value = listeners_delimiter.join(listeners_values)
-      putHiveSiteProperty('hive.metastore.transactional.event.listeners', listeners_property_value)
-      services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.metastore.transactional.event.listeners'})
+            and services['configurations']['beacon-env']['properties']['set_hive_configs'] == 'true' and hive_site:
+      hive_user = 'hive'
+      putHdfsCoreSiteProperty('hadoop.proxyuser.{0}.hosts'.format(hive_user), '*')
+      if not self.is_cloud_warehouse(hive_site['hive.metastore.warehouse.dir']):
+        putHiveSiteProperty('hive.metastore.dml.events', 'true')
+        putHiveSiteProperty('hive.repl.cm.enabled', 'true')
+        services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.metastore.dml.events'})
+        services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.repl.cm.enabled'})
+        # split existing values, append new one and merge back
+        listeners_delimiter = ","
+        listeners_values = set(['org.apache.hive.hcatalog.listener.DbNotificationListener'])
+        if hive_site and 'hive.metastore.transactional.event.listeners' in hive_site and hive_site['hive.metastore.transactional.event.listeners'] is not None:
+          listeners_values.update(
+            [item.strip() for item in hive_site['hive.metastore.transactional.event.listeners'].split(listeners_delimiter)
+             if item.strip() != ""]
+          )
+        listeners_property_value = listeners_delimiter.join(listeners_values)
+        putHiveSiteProperty('hive.metastore.transactional.event.listeners', listeners_property_value)
+        services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.metastore.transactional.event.listeners'})
 
-      if hive_site:
-        hive_home_folder = os.path.dirname(hive_site['hive.metastore.warehouse.dir'])
-        putHiveSiteProperty('hive.repl.cmrootdir', os.path.join(hive_home_folder, 'cmroot'))
-        putHiveSiteProperty('hive.repl.rootdir', os.path.join(hive_home_folder, 'repl'))
+        if hive_site:
+          hive_home_folder = os.path.dirname(hive_site['hive.metastore.warehouse.dir'])
+          putHiveSiteProperty('hive.repl.cmrootdir', os.path.join(hive_home_folder, 'cmroot'))
+          putHiveSiteProperty('hive.repl.rootdir', os.path.join(hive_home_folder, 'repl'))
 
   def getOldPropertyValue(self, services, configType, propertyName):
     if services:

@@ -53,7 +53,11 @@ import java.util.Properties;
  * Server side logic of cloud cred, extends client bean CloudCred.
  */
 public class BeaconCloudCred extends CloudCred {
-    private static final String CREDENTIAL_FILE_OWNER = "hive";
+    private static final String CREDENTIAL_FILE_OWNER;
+
+    static {
+        CREDENTIAL_FILE_OWNER = System.getProperty("beacon.hive.username", "hive");
+    }
     private static final Logger LOG = LoggerFactory.getLogger(BeaconCloudCred.class);
 
 
@@ -66,7 +70,7 @@ public class BeaconCloudCred extends CloudCred {
             Path path = ProviderUtils.unnestUri(new URI(credentialFile));
             LOG.debug("Setting owner for {} to {}", path, CREDENTIAL_FILE_OWNER);
             FileSystem fs = path.getFileSystem(new Configuration());
-            fs.setOwner(path, CREDENTIAL_FILE_OWNER, "hdfs");
+            fs.setOwner(path, CREDENTIAL_FILE_OWNER, "");
         } catch (URISyntaxException | IOException e) {
             throw new BeaconException(e);
         }
@@ -138,10 +142,10 @@ public class BeaconCloudCred extends CloudCred {
                             .getHadoopConfigName());
                     String secretKey = beaconCredentialProvider.resolveAlias(CloudCred.Config.AWS_SECRET_KEY
                             .getHadoopConfigName());
-                    s3Operation = new S3Operation(accessKey, secretKey);
+                    s3Operation = S3OperationFactory.getINSTANCE().createS3Operation(accessKey, secretKey);
                     break;
                 case AWS_INSTANCEPROFILE:
-                    s3Operation = new S3Operation();
+                    s3Operation = S3OperationFactory.getINSTANCE().createS3Operation();
                     break;
                 default:
                     throw new BeaconException("AuthType {} not supported.", this.getAuthType());

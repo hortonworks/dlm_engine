@@ -22,11 +22,15 @@
 
 package com.hortonworks.beacon;
 
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.hortonworks.beacon.api.HdfsAdminFactory;
 import com.hortonworks.beacon.api.LocalBeaconClient;
 import com.hortonworks.beacon.api.ResourceBaseTest;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.entity.S3Operation;
+import com.hortonworks.beacon.entity.S3OperationFactory;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
 import com.hortonworks.beacon.entity.util.hive.HiveServerClient;
@@ -37,6 +41,7 @@ import com.hortonworks.beacon.service.BeaconStoreService;
 import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.tools.BeaconDBSetup;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
@@ -51,6 +56,7 @@ import org.apache.hadoop.mapreduce.JobStatus;
 import org.apache.hadoop.mapreduce.TaskReport;
 import org.apache.hadoop.mapreduce.TaskType;
 import org.apache.hadoop.tools.DistCp;
+import org.apache.hive.jdbc.HiveStatement;
 import org.mockito.Matchers;
 import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
@@ -144,7 +150,7 @@ public class LocalTestDataGenerator extends TestDataGenerator {
         DistCpFactory.setDistCp(distCp);
         when(hiveMetadataClient.getDatabaseLocation(Matchers.anyString()))
                 .thenReturn(new Path(getRandomString("hive")));
-        Statement statement = mock(Statement.class);
+        Statement statement = mock(HiveStatement.class);
         when(hiveServerClient.createStatement()).thenReturn(statement);
         final ResultSet resultSet = mock(ResultSet.class);
         when(statement.executeQuery(Matchers.anyString())).thenAnswer(new Answer<ResultSet>() {
@@ -154,6 +160,16 @@ public class LocalTestDataGenerator extends TestDataGenerator {
                 return resultSet;
             }
         });
+        /**
+         * Amazon s3 client mocks for cloud replication
+         */
+        System.setProperty("beacon.hive.username", System.getProperty("user.name"));
+        String cwd = System.getProperty("user.dir");
+        BeaconConfig.getInstance().getEngine().setCloudCredProviderPath("jceks://file/" + cwd + "/target/credential/");
+        AmazonS3Client amazonS3Client = mock(AmazonS3Client.class);
+        S3Operation s3Operation = new S3Operation(amazonS3Client);
+        S3OperationFactory.setS3Operation(s3Operation);
+        when(amazonS3Client.getBucketLocation(Matchers.anyString())).thenReturn("US");
     }
 
     @Override
@@ -203,5 +219,6 @@ public class LocalTestDataGenerator extends TestDataGenerator {
     @Override
     public void createFSMocks(String path) throws IOException {
         when(targetFs.exists(new Path(path))).thenReturn(true);
+        when(targetFs.create(new Path(path))).thenReturn(mock(FSDataOutputStream.class));
     }
 }

@@ -24,6 +24,7 @@ package com.hortonworks.beacon;
 
 import com.hortonworks.beacon.api.ResourceBaseTest;
 import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
@@ -32,6 +33,8 @@ import org.apache.hadoop.fs.FileSystem;
 
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * test data generator interface for local and ambari based cluster.
@@ -78,25 +81,30 @@ public abstract class TestDataGenerator {
     }
 
     public ReplicationPolicy getPolicy() {
-        return getPolicy(getRandomString("Policy"), getRandomString("Path"), "FS", 120,
+        return getPolicy(getRandomString("Policy"), getRandomString("Path"),
+                getRandomString("Path"), "FS", 120,
                 getCluster(ResourceBaseTest.ClusterType.SOURCE, false).getName(),
-                getCluster(ResourceBaseTest.ClusterType.TARGET, true).getName());
+                getCluster(ResourceBaseTest.ClusterType.TARGET, true).getName(),
+                new HashMap<String, String>());
     }
 
     public ReplicationPolicy getPolicy(String policyName, String replicationPath) {
-        return getPolicy(policyName, replicationPath, "FS", 120,
+        return getPolicy(policyName, replicationPath, replicationPath, "FS", 120,
                 getCluster(ResourceBaseTest.ClusterType.SOURCE, false).getName(),
-                getCluster(ResourceBaseTest.ClusterType.TARGET, true).getName());
+                getCluster(ResourceBaseTest.ClusterType.TARGET, true).getName(),
+                new HashMap<String, String>());
     }
 
     public ReplicationPolicy getPolicy(String policyName, String replicationPath, String type) {
-        return getPolicy(policyName, replicationPath, type, 120,
+        return getPolicy(policyName, replicationPath, replicationPath, type, 120,
                 getCluster(ResourceBaseTest.ClusterType.SOURCE, false).getName(),
-                getCluster(ResourceBaseTest.ClusterType.TARGET, true).getName());
+                getCluster(ResourceBaseTest.ClusterType.TARGET, true).getName(),
+                new HashMap<String, String>());
     }
 
-    public ReplicationPolicy getPolicy(String policyName, String replicationPath, String type, int frequency,
-                                       String sourceCluster, String targetCluster) {
+    public ReplicationPolicy getPolicy(String policyName, String sourceDataSet, String targetDataSet,
+                                       String type, int frequency, String sourceCluster,
+                                       String targetCluster, Map<String, String> extraProps) {
         ReplicationPolicy policy = new ReplicationPolicy();
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.SECOND, 1);
@@ -105,12 +113,27 @@ public abstract class TestDataGenerator {
         policy.setDescription("Beacon test policy");
         policy.setType(type);
         policy.setFrequencyInSec(frequency);
-        policy.setSourceDataset(replicationPath);
-        policy.setTargetDataset(replicationPath);
+        policy.setSourceDataset(sourceDataSet);
+        policy.setTargetDataset(targetDataSet);
         policy.setTargetCluster(targetCluster);
         policy.setSourceCluster(sourceCluster);
         populateCustomProperties(policy);
+        for(Map.Entry<String, String> entry : extraProps.entrySet()) {
+            policy.getCustomProperties().setProperty(entry.getKey(), entry.getValue());
+        }
         return policy;
+    }
+
+
+
+    public CloudCred buildCloudCred(String name, CloudCred.Provider provider, CloudCred.AuthType authType,
+                                     Map<CloudCred.Config, String> configs) {
+        CloudCred cloudCred = new CloudCred();
+        cloudCred.setName(name);
+        cloudCred.setAuthType(authType);
+        cloudCred.setProvider(provider);
+        cloudCred.setConfigs(configs);
+        return cloudCred;
     }
 
     public String getRandomString(String prefix) {

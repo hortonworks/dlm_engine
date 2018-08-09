@@ -366,12 +366,6 @@
     <display-name>Beacon Store wait time in msecs</display-name>
   </property>
   <property>
-    <name>beacon_store_validate_connection</name>
-    <value>true</value>
-    <description>Beacon Store Validate Connection</description>
-    <display-name>Beacon Store validate Connection</display-name>
-  </property>
-  <property>
     <name>beacon_services</name>
     <value>com.hortonworks.beacon.scheduler.internal.StoreCleanupService,
       com.hortonworks.beacon.scheduler.internal.AdminJobService,

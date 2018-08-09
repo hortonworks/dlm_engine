@@ -68,7 +68,6 @@ dbStore:
     minIdleConnections: 2
     maxWaitMSecs: 60000
     schemaDirectory: ${beacon.schemadirectory}
-    validateDbConn: false
 
 scheduler:
     quartzPrefix: ${beacon.quartz.prefix}

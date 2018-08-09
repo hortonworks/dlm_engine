@@ -33,6 +33,7 @@ import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import com.hortonworks.beacon.service.BeaconService;
+import com.hortonworks.beacon.service.BeaconStoreService;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
@@ -148,7 +149,8 @@ public final class BeaconQuartzScheduler implements BeaconScheduler, BeaconServi
                     QuartzProperties.PASSWORD.getProperty(), dbStore.resolvePassword());
             properties.setProperty(QuartzProperties.MAX_CONNECTION.getProperty(),
                     String.valueOf(dbStore.getMaxConnections()));
-            if (dbStore.isValidateDbConn()) {
+            boolean validateDBConn = (BeaconStoreService.isNotDerby(dbStore.getDBType()));
+            if (validateDBConn) {
                 properties.setProperty(QuartzProperties.VALIDATION_QUERY.getProperty(),
                         BeaconConstants.VALIDATION_QUERY);
             }

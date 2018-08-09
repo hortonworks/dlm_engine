@@ -107,7 +107,6 @@ public class LocalTestDataGenerator extends TestDataGenerator {
         when(job.isComplete()).then(new Answer<Boolean>() {
             @Override
             public Boolean answer(InvocationOnMock invocation) throws Throwable {
-                Thread.sleep(200);
                 return true;
             }
         });

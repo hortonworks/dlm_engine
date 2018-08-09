@@ -77,18 +77,19 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetClient.pairClusters(sourceCluster.getName(), true);
     }
 
-    @Test(enabled = false)
+    @Test
     public void testSubmitAndSchedulePolicy() throws Exception {
         final String policyName = testDataGenerator.getRandomString("FsPolicy");
         String replicationPath = SOURCE_DIR + policyName;
         submitAndSchedulePolicy(replicationPath, policyName);
-        waitOnCondition(50000, "First Instance Success ", new Condition() {
+        waitOnCondition(20000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
                 PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName);
                 return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
             }
         });
+        targetClient.deletePolicy(policyName, false);
     }
 
     @Test
@@ -101,27 +102,43 @@ public class PolicyResourceTest extends ResourceBaseTest {
 
     @Test
     public void testPolicyDefinition() throws Exception {
-        String policyName = testDataGenerator.getRandomString("FsPolicy");
+        final String policyName = testDataGenerator.getRandomString("FsPolicy");
         String replicationPath = SOURCE_DIR + policyName;
         submitAndSchedulePolicy(replicationPath, policyName);
         PolicyList policyList = targetClient.getPolicy(policyName);
         boolean policySubmitted = policyList.getElements().length > 0;
         assertTrue(policySubmitted);
         assertEquals(policyName, policyList.getElements()[0].name);
+        waitOnCondition(20000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetClient.deletePolicy(policyName, false);
     }
 
     @Test
     public void testGetPolicy() throws Exception {
-        String policyName = testDataGenerator.getRandomString("FsPolicyGet");
+        final String policyName = testDataGenerator.getRandomString("FsPolicyGet");
         String replicationPath = SOURCE_DIR + policyName;
         submitAndSchedulePolicy(replicationPath, policyName);
         PolicyList policyList = targetClient.getPolicyList("name", "name", "name:" + policyName, "asc", 0, 10);
         assertEquals(1, policyList.getResults());
+        waitOnCondition(20000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetClient.deletePolicy(policyName, false);
     }
 
     @Test
     public void testUpdatePolicy() throws Exception {
-        String policyName = testDataGenerator.getRandomString("FsPolicyUpdate");
+        final String policyName = testDataGenerator.getRandomString("FsPolicyUpdate");
         String replicationPath = SOURCE_DIR + policyName;
         targetFs.mkdirs(new Path(replicationPath));
         testDataGenerator.createFSMocks(replicationPath);
@@ -134,6 +151,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetClient.updatePolicy(policyName, updatedPolicy.asProperties());
         PolicyList newDef = targetClient.getPolicy(policyName);
         assertEquals(240, (long) newDef.getElements()[0].frequencyInSec);
+        targetClient.deletePolicy(policyName, false);
     }
 
     @Test
@@ -151,6 +169,14 @@ public class PolicyResourceTest extends ResourceBaseTest {
                 return statusResult != null && statusResult.getStatus().equals(Entity.EntityStatus.RUNNING);
             }
         });
+        waitOnCondition(20000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetClient.deletePolicy(policyName, false);
     }
 
     @Test
@@ -171,6 +197,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
                 return statusResult != null && statusResult.getStatus().equals(Entity.EntityStatus.SUSPENDED);
             }
         });
+        targetClient.deletePolicy(policyName, false);
     }
 
     @Test
@@ -204,9 +231,17 @@ public class PolicyResourceTest extends ResourceBaseTest {
                 return statusResult != null && statusResult.getStatus().equals(Entity.EntityStatus.RUNNING);
             }
         });
+        waitOnCondition(20000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetClient.deletePolicy(policyName, false);
     }
 
-    @Test(enabled = false)
+    @Test
     public void testListInstance() throws Exception {
         final String policyName = testDataGenerator.getRandomString("FsPolicy");
         String replicationPath = SOURCE_DIR + policyName;
@@ -214,13 +249,14 @@ public class PolicyResourceTest extends ResourceBaseTest {
         testDataGenerator.createFSMocks(replicationPath);
         ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath);
         targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
-        waitOnCondition(10000, "First Instance Success ", new Condition() {
+        waitOnCondition(20000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
                 PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName);
                 return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
             }
         });
+        targetClient.deletePolicy(policyName, false);
     }
 
     @Test(enabled = false)
@@ -260,10 +296,11 @@ public class PolicyResourceTest extends ResourceBaseTest {
                 return instanceElement != null && instanceElement.status.equals(JobStatus.RUNNING.name());
             }
         });
+        targetClient.deletePolicy(policyName, false);
 
     }
 
-    @Test(enabled = false)
+    @Test
     public void testSubmitHivePolicy() throws Exception{
         final String policyName = testDataGenerator.getRandomString("HivePolicy");
         String replicationPath = policyName;
@@ -276,6 +313,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
                 return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
             }
         });
+        targetClient.deletePolicy(policyName, false);
     }
 
     /**
@@ -283,7 +321,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
      * Reason: specific mocks are implemented to throw {@link com.hortonworks.beacon.exceptions.BeaconSuspendException}
      * @throws Exception
      */
-    @Test(enabled = false)
+    @Test
     public void testRerunHiveFailedAdmin() throws Exception {
         final String policyName = testDataGenerator.getRandomString("HivePolicy");
         String replicationPath = policyName;
@@ -331,6 +369,9 @@ public class PolicyResourceTest extends ResourceBaseTest {
                 return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
             }
         });
+        /**
+         * Reset the mocks for this tests such that next tests picks the default mocks.
+         */
         reset(statementForThisTest, resultSetReplStatus, resultSetReplDump, exceptionForThisTest);
         HiveServerClient hiveServerClientForOtherTests = mock(HiveServerClient.class);
         HiveClientFactory.setHiveServerClient(hiveServerClientForOtherTests);
@@ -340,10 +381,10 @@ public class PolicyResourceTest extends ResourceBaseTest {
         when(statementForOtherTests.executeQuery(Matchers.anyString())).thenAnswer(new Answer<ResultSet>() {
             @Override
             public ResultSet answer(InvocationOnMock invocation) throws Throwable {
-                Thread.sleep(100);
                 return mock(ResultSet.class);
             }
         });
+        targetClient.deletePolicy(policyName, false);
 
     }
 

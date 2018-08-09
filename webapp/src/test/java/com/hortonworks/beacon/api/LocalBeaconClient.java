@@ -178,8 +178,13 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public void deletePolicy(String policyName, boolean isInternalSyncDelete) throws BeaconClientException {
-
+    public void deletePolicy(final String policyName, final boolean isInternalSyncDelete) throws BeaconClientException {
+        new ClientResource<APIResult>() {
+            @Override
+            APIResult api() throws BeaconWebException {
+                return policyResource.delete(policyName, isInternalSyncDelete);
+            }
+        }.call();
     }
 
     @Override

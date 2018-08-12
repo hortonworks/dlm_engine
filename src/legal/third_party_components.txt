@@ -60,7 +60,7 @@ jersey-json | 1.19.3 | (Sun GPL With Classpath Exception v2.0 AND Common Develop
 Jersey | 1.19.3 | (Sun GPL With Classpath Exception v2.0 AND Common Development and Distribution License 1.1)
 Apache HttpComponents Core | 4.4 | Apache License 2.0
 Apache log4j | 1.2.17 | Apache License 2.0
-Apache Commons DBCP | 1.4 | Apache License 2.0
+Apache Commons DBCP | 2.5.0 | Apache License 2.0
 Commons IO | 2.4 | Apache License 2.0
 Netty Project | 3.7.0.Final | Apache License 2.0
 Jetty: Java based HTTP, Servlet, SPDY, WebSocket Server | 3.0.0.v201112011016 | (Apache License 2.0 AND Eclipse Public License 1.0)

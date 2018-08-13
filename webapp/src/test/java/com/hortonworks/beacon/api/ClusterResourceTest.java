@@ -26,6 +26,7 @@ import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.resource.ClusterList;
+import com.hortonworks.beacon.config.BeaconConfig;
 import org.junit.Assert;
 import org.testng.annotations.Test;
 
@@ -49,6 +50,18 @@ public class ClusterResourceTest extends ResourceBaseTest {
     @Test(dependsOnMethods = "testSubmitCluster")
     public void testPairCluster() throws Exception {
         targetClient.pairClusters(targetCluster.getName(), true);
+    }
+
+    @Test(dependsOnMethods = "testSubmitCluster")
+    public void testListWithoutArguments() throws Exception {
+        try {
+            BeaconConfig.getInstance().getEngine().setKnoxProxyEnabled(true);
+            ClusterList list = targetClient.getClusterList("", "name", "asc", 0, 10);
+            //getBeaconEndpoint shouldn't fail when custom properties are not loaded
+            list.getClusters()[0].getBeaconEndpoint();
+        } finally {
+            BeaconConfig.getInstance().getEngine().setKnoxProxyEnabled(false);
+        }
     }
 
     @Test(dependsOnMethods = "testSubmitCluster")

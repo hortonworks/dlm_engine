@@ -25,6 +25,7 @@ package com.hortonworks.beacon.client.entity;
 import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.util.KnoxTokenUtils;
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import java.util.List;
@@ -240,9 +241,9 @@ public class Cluster extends Entity {
     }
 
     public String getBeaconEndpoint() {
-        if (BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled()) {
-            return KnoxTokenUtils.getKnoxProxiedURL(customProperties
-                    .getProperty(ClusterFields.KNOX_GATEWAY_URL.getName()), "beacon");
+        String knoxGatewayUrl = customProperties.getProperty(ClusterFields.KNOX_GATEWAY_URL.getName());
+        if (BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled() && StringUtils.isNotEmpty(knoxGatewayUrl)) {
+            return KnoxTokenUtils.getKnoxProxiedURL(knoxGatewayUrl, "beacon");
         }
         return beaconEndpoint;
     }

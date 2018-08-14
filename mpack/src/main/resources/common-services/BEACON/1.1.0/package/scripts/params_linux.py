@@ -137,6 +137,7 @@ hive_bootstrap_job_retry_attempts = beacon_env['hive_bootstrap_job_retry_attempt
 
 ranger_client_connect_timeout = beacon_env['ranger_client_connect_timeout']
 ranger_client_read_timeout = beacon_env['ranger_client_read_timeout']
+beacon_max_file_list_per_page = beacon_env['beacon_max_file_list_per_page']
 
 etc_prefix_dir = "/etc/beacon"
 

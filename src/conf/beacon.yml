@@ -56,6 +56,7 @@ engine:
     hiveBootstrapJobRetryAttempts : 3
     rangerClientConnectTimeout: 10
     rangerClientReadTimeout: 60
+    maxFileListPerPage: -1
 
 dbStore:
     driver: ${beacon.driver}

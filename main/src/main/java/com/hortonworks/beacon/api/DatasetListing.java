@@ -30,6 +30,7 @@ import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.FileListResult;
 import com.hortonworks.beacon.client.result.FileListResult.FileList;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
@@ -48,7 +49,6 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -59,18 +59,33 @@ final class DatasetListing {
 
     private static final Logger LOG = LoggerFactory.getLogger(DatasetListing.class);
 
-    FileListResult listFiles(Cluster cluster, String path) throws BeaconException {
+    FileListResult listFiles(Cluster cluster, String path, String filter) throws BeaconException {
+        if (filter == null) {
+            filter = StringUtils.EMPTY;
+        }
         Preconditions.checkArgument(StringUtils.isNotEmpty(cluster.getFsEndpoint()), "Namenode Endpoint");
         String dataset = FSUtils.getStagingUri(cluster.getFsEndpoint(), path);
         FileListResult fileListResult;
 
         try {
             FileSystem fs = FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration());
-            FileStatus []fileStatuses = fs.listStatus(new Path(dataset));
-            int total = fileStatuses.length;
-            int copyTill = total > 5000 ? 5000 : total;
-            fileStatuses = Arrays.copyOfRange(fileStatuses, 0, copyTill);
-            if (fileStatuses.length==0) {
+
+            RemoteIterator<FileStatus> iterator = fs.listStatusIterator(new Path(dataset));
+            List<FileStatus> fileStatusList = new ArrayList<>();
+            long totalResults = 0;
+            long maxFilePerPage = BeaconConfig.getInstance().getEngine().getMaxFileListPerPage();
+            if (maxFilePerPage == -1) {
+                maxFilePerPage = Long.MAX_VALUE;
+            }
+            while (iterator.hasNext()) {
+                FileStatus fileStatus = iterator.next();
+                if (fileStatusList.size() <= maxFilePerPage && fileStatus.getPath().getName().contains(filter)) {
+                    fileStatusList.add(fileStatus);
+                }
+                totalResults++;
+            }
+
+            if (fileStatusList.size() == 0) {
                 fileListResult = new FileListResult(APIResult.Status.SUCCEEDED, "Empty");
             } else {
                 fileListResult = new FileListResult(APIResult.Status.SUCCEEDED, "Success");
@@ -85,9 +100,9 @@ final class DatasetListing {
             String parentEncryptionKey = encryptionZoneListing.getEncryptionKeyName(cluster.getName(),
                     baseEncryptedPath);
 
-            FileListResult.FileList[] fileLists = new FileListResult.FileList[fileStatuses.length];
+            FileListResult.FileList[] fileLists = new FileListResult.FileList[fileStatusList.size()];
             int index = 0;
-            for (FileStatus status : fileStatuses) {
+            for (FileStatus status : fileStatusList) {
                 FileList fileList = createFileList(status);
                 if (!parentEncrypted) {
                     String encryptedPath = encryptionZoneListing.getBaseEncryptedPath(cluster.getName(),
@@ -105,7 +120,7 @@ final class DatasetListing {
                 fileLists[index++] = fileList;
             }
             fileListResult.setCollection(fileLists);
-            fileListResult.setTotalResults(total);
+            fileListResult.setTotalResults(totalResults);
         } catch (IOException ioe) {
             LOG.error("Exception occurred while accessing file status : {}", ioe);
             throw new BeaconException("Exception occurred while accessing file status : ", ioe);

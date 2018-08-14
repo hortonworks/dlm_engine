@@ -30,6 +30,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.junit.Assert;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -38,6 +39,9 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.testng.PowerMockTestCase;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.util.NoSuchElementException;
 
 import static org.mockito.Matchers.notNull;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -85,7 +89,8 @@ public class DatasetListingTest extends PowerMockTestCase {
         String baseEncryptedPath = path;
         when(FSUtils.getStagingUri(cluster.getFsEndpoint(), path)).thenReturn(path);
         when(FSUtils.getFileSystem((String) notNull(), (Configuration) notNull())).thenReturn(fs);
-        when(fs.listStatus(new Path(path))).thenReturn(fileStatuses);
+        when(fs.listStatusIterator(new Path(path)))
+                .thenReturn(getRemoteFileStatusIterator(fileStatuses, new Path(path)));
 
         when(EncryptionZoneListing.get()).thenReturn(encryptionZoneListing);
         when(encryptionZoneListing.getBaseEncryptedPath(cluster.getName(), cluster.getFsEndpoint(),
@@ -98,7 +103,7 @@ public class DatasetListingTest extends PowerMockTestCase {
                 .thenReturn(true);
 
         DatasetListing datasetListing = new DatasetListing();
-        FileListResult fileListResult = datasetListing.listFiles(cluster, path);
+        FileListResult fileListResult = datasetListing.listFiles(cluster, path, "");
         Assert.assertEquals(fileListResult.results, 2);
         Assert.assertEquals(fileListResult.totalResults, 2);
         Assert.assertEquals(fileListResult.fileList[0].isEncrypted, true);
@@ -116,18 +121,30 @@ public class DatasetListingTest extends PowerMockTestCase {
         fileStatuses[1].setPath(new Path(subPath1));
 
         when(FSUtils.getStagingUri(cluster.getFsEndpoint(), path)).thenReturn(path);
-        when(fs.listStatus(new Path(path))).thenReturn(fileStatuses);
+        when(fs.listStatusIterator(new Path(path)))
+                .thenReturn(getRemoteFileStatusIterator(fileStatuses, new Path(path)));
         when(encryptionZoneListing.getBaseEncryptedPath(cluster.getName(), cluster.getFsEndpoint(),
                 subPath)).thenReturn(subPath);
         when(encryptionZoneListing.isEncrypted(subPath)).thenReturn(true);
         when(encryptionZoneListing.getEncryptionKeyName(cluster.getName(), subPath)).thenReturn(keyName);
 
-        fileListResult = datasetListing.listFiles(cluster, path);
+        fileListResult = datasetListing.listFiles(cluster, path, "");
         Assert.assertEquals(fileListResult.fileList[0].isEncrypted, true);
         Assert.assertEquals(fileListResult.fileList[0].encryptionKeyName, "default");
         Assert.assertEquals(fileListResult.fileList[1].isEncrypted, false);
         Assert.assertEquals(fileListResult.fileList[1].encryptionKeyName, null);
         Assert.assertEquals(fileListResult.fileList[1].snapshottable, false);
+
+
+        when(fs.listStatusIterator(new Path(path)))
+                .thenReturn(getRemoteFileStatusIterator(fileStatuses, new Path(path)));
+        fileListResult = datasetListing.listFiles(cluster, path, "1");
+
+        Assert.assertEquals(fileListResult.totalResults, 2);
+        Assert.assertEquals(fileListResult.results, 1);
+        Assert.assertEquals(fileListResult.fileList[0].isEncrypted, true);
+        Assert.assertEquals(fileListResult.fileList[0].encryptionKeyName, "default");
+
 
         // path is Snapshotted
         path = "/data2/snapshot/";
@@ -135,10 +152,31 @@ public class DatasetListingTest extends PowerMockTestCase {
         fileStatuses[0] = new FileStatus();
         fileStatuses[0].setPath(new Path(path));
         when(FSUtils.getStagingUri(cluster.getFsEndpoint(), path)).thenReturn(path);
-        when(fs.listStatus(new Path(path))).thenReturn(fileStatuses);
-        fileListResult = datasetListing.listFiles(cluster, path);
+        when(fs.listStatusIterator(new Path(path)))
+                .thenReturn(getRemoteFileStatusIterator(fileStatuses, new Path(path)));
+        fileListResult = datasetListing.listFiles(cluster, path, "");
         Assert.assertEquals(fileListResult.fileList[0].isEncrypted, false);
         Assert.assertEquals(fileListResult.fileList[0].encryptionKeyName, null);
         Assert.assertEquals(fileListResult.fileList[0].snapshottable, true);
+    }
+
+    private RemoteIterator<FileStatus> getRemoteFileStatusIterator(final FileStatus[] fileStatuses, final Path path) {
+        return new RemoteIterator<FileStatus>() {
+            private final FileStatus[] stats = fileStatuses;
+            private int i = 0;
+
+            @Override
+            public boolean hasNext() {
+                return i<stats.length;
+            }
+
+            @Override
+            public FileStatus next() throws IOException {
+                if (!hasNext()) {
+                    throw new NoSuchElementException("No more entry in " + path);
+                }
+                return stats[i++];
+            }
+        };
     }
 }

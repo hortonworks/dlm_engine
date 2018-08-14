@@ -1511,6 +1511,7 @@ GET api/beacon/file/list
 *Parameters:*
 
 * *_filePath_:* FS path to list details.
+* *_filter_:* Filter on the final component of this path.
 
 *REST Call:* GET http://localhost:25968/api/beacon/file/list?filePath=/user/ambari-qa
 

@@ -555,4 +555,10 @@
     <description>Ranger http client read timeout (in seconds)</description>
     <display-name>Ranger http client read timeout (in seconds)</display-name>
   </property>
+  <property>
+    <name>beacon_max_file_list_per_page</name>
+    <value>5000</value>
+    <description>Max no. of file(s)/dir(s) list per page in HDFS API</description>
+    <display-name>Max no. of file(s)/dir(s) list per page in HDFS API</display-name>
+  </property>
 </configuration>

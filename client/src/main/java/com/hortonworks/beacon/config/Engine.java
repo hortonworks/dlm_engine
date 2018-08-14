@@ -63,6 +63,7 @@ public class Engine {
     private int resultsPerPage;
     private int maxResultsPerPage;
     private int maxInstanceCount;
+    private long maxFileListPerPage;
 
     private int socketBufferSize;
     private String services;
@@ -91,8 +92,7 @@ public class Engine {
 
     private String knoxPreAuthTopology;
     private String knoxProxyTopology;
-    private  int knoxProxyTokenThreshold;
-
+    private int knoxProxyTokenThreshold;
 
     //TLS parameters
     private int tlsPort;
@@ -184,6 +184,7 @@ public class Engine {
         setHiveBootstrapJobRetryAttempts(o.getHiveBootstrapJobRetryAttempts());
         setRangerClientConnectTimeout(o.getRangerClientConnectTimeout());
         setRangerClientReadTimeout(o.getRangerClientReadTimeout());
+        setMaxFileListPerPage(o.maxFileListPerPage);
     }
 
     public String getHostName() {
@@ -567,5 +568,13 @@ public class Engine {
 
     public void setRangerClientReadTimeout(int rangerClientReadTimeout) {
         this.rangerClientReadTimeout = rangerClientReadTimeout;
+    }
+
+    public long getMaxFileListPerPage() {
+        return maxFileListPerPage;
+    }
+
+    public void setMaxFileListPerPage(long maxFileListPerPage) {
+        this.maxFileListPerPage = maxFileListPerPage;
     }
 }

@@ -31,11 +31,14 @@ import com.hortonworks.beacon.job.JobStatus;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Unit Tests for cloud replication.
@@ -71,14 +74,14 @@ public class CloudReplicationTest extends ResourceBaseTest {
 
     @Test
     public void submitCloudCredTest() throws Exception {
-        CloudCred cloudCred = createCloudCred(testDataGenerator.getRandomString("CloudCred-Create-test"));
+        CloudCred cloudCred = createAwsCloudCred(testDataGenerator.getRandomString("CloudCred-Create-test"));
         String cloudCredId = targetClient.submitCloudCred(cloudCred);
         assertNotNull(cloudCredId);
     }
 
     @Test
     public void hdfsS3ReplicationTest() throws Exception {
-        CloudCred cloudCred = createCloudCred(testDataGenerator.getRandomString("Run-HDFS-S3-repl"));
+        CloudCred cloudCred = createAwsCloudCred(testDataGenerator.getRandomString("Run-HDFS-S3-repl"));
         String cloudCredId = targetClient.submitCloudCred(cloudCred);
         assertNotNull(cloudCredId);
         final String policyName = testDataGenerator.getRandomString("HDFSS3Policy");
@@ -102,7 +105,7 @@ public class CloudReplicationTest extends ResourceBaseTest {
 
     @Test
     public void s3HdfsReplicationTest() throws Exception {
-        CloudCred cloudCred = createCloudCred(testDataGenerator.getRandomString("Run-S3-HDFS-repl"));
+        CloudCred cloudCred = createAwsCloudCred(testDataGenerator.getRandomString("Run-S3-HDFS-repl"));
         String cloudCredId = targetClient.submitCloudCred(cloudCred);
         assertNotNull(cloudCredId);
         final String policyName = testDataGenerator.getRandomString("S3HDFSPolicy");
@@ -127,7 +130,7 @@ public class CloudReplicationTest extends ResourceBaseTest {
 
     @Test
     public void testHiveS3ReplicationTest() throws Exception {
-        CloudCred cloudCred = createCloudCred(testDataGenerator.getRandomString("Run-HIVE-S3-repl"));
+        CloudCred cloudCred = createAwsCloudCred(testDataGenerator.getRandomString("Run-HIVE-S3-repl"));
         String cloudCredId = targetClient.submitCloudCred(cloudCred);
         assertNotNull(cloudCredId);
         final String policyName = testDataGenerator.getRandomString("HiveS3Policy");
@@ -148,12 +151,124 @@ public class CloudReplicationTest extends ResourceBaseTest {
         targetClient.deletePolicy(policyName, false);
     }
 
-    private CloudCred createCloudCred(String cloudCredName) {
+    @Test
+    public void testSubmitWasbCloudCred() throws Exception {
+        CloudCred cloudCred = createWasbCloudCredAccessKey(
+                testDataGenerator.getRandomString("Submit-Cloud-Cred"));
+        String cloudCredIdAccessKey = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredIdAccessKey);
+        CloudCred cloudCredSasToken = createWasbCloudCredSasToken(
+                testDataGenerator.getRandomString("Submit-Cloud-Cred"));
+        String cloudCredIdSas = targetClient.submitCloudCred(cloudCredSasToken);
+        assertNotNull(cloudCredIdSas);
+    }
+
+    @Test
+    public void testCloudCredAlreadyExistException() throws Exception {
+        String cloudCredName = testDataGenerator.getRandomString("Submit-Cloud-Cred");
+        CloudCred cloudCred = createWasbCloudCredAccessKey(cloudCredName);
+        String cloudCredIdAccessKey = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredIdAccessKey);
+        boolean expected = false;
+        try {
+            CloudCred cloudCredSasToken = createWasbCloudCredSasToken(cloudCredName);
+            String cloudCredIdSas = targetClient.submitCloudCred(cloudCredSasToken);
+            assertNotNull(cloudCredIdSas);
+        } catch (BeaconClientException e) {
+            if (e.getStatus() == Response.Status.CONFLICT.getStatusCode()) {
+                expected = true;
+            }
+        }
+        assertTrue(expected);
+    }
+
+    @Test
+    public void testUpdateWasbCloudCred() throws Exception {
+        String cloudCredName = testDataGenerator.getRandomString("Submit-Cloud-Cred");
+        CloudCred cloudCred = createWasbCloudCredAccessKey(cloudCredName);
+        String cloudCredIdAccessKey = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredIdAccessKey);
+        CloudCred savedCloudCred = targetClient.getCloudCred(cloudCredIdAccessKey);
+        assertEquals(savedCloudCred.getName(), cloudCredName);
+        assertEquals(savedCloudCred.getProvider().name(), CloudCred.Provider.WASB.name());
+        assertEquals(savedCloudCred.getConfigs().get(CloudCred.Config.WASB_ACCOUNT_NAME), "test-account");
+        CloudCred newCloudCred = createWasbCloudCredAccessKey(cloudCredName);
+        newCloudCred.getConfigs().put(CloudCred.Config.WASB_ACCOUNT_NAME, "updated-test-account");
+        targetClient.updateCloudCred(cloudCredIdAccessKey, newCloudCred);
+        CloudCred updatedCloudCred = targetClient.getCloudCred(cloudCredIdAccessKey);
+        assertEquals(updatedCloudCred.getConfigs().get(CloudCred.Config.WASB_ACCOUNT_NAME), "updated-test-account");
+    }
+
+    @Test
+    public void deleteCloudCred() throws Exception {
+        /**
+         * Creating and deleting the cloud cred without any policy should succeed.
+         */
+        String cloudCredName = testDataGenerator.getRandomString("Run-S3-HDFS-repl");
+        CloudCred cloudCred = createAwsCloudCred(cloudCredName);
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        targetClient.deleteCloudCred(cloudCredId);
+
+        cloudCredName = testDataGenerator.getRandomString("Run-S3-HDFS-repl");
+        cloudCred = createAwsCloudCred(cloudCredName);
+        cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName = testDataGenerator.getRandomString("S3HDFSPolicy");
+        String targetDataSet = SOURCE_DIR + policyName;
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        String sourceDataSet = testDataGenerator.getRandomString("s3://dummy/test");
+        ReplicationPolicy policy = testDataGenerator.getPolicy(policyName,
+                sourceDataSet, targetDataSet, "FS", 60,
+                null, sourceCluster.getName(), cloudProps);
+        testDataGenerator.createFSMocks(sourceDataSet);
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        /**
+         * deleting the cloud cred with any active policy should fail.
+         */
+        boolean exception = false;
+        try {
+            targetClient.deleteCloudCred(cloudCredId);
+        } catch (BeaconClientException e) {
+            if (e.getStatus() == Response.Status.BAD_REQUEST.getStatusCode()) {
+                exception = true;
+            }
+        }
+        assertTrue(exception);
+        targetClient.deletePolicy(policyName, false);
+        /**
+         * Deleting the cloud cred after deleting the policy should succeed.
+         */
+        targetClient.deleteCloudCred(cloudCredId);
+    }
+
+
+    private CloudCred createAwsCloudCred(String cloudCredName) {
         Map<CloudCred.Config, String> configs = new HashMap<>();
         configs.put(CloudCred.Config.AWS_ACCESS_KEY, "access.key.value");
         configs.put(CloudCred.Config.AWS_SECRET_KEY, "secret.key.value");
         CloudCred cloudCred = testDataGenerator.buildCloudCred(cloudCredName, CloudCred.Provider.AWS,
                 CloudCred.AuthType.AWS_ACCESSKEY, configs);
+        return cloudCred;
+    }
+
+    private CloudCred createWasbCloudCredAccessKey(String cloudCredName) {
+        Map<CloudCred.Config, String> configs = new HashMap<>();
+        configs.put(CloudCred.Config.WASB_ACCOUNT_NAME, "test-account");
+        configs.put(CloudCred.Config.WASB_ACCESS_KEY, "test-access-key");
+        CloudCred cloudCred = testDataGenerator.buildCloudCred(cloudCredName, CloudCred.Provider.WASB,
+                CloudCred.AuthType.WASB_ACCESSKEY, configs);
+        return cloudCred;
+    }
+
+    private CloudCred createWasbCloudCredSasToken(String cloudCredName) {
+        Map<CloudCred.Config, String> configs = new HashMap<>();
+        configs.put(CloudCred.Config.WASB_CONTAINER_NAME, "test-container");
+        configs.put(CloudCred.Config.WASB_ACCOUNT_NAME, "test-account-name");
+        configs.put(CloudCred.Config.WASB_SAS_TOKEN, "test-sas-token");
+        CloudCred cloudCred = testDataGenerator.buildCloudCred(cloudCredName, CloudCred.Provider.WASB,
+                CloudCred.AuthType.WASB_SAS_TOKEN, configs);
         return cloudCred;
     }
 

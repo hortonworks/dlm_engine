@@ -25,7 +25,6 @@ package com.hortonworks.beacon.api;
 import com.codahale.metrics.annotation.Timed;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
-import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.CloudCredProperties;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.resource.APIResult;
@@ -34,7 +33,7 @@ import com.hortonworks.beacon.client.util.CloudCredBuilder;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.openjpa.persistence.EntityExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +67,9 @@ public class CloudCredResource extends AbstractResourceManager {
         try {
             String entityId = submitInternal(properties);
             return new APIResult(entityId, APIResult.Status.SUCCEEDED, "Cloud credential entity submitted.");
+        } catch (EntityExistsException e) {
+            throw BeaconWebException.newAPIException("Cloud credential with given name already exists",
+                    Status.CONFLICT);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable e) {
@@ -135,26 +137,6 @@ public class CloudCredResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable e) {
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GET
-    @Path("{cloud-cred-id}/validate")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    @Timed(absolute = true, name="api.beacon.cloudcred.validate")
-    public APIResult validatePath(@PathParam("cloud-cred-id") String cloudCredId,
-                           @QueryParam("filePath") String filePath) {
-        try {
-            if (StringUtils.isBlank(filePath)) {
-                throw BeaconWebException.newAPIException("Query parameter [path] is empty.", Status.BAD_REQUEST);
-            }
-            validatePathInternal(cloudCredId, filePath);
-            return new APIResult(APIResult.Status.SUCCEEDED,
-                    "Credential [{}] has access to the path: [{}].", cloudCredId, filePath);
-        } catch (BeaconWebException e) {
-            throw e;
-        } catch (Throwable e) {
-            throw BeaconWebException.newAPIException(e, Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -231,10 +213,5 @@ public class CloudCredResource extends AbstractResourceManager {
         resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
         offset = checkAndSetOffset(offset);
         return cloudCredDao.listCloudCred(filterBy, orderBy, sortOrder, offset, resultsPerPage);
-    }
-
-    private void validatePathInternal(String cloudCredId, String path) {
-        CloudCred cloudCred = cloudCredDao.getCloudCred(cloudCredId);
-        ValidationUtil.validateCloudPath(cloudCred, path);
     }
 }

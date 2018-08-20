@@ -326,18 +326,33 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public void updateCloudCred(String cloudCredId, CloudCred cloudCred) throws BeaconClientException {
-
+    public void updateCloudCred(final String cloudCredId, final CloudCred cloudCred) throws BeaconClientException {
+        new ClientResource<APIResult>() {
+            @Override
+            APIResult api() throws BeaconWebException {
+                return cloudCredResource.update(cloudCredId, cloudCred.asProperties());
+            }
+        }.call();
     }
 
     @Override
-    public void deleteCloudCred(String cloudCredId) throws BeaconClientException {
-
+    public void deleteCloudCred(final String cloudCredId) throws BeaconClientException {
+        new ClientResource<APIResult>() {
+            @Override
+            APIResult api() throws BeaconWebException {
+                return cloudCredResource.delete(cloudCredId);
+            }
+        }.call();
     }
 
     @Override
-    public CloudCred getCloudCred(String cloudCredId) throws BeaconClientException {
-        return null;
+    public CloudCred getCloudCred(final String cloudCredId) throws BeaconClientException {
+        return new ClientResource<CloudCred>() {
+            @Override
+            CloudCred api() throws BeaconWebException {
+                return cloudCredResource.get(cloudCredId);
+            }
+        }.call();
     }
 
     @Override

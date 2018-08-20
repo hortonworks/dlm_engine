@@ -78,6 +78,9 @@ public class ServerStatusResult {
     @XmlElement
     private boolean clusterUpdateSupported;
 
+    @XmlElement
+    private boolean wasbReplicationSupported;
+
     private boolean cloudHosted;
 
 
@@ -230,6 +233,15 @@ public class ServerStatusResult {
     public void setKnoxProxyingSupported(boolean knoxProxyingSupported) {
         this.knoxProxyingSupported = knoxProxyingSupported;
     }
+
+    public boolean isWasbReplicationSupported() {
+        return wasbReplicationSupported;
+    }
+
+    public void setWasbReplicationSupported(boolean wasbReplicationSupported) {
+        this.wasbReplicationSupported = wasbReplicationSupported;
+    }
+
     public boolean isCloudHosted() {
         return cloudHosted;
     }

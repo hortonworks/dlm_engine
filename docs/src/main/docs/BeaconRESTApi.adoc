@@ -1673,7 +1673,8 @@ GET api/beacon/admin/status
     "replication_cloud_hive_withCluster": true,
     "policy_edit": true,
     "clusterUpdateSupported": true,
-    "cloudHosted": false
+    "cloudHosted": false,
+    "wasbReplicationSupported": true
 }
 
 Response with plugins enabled:
@@ -1692,6 +1693,7 @@ Response with plugins enabled:
 
 Supported configurations for AWS:
 
+For AWS access key based,
 [source, properties]
 name=cloud-cred
 provider=AWS
@@ -1706,6 +1708,26 @@ name=cloud-cred
 provider=AWS
 authtype=AWS_INSTANCEPROFILE
 version=1
+
+Supported configurations for WASB:
+
+For WASB access key based.
+
+[source, properties]
+name=cloud-cred
+provider=AWS
+wasb.account.name=test-account
+wasb.access.key=AKIAJ2B5WGGW2QZKJQQA
+authtype=WASB_ACCESSKEY
+
+For WASB SAS token based.
+[source, properties]
+name=cloud-cred-wasb-sas
+provider=WASB
+wasb.account.name=test-account
+wasb.container.name=test-container
+wasb.sas.token=jYe/fQ6wOi9ebIr5FM7emBHafx3JMzNgjxGmpZMD
+authtype=WASB_SAS_TOKEN
 
 *Response:*
 

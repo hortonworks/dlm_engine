@@ -163,9 +163,17 @@ public class CloudCred extends Entity {
     public enum Config {
         VERSION("version", null, null, false),
 
-        //AWS related configs
+        //AWS related configs.
         AWS_ACCESS_KEY("aws.access.key", "fs.s3a.access.key", Provider.AWS, true),
-        AWS_SECRET_KEY("aws.secret.key", "fs.s3a.secret.key", Provider.AWS, true);
+        AWS_SECRET_KEY("aws.secret.key", "fs.s3a.secret.key", Provider.AWS, true),
+
+        //WASB related configs.
+        WASB_ACCOUNT_NAME("wasb.account.name", null, Provider.WASB, false),
+        WASB_ACCESS_KEY("wasb.access.key", "fs.azure.account.key.{wasb.account.name}.blob.core.windows.net",
+                Provider.WASB, true),
+        WASB_CONTAINER_NAME("wasb.container.name", null, Provider.WASB, false),
+        WASB_SAS_TOKEN("wasb.sas.token", "fs.azure.sas.{wasb.container.name}.{wasb.account.name}.blob.core.windows.net",
+                Provider.WASB, true);
 
         private static final Map<String, Config> CONFIG_MAP = new HashMap<>();
 
@@ -223,7 +231,8 @@ public class CloudCred extends Entity {
      * Cloud cred provider types.
      */
     public enum Provider {
-        AWS("s3", "s3a");
+        AWS("s3", "s3a"),
+        WASB("wasb", "wasb");
 
         private final String scheme;
 
@@ -247,7 +256,11 @@ public class CloudCred extends Entity {
      * Cloud cred auth types.
      */
     public enum AuthType {
-        AWS_ACCESSKEY(Config.AWS_ACCESS_KEY, Config.AWS_SECRET_KEY), AWS_SESSIONKEY, AWS_INSTANCEPROFILE;
+        AWS_ACCESSKEY(Config.AWS_ACCESS_KEY, Config.AWS_SECRET_KEY),
+        AWS_SESSIONKEY,
+        AWS_INSTANCEPROFILE,
+        WASB_ACCESSKEY(Config.WASB_ACCESS_KEY, Config.WASB_ACCOUNT_NAME),
+        WASB_SAS_TOKEN(Config.WASB_CONTAINER_NAME, Config.WASB_SAS_TOKEN, Config.WASB_ACCOUNT_NAME);
 
         private final List<Config> requiredConfigs;
 

@@ -84,7 +84,20 @@ public class BeaconCloudCred extends CloudCred {
         List<Config> requiredConfigs = getAuthType().getRequiredConfigs();
         for (Config config : requiredConfigs) {
             if (config.isPassword() && configs.containsKey(config)) {
-                credProvider.createCredentialEntry(config.getHadoopConfigName(), configs.get(config));
+                switch (this.getProvider()) {
+                    case AWS:
+                        credProvider.createCredentialEntry(config.getHadoopConfigName(), configs.get(config));
+                        break;
+                    case WASB:
+                        String hadoopConfig = config.getHadoopConfigName();
+                        for(Config cfg : requiredConfigs) {
+                            hadoopConfig = hadoopConfig.replace("{"+ cfg.getName() + "}", configs.get(cfg));
+                        }
+                        credProvider.createCredentialEntry(hadoopConfig, configs.get(config));
+                        break;
+                    default:
+                        throw new BeaconException("Specified Provider not supported");
+                }
                 credUpdated = true;
             }
         }

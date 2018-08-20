@@ -25,10 +25,13 @@ package com.hortonworks.beacon;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.service.BeaconStoreService;
 import com.hortonworks.beacon.service.Services;
+import org.apache.openjpa.persistence.EntityExistsException;
+import org.apache.openjpa.persistence.RollbackException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -83,10 +86,20 @@ public final class RequestContext {
     }
 
     public void commitTransaction() {
-        if (transaction && entityManager.getTransaction().isActive()) {
-            entityManager.getTransaction().commit();
-            transaction = false;
+
+        try {
+            if (transaction && entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().commit();
+                transaction = false;
+            }
+        } catch (RollbackException e) {
+            if (e.getCause() instanceof EntityExistsException) {
+                throw (EntityExistsException) e.getCause();
+            } else {
+                throw e;
+            }
         }
+
     }
 
     public void rollbackTransaction() {

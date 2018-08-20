@@ -100,6 +100,8 @@ public class AdminResource extends AbstractResourceManager {
         //Beacon DLM 1.1.2 features
         result.setClusterUpdateSupported(true);
 
+        //Beacon DLM 1.1.3 features
+        result.setWasbReplicationSupported(true);
         return result;
     }
 }

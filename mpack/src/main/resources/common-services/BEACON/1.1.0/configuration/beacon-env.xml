@@ -396,7 +396,7 @@
   </property>
   <property>
     <name>beacon_quartz_thread_pool</name>
-    <value>1000</value>
+    <value>500</value>
     <description>Number of threads for running replication jobs.</description>
     <display-name>Beacon Scheduler Threads</display-name>
   </property>

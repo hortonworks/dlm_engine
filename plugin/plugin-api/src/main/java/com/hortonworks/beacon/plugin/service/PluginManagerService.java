@@ -49,11 +49,11 @@ public final class PluginManagerService implements BeaconService {
 
     private static ServiceLoader<Plugin> pluginServiceLoader;
     private static Map<String, Plugin> registeredPluginsMap = new HashMap<>();
-    public static final String DEFAULT_PLUGIN = "RANGER";
+    public static final String RANGER_PLUGIN = "RANGER";
 
     private static final Map<String, Integer> DEFAULTPLUGINSORDERMAP = new HashMap<String, Integer>() {
         {
-            put(DEFAULT_PLUGIN, 1);
+            put(RANGER_PLUGIN, 1);
             put("ATLAS", 2);
         }
     };
@@ -111,11 +111,6 @@ public final class PluginManagerService implements BeaconService {
                 throw new BeaconException("Plugin info cannot be null or empty. Registration failed");
             }
             if (Plugin.Status.INVALID == plugin.getStatus() || Plugin.Status.INACTIVE == plugin.getStatus()) {
-                if (DEFAULT_PLUGIN.equalsIgnoreCase(pluginInfo.getName())) {
-                    LOG.info("Ranger plugin is in invalid state. Not registering any other plugins.",
-                        pluginInfo.getName());
-                    break;
-                }
                 LOG.info("Plugin {} is in {} state. Not registering.", pluginInfo.getName(), plugin.getStatus());
                 continue;
             }

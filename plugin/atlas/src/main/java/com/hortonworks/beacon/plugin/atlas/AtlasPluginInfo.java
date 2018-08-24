@@ -21,13 +21,14 @@
  */
 package com.hortonworks.beacon.plugin.atlas;
 
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.plugin.BeaconInfo;
 import com.hortonworks.beacon.plugin.PluginInfo;
+import com.hortonworks.beacon.plugin.ranger.BeaconRangerPluginImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Atlas Plugin Info.
@@ -38,14 +39,6 @@ public class AtlasPluginInfo implements PluginInfo {
     public static final String PLUGIN_NAME = "Atlas";
     public static final String ATLAS_PLUGIN_VERSION = "0.8";
     public static final String ATLAS_PLUGIN_DESCRIPTION = "Beacon Atlas Plugin";
-
-    private static final String STAGING_DIRECTORY_NAME_FORMAT = "%s%s%s";
-
-    private final BeaconInfo beaconInfo;
-
-    public AtlasPluginInfo(BeaconInfo beaconInfo) {
-        this.beaconInfo = beaconInfo;
-    }
 
     @Override
     public String getName() {
@@ -63,20 +56,8 @@ public class AtlasPluginInfo implements PluginInfo {
     }
 
     @Override
-    public String getDependencies() {
-        return null;
-    }
-
-    @Override
-    public String getStagingDir() throws BeaconException {
-        if (beaconInfo == null) {
-            return "";
-        }
-
-        String s = String.format(STAGING_DIRECTORY_NAME_FORMAT,
-                beaconInfo.getStagingDir(), File.separator, BeaconAtlasPlugin.getPluginName());
-        debugDisplay(s);
-        return s;
+    public List<String> getDependencies() {
+        return Arrays.asList(new BeaconRangerPluginImpl().getInfo().getName().toUpperCase(Locale.ENGLISH));
     }
 
     private void debugDisplay(String s) {

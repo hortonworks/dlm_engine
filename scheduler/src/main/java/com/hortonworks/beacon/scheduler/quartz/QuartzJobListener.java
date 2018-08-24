@@ -67,11 +67,11 @@ public class QuartzJobListener extends JobListenerSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzJobListener.class);
     private String name;
-    private Map<JobKey, JobKey> chainLinks;
+    private Map<String, Map<JobKey, JobKey>> chainLinkForPolicy;
 
     public QuartzJobListener(String name) {
         this.name = name;
-        chainLinks = new Hashtable<>();
+        chainLinkForPolicy = new Hashtable<>();
     }
 
     public String getName() {
@@ -263,7 +263,8 @@ public class QuartzJobListener extends JobListenerSupport {
             }
             if (!jobFailed) {
                 StoreHelper.updateInstanceJobCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
-                boolean chainNextJob = chainNextJob(context, jobContext);
+                String policyId = context.getJobDetail().getKey().getName();
+                boolean chainNextJob = chainNextJob(policyId, context, jobContext);
                 if (!chainNextJob) {
                     StoreHelper.updatePolicyInstanceCompleted(jobContext,
                             detail.getJobStatus(), detail.getJobMessage());
@@ -317,10 +318,14 @@ public class QuartzJobListener extends JobListenerSupport {
         return jobDataMap.getBoolean(value);
     }
 
-    private boolean chainNextJob(JobExecutionContext context, JobContext jobContext)
+    private boolean chainNextJob(String policyId, JobExecutionContext context, JobContext jobContext)
             throws SchedulerException, BeaconException {
+        Map<JobKey, JobKey> chainLink = chainLinkForPolicy.get(policyId);
+        if (chainLink == null) {
+            chainLink = new Hashtable<>();
+        }
         JobKey currentJobKey = context.getJobDetail().getKey();
-        JobKey nextJobKey = chainLinks.get(currentJobKey);
+        JobKey nextJobKey = chainLink.get(currentJobKey);
         boolean isChained = getFlag(QuartzDataMapEnum.CHAINED.getValue(), context.getJobDetail().getJobDataMap());
         // next job is not available in the cache and it is not chained job.
         if (nextJobKey == null && !isChained) {
@@ -336,7 +341,8 @@ public class QuartzJobListener extends JobListenerSupport {
             failCurrentInstance(context, jobContext, msg);
             throw new BeaconException(msg);
         } else {
-            chainLinks.put(currentJobKey, nextJobKey);
+            chainLink.put(currentJobKey, nextJobKey);
+            chainLinkForPolicy.put(policyId, chainLink);
         }
         // This passing of the counter is required to load the context for next job.
         // (check: StoreHelper#transferJobContext)
@@ -374,7 +380,7 @@ public class QuartzJobListener extends JobListenerSupport {
                 || jobStatus.equals(JobStatus.KILLED.name()));
     }
 
-    void addJobChainLink(JobKey firstJob, JobKey secondJob) {
+    void addJobChainLink(String policyId, JobKey firstJob, JobKey secondJob) {
         if (firstJob == null || secondJob == null) {
             throw new IllegalArgumentException("Key cannot be null or empty");
         }
@@ -383,7 +389,21 @@ public class QuartzJobListener extends JobListenerSupport {
             throw new IllegalArgumentException("Key cannot have a null name!");
         }
         LOG.info("Job [key: {}] is chained with job [key: {}]", firstJob, secondJob);
-        chainLinks.put(firstJob, secondJob);
+        Map<JobKey, JobKey> chainLink = chainLinkForPolicy.get(policyId);
+        if (chainLink == null) {
+            chainLink = new Hashtable<>();
+            chainLink.put(firstJob, secondJob);
+            chainLinkForPolicy.put(policyId, chainLink);
+        } else {
+            chainLink.put(firstJob, secondJob);
+        }
+    }
+
+    void clearChainLinkForPolicy(String policyId) {
+        LOG.info("Clearing the DAG of policy: {}", policyId);
+        if (chainLinkForPolicy.containsKey(policyId)) {
+            chainLinkForPolicy.get(policyId).clear();
+        }
     }
 
     private int getAndUpdateCounter(JobDetail jobDetail) {

@@ -20,7 +20,7 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.replication.hive;
+package com.hortonworks.beacon.entity.util.hive;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.HiveDRProperties;
@@ -48,11 +48,11 @@ public class ReplCommand {
 
     private String database;
 
-    ReplCommand(String database) {
+    public ReplCommand(String database) {
         this.database = PolicyHelper.escapeDataSet(database);
     }
 
-    ReplCommand() {
+    public ReplCommand() {
     }
 
     public String getReplDump(long fromEvent) {
@@ -75,7 +75,7 @@ public class ReplCommand {
         return replLoad.toString();
     }
 
-    protected String getReplStatus(Properties properties) {
+    public String getReplStatus(Properties properties) {
         StringBuilder replStatus = new StringBuilder();
         String targetDatabase = properties.getProperty(HiveDRProperties.TARGET_DATASET.getName());
         targetDatabase = PolicyHelper.escapeDataSet(targetDatabase);
@@ -92,7 +92,7 @@ public class ReplCommand {
         return replStatus.toString();
     }
 
-    protected long getReplicatedEventId(Statement statement, Properties properties) throws BeaconException {
+    public long getReplicatedEventId(Statement statement, Properties properties) throws BeaconException {
         long eventReplId = -1L;
         String replStatus = getReplStatus(properties);
         try (ResultSet res = statement.executeQuery(replStatus)) {

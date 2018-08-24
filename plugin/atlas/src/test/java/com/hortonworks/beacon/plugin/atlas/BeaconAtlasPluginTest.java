@@ -22,7 +22,6 @@
 package com.hortonworks.beacon.plugin.atlas;
 
 import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.plugin.BeaconInfo;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -87,7 +86,7 @@ public class BeaconAtlasPluginTest extends RequestProviderBase {
         AtlasMockRESTClient.Builder clientBuilder = new AtlasMockRESTClient.Builder();
         clientBuilder.setFilePath(getZipFilePath());
         beaconAtlasPlugin = new BeaconAtlasPlugin(clientBuilder);
-        beaconAtlasPlugin.register(getBeaconInfo());
+        beaconAtlasPlugin.register();
     }
 
     private String getZipFilePath() {
@@ -109,20 +108,6 @@ public class BeaconAtlasPluginTest extends RequestProviderBase {
         pluginStats = (AtlasPluginStats) beaconAtlasPlugin.getStats();
         assertNotNull(pluginStats);
         assertEquals(pluginStats.getExportStats(), pluginStats.getImportStats());
-    }
-
-    private BeaconInfo getBeaconInfo() {
-        return new BeaconInfo() {
-            @Override
-            public Cluster getCluster() {
-                return null;
-            }
-
-            @Override
-            public Path getStagingDir() {
-                return new Path(STAGING_DIR);
-            }
-        };
     }
 
     private DataSet getDataSet() {

@@ -27,6 +27,7 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.BeaconCluster;
+import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
@@ -47,6 +48,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Hive server metadata client using jdbc.
@@ -72,12 +74,30 @@ public class HS2Client implements HiveMetadataClient, HiveServerClient {
     private static final int TIMEOUT_IN_SECS = 300;
 
     private Connection connection;
-    private String clusterName;
+    private Cluster cluster;
     private  String connectionString;
     private  String knoxGatewayURL;
 
+
     public HS2Client(Cluster cluster) throws BeaconException {
-        this.clusterName = cluster.getName();
+        this.cluster = cluster;
+        // target is not data lake.   We will use pull - so update source cluster with knox proxy address
+        // if enabled
+        Engine engine = BeaconConfig.getInstance().getEngine();
+
+        initializeDriveClass();
+        BeaconCluster beaconCluster = new BeaconCluster(cluster);
+        this.knoxGatewayURL = beaconCluster.getKnoxGatewayURL();
+        if (cluster.isLocal() || !engine.isKnoxProxyEnabled()) {
+            this.connectionString = HiveDRUtils.getHS2ConnectionUrl(cluster.getHsEndpoint());
+        } else {
+            this.connectionString = HiveDRUtils.getKnoxProxiedURL(cluster);
+            LOG.debug("Generated knox propxied hs2 endpoint: {}", connectionString);
+        }
+    }
+
+    public HS2Client(String connectionString, Cluster cluster) throws BeaconException {
+        this.cluster = cluster;
         // target is not data lake.   We will use pull - so update source cluster with knox proxy address
         // if enabled
         Engine engine = BeaconConfig.getInstance().getEngine();
@@ -172,7 +192,7 @@ public class HS2Client implements HiveMetadataClient, HiveServerClient {
             return new Path(dbPath);
         } catch (SQLException e) {
             if (e.getErrorCode() == DB_NOT_EXIST_EC && e.getSQLState().equalsIgnoreCase(DB_NOT_EXIST_STATE)) {
-                throw new ValidationException(e, "Database {} doesn't exist on cluster {}", dbName, clusterName);
+                throw new ValidationException(e, "Database {} doesn't exist on cluster {}", dbName, cluster.getName());
             }
             throw new BeaconException(e);
         } finally {
@@ -207,7 +227,7 @@ public class HS2Client implements HiveMetadataClient, HiveServerClient {
             return propertyValue;
         } catch (SQLException e) {
             if (e.getErrorCode() == DB_NOT_EXIST_EC && e.getSQLState().equalsIgnoreCase(DB_NOT_EXIST_STATE)) {
-                throw new ValidationException(e, "Database {} doesn't exist on cluster {}", dbName, clusterName);
+                throw new ValidationException(e, "Database {} doesn't exist on cluster {}", dbName, cluster.getName());
             }
             throw new BeaconException(e);
         } finally {
@@ -227,7 +247,7 @@ public class HS2Client implements HiveMetadataClient, HiveServerClient {
             statement.execute(query);
         } catch (SQLException e) {
             if (e.getErrorCode() == DB_NOT_EXIST_EC && e.getSQLState().equalsIgnoreCase(DB_NOT_EXIST_STATE)) {
-                throw new ValidationException(e, "Database {} doesn't exist on cluster {}", dbName, clusterName);
+                throw new ValidationException(e, "Database {} doesn't exist on cluster {}", dbName, cluster.getName());
             }
             throw new BeaconException(e);
         } finally {
@@ -351,6 +371,35 @@ public class HS2Client implements HiveMetadataClient, HiveServerClient {
         } finally {
             close(statement);
         }
+    }
+
+    @Override
+    public long getReplicatedEventId(String dbName) throws BeaconException {
+        Statement statement = null;
+        try {
+            statement = getConnection().createStatement();
+            ReplCommand replCommand = new ReplCommand();
+            return replCommand.getReplicatedEventId(statement, getPropertiesForReplicatedEventId(dbName));
+        } catch (SQLException e) {
+            throw new BeaconException(e);
+        } finally {
+            close(statement);
+        }
+    }
+
+    private Properties getPropertiesForReplicatedEventId(String dbName) throws BeaconException {
+        Properties properties = new Properties();
+        properties.put(HiveDRProperties.TARGET_DATASET.getName(), dbName);
+        BeaconCluster beaconCluster = new BeaconCluster(cluster);
+        if (PolicyHelper.isDatasetHCFS(beaconCluster.getHiveWarehouseLocation())) {
+            properties.put(Cluster.ClusterFields.CLOUDDATALAKE.getName(), "true");
+            properties.put(Cluster.ClusterFields.HMSENDPOINT.getName(), beaconCluster.getHmsEndpoint());
+            properties.put(HiveDRProperties.TARGET_HMS_KERBEROS_PRINCIPAL.getName(),
+                    beaconCluster.getHiveMetastoreKerberosPrincipal());
+            properties.put(HiveDRProperties.TARGET_HIVE_SERVER_AUTHENTICATION.getName(),
+                    beaconCluster.getHiveServerAuthentication());
+        }
+        return properties;
     }
 
     private void initializeDriveClass() throws BeaconException {

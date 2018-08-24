@@ -19,36 +19,19 @@
  *    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
  *    OR LOSS OR CORRUPTION OF DATA.
  */
+package com.hortonworks.beacon.scheduler.workflow;
 
-
-package com.hortonworks.beacon.plugin;
-
-
-import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import org.apache.hadoop.fs.Path;
+import com.hortonworks.beacon.replication.ReplicationJobDetails;
+
+import java.util.List;
 
 /**
- * BeaconInfo to be used by the plugin.
+ * Workflow interface to provide the lineage of execution of the policy.
+ *
+ * TODO : We can add Graph<ReplicationJobDetails> to execute a DAG instead of a linkedlist.
  */
-public interface BeaconInfo {
-
-    /**
-     * Return the current cluster of beacon engine.
-     *
-     * @return cluster
-     * @throws BeaconException
-     */
-    Cluster getCluster() throws BeaconException;
-
-    /**
-     * Return the staging directory that beacon uses.   Plugins can create subdirectories
-     * with appropriate permissions underneath this directory.   This directory will be owned by beacon
-     * and writable by the hadoop group (the group for services).
-     *
-     * @return Staging directory
-     * @throws BeaconException
-     */
-    Path getStagingDir() throws BeaconException;
-
+public interface Workflow {
+    List<ReplicationJobDetails> createChainedWorkflow(ReplicationPolicy policy) throws BeaconException;
 }

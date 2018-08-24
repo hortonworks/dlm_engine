@@ -25,7 +25,6 @@ package com.hortonworks.beacon.nodes;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.ReplicationType;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -43,13 +42,13 @@ public final class NodeGenerator {
         return new ReplicationJobDetails(identifier, policyName, type, null);
     }
 
-    public static List<ReplicationJobDetails> appendNodes(List<ReplicationJobDetails> details) {
+    public static void appendEndNode(List<ReplicationJobDetails> details) {
         String policyName = details.get(0).getName();
-        List<ReplicationJobDetails> jobDetails = new ArrayList<>(details);
-        ReplicationJobDetails startNode = generateNode(policyName, START_NODE, ReplicationType.START.getName());
-        jobDetails.add(0, startNode);
         ReplicationJobDetails endNode = generateNode(policyName, END_NODE, ReplicationType.END.getName());
-        jobDetails.add(endNode);
-        return jobDetails;
+        details.add(endNode);
+    }
+
+    public static ReplicationJobDetails getStartNode(String policyName) {
+        return generateNode(policyName, START_NODE, ReplicationType.START.getName());
     }
 }

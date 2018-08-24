@@ -269,7 +269,7 @@ public class BeaconIntegrationTest {
         client.submitCluster(clusterName, cluster);
     }
 
-    private PropertiesIgnoreCase getClusterData(String clusterName, String server, String fsEndPoint,
+    protected PropertiesIgnoreCase getClusterData(String clusterName, String server, String fsEndPoint,
                                                 Map<String, String> customProperties, boolean isLocal) {
         Cluster cluster = new Cluster();
         cluster.setName(clusterName);

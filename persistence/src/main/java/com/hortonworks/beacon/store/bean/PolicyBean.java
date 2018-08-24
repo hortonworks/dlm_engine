@@ -152,6 +152,9 @@ public class PolicyBean {
     @Column(name = "tags")
     private String tags;
 
+    @Column(name = "plugins")
+    private String plugins;
+
     @Column(name = "execution_type")
     private String executionType;
 
@@ -344,6 +347,14 @@ public class PolicyBean {
 
     public void setTags(String tags) {
         this.tags = tags;
+    }
+
+    public String getPlugins() {
+        return plugins;
+    }
+
+    public void setPlugins(String plugins) {
+        this.plugins = plugins;
     }
 
     public String getNotificationType() {

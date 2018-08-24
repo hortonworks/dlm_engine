@@ -24,14 +24,18 @@ package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLogUtils;
+import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import com.hortonworks.beacon.scheduler.StoreHelper;
+import com.hortonworks.beacon.scheduler.workflow.BeaconWorkflow;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
+import com.hortonworks.beacon.store.bean.PolicyBean;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -40,6 +44,7 @@ import org.quartz.listeners.TriggerListenerSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
@@ -64,9 +69,10 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
         JobKey jobKey = trigger.getJobKey();
         String policyId = trigger.getJobKey().getName();
         BeaconLogUtils.prefixId(policyId);
+        PolicyBean policyBean;
         LOG.info("Trigger [key: {}] is fired for Job [key: {}]", trigger.getKey(), jobKey);
         try {
-            StoreHelper.getPolicyById(policyId);
+            policyBean = StoreHelper.getPolicyById(policyId);
         } catch (NoSuchElementException e) {
             LOG.error("Policy [{}] not found. Removing policy trigger.", jobKey.getName(), e);
             trigger.getJobDataMap().put(QuartzDataMapEnum.POLICY_NOT_FOUND.getValue(), true);
@@ -88,7 +94,32 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
                 } else {
                     cache.insert(jobKey.getName(), new InstanceSchedulerDetail());
                 }
+                try {
+                    PolicyDao policyDao = new PolicyDao();
+                    List<ReplicationJobDetails> workflowList = BeaconWorkflow.get().createChainedWorkflow(policyDao
+                            .getReplicationPolicy(policyBean));
+                    BeaconQuartzScheduler.get().linkWorkflow(workflowList, trigger.getJobKey().getName());
+                    setJobCount(context, workflowList.size() + 1);
+                } catch (BeaconException e) {
+                    LOG.error("Exception while creating the job workflow.", e);
+                }
             }
+        }
+    }
+
+    private void setJobCount(JobExecutionContext context, int noOfJobs) {
+        context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.NO_OF_JOBS.getValue(), noOfJobs);
+        if (context.getJobDetail().getJobDataMap().containsKey(
+                                        QuartzDataMapEnum.MAX_NO_OF_JOBS.getValue())) {
+            int maxNoOfJobs = context.getJobDetail().getJobDataMap().getInt(
+                                        QuartzDataMapEnum.MAX_NO_OF_JOBS.getValue());
+            if (maxNoOfJobs > noOfJobs) {
+                context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.MAX_NO_OF_JOBS.getValue(),
+                        maxNoOfJobs);
+            }
+        } else {
+            context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.MAX_NO_OF_JOBS.getValue(),
+                    noOfJobs);
         }
     }
 

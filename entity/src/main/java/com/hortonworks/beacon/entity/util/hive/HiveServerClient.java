@@ -35,4 +35,6 @@ public interface HiveServerClient {
     void killQuery(String queryId) throws BeaconException;
 
     void close();
+
+    long getReplicatedEventId(String dbName) throws BeaconException;
 }

@@ -38,8 +38,6 @@ import com.hortonworks.beacon.store.executors.ClusterListExecutor;
 import com.hortonworks.beacon.store.executors.ClusterPairExecutor;
 import com.hortonworks.beacon.store.executors.ClusterUpdateExecutor;
 import com.hortonworks.beacon.util.ClusterStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,8 +53,6 @@ import static com.hortonworks.beacon.entity.util.ClusterHelper.convertToString;
  * Persistence Cluster helper for Beacon.
  */
 public final class ClusterDao {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ClusterDao.class);
 
     public void submitCluster(Cluster cluster) {
         ClusterBean bean = getClusterBean(cluster);

@@ -23,7 +23,7 @@
 
 package com.hortonworks.beacon.plugin;
 
-import com.hortonworks.beacon.exceptions.BeaconException;
+import java.util.List;
 
 /**
  * This defines the plugin information that the plugin provides.
@@ -52,20 +52,11 @@ public interface PluginInfo {
     String getDescription();
 
     /**
-     * Dependencies of the plugin as a comma separated components in the format component-version.
-     * Currently just logged by the plugin manager on discovery.
+     * Dependencies of the plugin.
      *
      * @return dependencies.
      */
-    String getDependencies();
-
-    /**
-     * Return the absolute path of the plugin staging directory.   This must be owned and managed by the
-     * plugin.
-     *
-     * @return staging dir
-     */
-    String getStagingDir() throws BeaconException;
+    List<String> getDependencies();
 
     /**
      * Return true if job should continue running other actions on plugin failure else return false.

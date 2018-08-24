@@ -118,6 +118,9 @@ public class PolicyList {
         public List<String> tags;
 
         @XmlElement
+        public List<String> plugins;
+
+        @XmlElement
         public Properties customProperties;
 
         @XmlElement

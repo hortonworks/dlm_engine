@@ -57,18 +57,21 @@ public final class QuartzJobDetailBuilder {
         return jobDetail;
     }
 
+    static JobDetail createStartJobDetail(ReplicationJobDetails startJob, boolean recovery, String policyId) {
+        JobDetail jobDetail = createJobDetail(startJob, recovery, false, policyId, String.valueOf(0));
+        jobDetail.getJobDataMap().put(QuartzDataMapEnum.COUNTER.getValue(), 0);
+        return jobDetail;
+    }
+
     static List<JobDetail> createJobDetailList(List<ReplicationJobDetails> jobs,
                                                boolean recovery, String policyId) {
         List<JobDetail> jobDetails = new ArrayList<>();
         int i = 0;
         for (; i < jobs.size() - 1; i++) {
-            jobDetails.add(createJobDetail(jobs.get(i), recovery, true, policyId, String.valueOf(i)));
+            jobDetails.add(createJobDetail(jobs.get(i), recovery, true, policyId, String.valueOf(i+1)));
         }
-        jobDetails.add(createJobDetail(jobs.get(i), recovery, false, policyId, String.valueOf(i)));
+        jobDetails.add(createJobDetail(jobs.get(i), recovery, false, policyId, String.valueOf(i+1)));
         // Add the number of jobs, which is used for inserting the job instance.
-        JobDetail jobDetail = jobDetails.get(0);
-        jobDetail.getJobDataMap().put(QuartzDataMapEnum.NO_OF_JOBS.getValue(), jobs.size());
-        jobDetail.getJobDataMap().put(QuartzDataMapEnum.COUNTER.getValue(), 0);
         JobDetail lastJobDetail = jobDetails.get(jobDetails.size() - 1);
         lastJobDetail.getJobDataMap().put(QuartzDataMapEnum.IS_END_JOB.getValue(), true);
         return jobDetails;
@@ -89,4 +92,6 @@ public final class QuartzJobDetailBuilder {
         LOG.info("JobDetail [key: {}] is created.", jobDetail.getKey());
         return jobDetail;
     }
+
+
 }

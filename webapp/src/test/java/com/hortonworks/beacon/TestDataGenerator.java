@@ -75,6 +75,7 @@ public abstract class TestDataGenerator {
         policy.getCustomProperties().setProperty("targetSnapshotRetentionAgeLimit", "10");
         policy.getCustomProperties().setProperty("targetSnapshotRetentionNumber", "1");
         policy.getCustomProperties().setProperty("tags", "owner=producer@xyz.com,component=sales");
+        policy.getCustomProperties().setProperty("plugins", "RANGER,ATLAS");
         policy.getCustomProperties().setProperty("retryAttempts", "0");
         policy.getCustomProperties().setProperty("retryDelay", "120");
         policy.getCustomProperties().setProperty("user", System.getProperty("user.name"));

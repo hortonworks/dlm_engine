@@ -22,13 +22,17 @@
 
 package com.hortonworks.beacon.replication.hive;
 
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
+import com.hortonworks.beacon.entity.util.hive.HiveServerClient;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.HiveActionType;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -39,9 +43,17 @@ import java.util.Properties;
 public class HiveJobBuilder extends JobBuilder {
 
     public List<ReplicationJobDetails> buildJob(ReplicationPolicy policy) throws BeaconException {
-
-        return Arrays.asList(exportReplicationJob(policy),
-                importReplicationJob(policy));
+        List<ReplicationJobDetails> replicationJobDetailsList = new ArrayList<>();
+        ReplicationJobDetails exportJobDetails = exportReplicationJob(policy);
+        ReplicationJobDetails importJobDetails = importReplicationJob(policy);
+        replicationJobDetailsList.add(exportJobDetails);
+        replicationJobDetailsList.add(importJobDetails);
+        boolean bootstrap = isBootstrapRun(policy);
+        if (bootstrap) {
+            replicationJobDetailsList.add(exportJobDetails);
+            replicationJobDetailsList.add(importJobDetails);
+        }
+        return replicationJobDetailsList;
     }
 
     private ReplicationJobDetails exportReplicationJob(ReplicationPolicy policy) throws BeaconException {
@@ -64,5 +76,14 @@ public class HiveJobBuilder extends JobBuilder {
         String type = hiveDRProperties.getProperty(ReplicationPolicy.ReplicationPolicyFields.TYPE.getName());
 
         return new ReplicationJobDetails(type, name, type, hiveDRProperties);
+    }
+
+    private boolean isBootstrapRun(ReplicationPolicy policy) throws BeaconException {
+        Cluster cluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
+        Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
+        HiveServerClient hiveServerClient = HiveClientFactory.getHiveServerClient(cluster.getHsEndpoint(),
+                                                                                    targetCluster);
+        long replId = hiveServerClient.getReplicatedEventId(policy.getTargetDataset());
+        return replId <= 0;
     }
 }

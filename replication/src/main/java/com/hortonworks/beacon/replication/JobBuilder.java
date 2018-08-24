@@ -31,5 +31,6 @@ import java.util.List;
  * Abstract Class JobBuilder definition required to be overridden by actual implemented class .
  */
 public abstract class JobBuilder {
-    public abstract List<ReplicationJobDetails> buildJob(ReplicationPolicy policy) throws BeaconException;
+    public abstract List<ReplicationJobDetails> buildJob(ReplicationPolicy policy) throws
+            BeaconException;
 }

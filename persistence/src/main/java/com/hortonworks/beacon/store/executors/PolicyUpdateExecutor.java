@@ -119,12 +119,18 @@ public class PolicyUpdateExecutor  extends BaseExecutor {
             paramNames.add(key);
             paramValues.add(updatedPolicy.getEndTime());
         }
+        if (updatedPolicy.getPlugins() != null) {
+            key = "plugins" + index++;
+            queryBuilder.append(", b.plugins = :").append(key);
+            paramNames.add(key);
+            paramValues.add(updatedPolicy.getPlugins());
+        }
         key = "frequencyInSec" + index++;
         queryBuilder.append(", b.frequencyInSec = :").append(key);
         paramNames.add(key);
         paramValues.add(updatedPolicy.getFrequencyInSec());
 
-        key = "id" + index++;
+        key = "id" + index;
         queryBuilder.append(" where b.id = :").append(key);
         paramNames.add(key);
         paramValues.add(updatedPolicy.getId());

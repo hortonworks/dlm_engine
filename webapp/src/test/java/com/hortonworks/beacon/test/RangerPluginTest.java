@@ -23,65 +23,40 @@
 package com.hortonworks.beacon.test;
 
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.plugin.BeaconInfo;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.plugin.Plugin;
 import com.hortonworks.beacon.plugin.PluginInfo;
 import com.hortonworks.beacon.plugin.PluginStats;
-import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import com.hortonworks.beacon.util.FSUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Properties;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implementation of Plugin for IT purpose.
  */
-public class PluginTest implements Plugin {
-    private static String stagingPath;
-    private static final String PLUGIN_NAME = PluginManagerService.RANGER_PLUGIN;
+public class RangerPluginTest implements Plugin {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerPluginTest.class);
+    private static String stagingPath = BeaconConfig.getInstance().getEngine().getPluginStagingPath();
     // Used only for Beacon IT purpose
-    private static boolean allowPlugin = true;
 
     @Override
-    public PluginInfo register(BeaconInfo info) throws BeaconException {
-        Properties clusterProperties = info.getCluster().getCustomProperties();
-        if (clusterProperties != null) {
-            String allowPluginStr = (String) clusterProperties.get("allowPluginsOnThisCluster");
-            if (StringUtils.isNotBlank(allowPluginStr) && allowPluginStr.equalsIgnoreCase("true")) {
-                allowPlugin = true;
-            }
-        }
-
-        PluginInfo pluginInfo = getPluginDetails(info);
-        // allowPlugin used only for Beacon IT purpose
-        if (allowPlugin) {
-            // Create staging path on target
-            FileSystem targetFS = FSUtils.getFileSystem(info.getCluster().getFsEndpoint(), new Configuration());
-            Path exportPath;
-            try {
-                exportPath = new Path(pluginInfo.getStagingDir());
-                targetFS.mkdirs(exportPath);
-            } catch (IOException e) {
-                throw new BeaconException(e);
-            }
-        }
-
+    public PluginInfo register() throws BeaconException {
+        PluginInfo pluginInfo = getPluginDetails();
         return pluginInfo;
     }
 
     @Override
     public Path exportData(DataSet dataset) throws BeaconException {
-        if (!allowPlugin) {
-            return null;
-        }
-
+        LOG.info("Ranger policy export started");
         Cluster srcCluster = dataset.getSourceCluster();
         /**
          * Returning dummy path in case of cloud to hdfs replication as srcCluster will
@@ -101,14 +76,14 @@ public class PluginTest implements Plugin {
             throw new BeaconException(e);
         }
         Path tmpPath = new Path(srcCluster.getFsEndpoint(), exportPath);
+        LOG.debug("Export path: {}", tmpPath);
+        LOG.info("Ranger policy export finished");
         return tmpPath;
     }
 
     @Override
     public void importData(DataSet dataset, Path exportedDataPath) throws BeaconException {
-        if (!allowPlugin) {
-            return;
-        }
+        LOG.info("Ranger policy import started");
         Cluster targetCluster = dataset.getTargetCluster();
         /**
          * Returning in case of hdfs to cloud replication as tgtCluster will
@@ -117,7 +92,6 @@ public class PluginTest implements Plugin {
         if (targetCluster == null) {
             return;
         }
-        Path targetPath = new Path(targetCluster.getFsEndpoint(), stagingPath);
         FileSystem targetFS = FSUtils.getFileSystem(targetCluster.getFsEndpoint(), new Configuration());
         try {
             /* TODO - DO we have to delete sample.txt and this file after test run */
@@ -125,11 +99,17 @@ public class PluginTest implements Plugin {
         } catch (IOException e) {
             throw new BeaconException(e);
         }
+        LOG.info("Ranger policy import finished");
+    }
+
+    @Override
+    public boolean isEnabled(String cluster) throws BeaconException {
+        return true;
     }
 
     @Override
     public PluginInfo getInfo() throws BeaconException {
-        return null;
+        return getPluginDetails();
     }
 
     @Override
@@ -142,11 +122,11 @@ public class PluginTest implements Plugin {
         return Status.ACTIVE;
     }
 
-    private static PluginInfo getPluginDetails(final BeaconInfo beaconInfo) {
+    private static PluginInfo getPluginDetails() {
         PluginInfo info = new PluginInfo() {
             @Override
             public String getName() {
-                return PLUGIN_NAME;
+                return "Ranger";
             }
 
             @Override
@@ -160,14 +140,8 @@ public class PluginTest implements Plugin {
             }
 
             @Override
-            public String getDependencies() {
-                return null;
-            }
-
-            @Override
-            public String getStagingDir() throws BeaconException {
-                stagingPath = beaconInfo.getStagingDir() + File.separator + PLUGIN_NAME;
-                return stagingPath;
+            public List<String> getDependencies() {
+                return new ArrayList<>();
             }
 
             @Override
@@ -179,6 +153,6 @@ public class PluginTest implements Plugin {
     }
 
     public static String getPluginName() {
-        return PLUGIN_NAME;
+        return "Ranger";
     }
 }

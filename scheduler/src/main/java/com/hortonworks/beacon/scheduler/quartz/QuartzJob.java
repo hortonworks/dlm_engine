@@ -104,6 +104,8 @@ public class QuartzJob implements InterruptableJob {
             jobKey = context.getJobDetail().getKey();
             LOG.info("Job [instance: {}, offset: {}, type: {}] execution started.", jobContext.getJobInstanceId(),
                     jobContext.getOffset(), jobDetail.getType());
+
+            // TODO : fix Property doesn't get set in case of pairing is suspended, but retry params are accessed.
             jobDetail.setProperties(buildProperties(jobDetail));
 
             replicationJob = BeaconJobImplFactory.getBeaconJobImpl(jobDetail);

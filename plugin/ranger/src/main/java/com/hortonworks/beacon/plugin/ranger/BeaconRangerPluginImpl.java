@@ -22,9 +22,9 @@
 
 package com.hortonworks.beacon.plugin.ranger;
 
-import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.entity.BeaconCluster;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.plugin.BeaconInfo;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.plugin.Plugin;
 import com.hortonworks.beacon.plugin.PluginInfo;
@@ -35,7 +35,6 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,27 +60,22 @@ public class BeaconRangerPluginImpl implements Plugin{
     /**
      * Get plugin status.   Valid statuses are ACTIVE, INACTIVE, INITIALIZING, ERROR
      */
-    private static final String PLUGIN_NAME = "ranger";
     private static final Logger LOG = LoggerFactory.getLogger(BeaconRangerPluginImpl.class);
     private Plugin.Status pluginStatus=Plugin.Status.INACTIVE;
 
     /**
-     * Register the plugin with beacon specific information.    The BeaconInfo object will provide
-     * the beacon staging directory location and cluster name among others.  Beacon plugin system will
+     * Register the plugin with beacon specific information.   Beacon plugin system will
      * call this method on the plugin provider on discovery.   The plugin should make copy the info for
      * future usage.  The plugin should return the information on the plugin as a response.
      *
-     * @param info
      * @return
      * @throws BeaconException
      */
 
     @Override
-    public PluginInfo register(BeaconInfo info) throws BeaconException{
-        if (!StringUtils.isEmpty(info.getCluster().getRangerEndpoint())) {
-            pluginStatus=Plugin.Status.ACTIVE;
-        }
-        return getPluginDetails(info);
+    public PluginInfo register() throws BeaconException{
+        pluginStatus=Plugin.Status.ACTIVE;
+        return getPluginDetails();
     }
 
     /**
@@ -164,7 +158,7 @@ public class BeaconRangerPluginImpl implements Plugin{
         }
 
         if (CollectionUtils.isEmpty(rangerPolicies)) {
-            rangerPolicies=new ArrayList<RangerPolicy>();
+            rangerPolicies=new ArrayList<>();
         }
         List<RangerPolicy> rangerPoliciesWithDenyPolicy = rangerAdminRESTClient.addSingleDenyPolicies(dataset,
                 rangerPolicies);
@@ -178,6 +172,15 @@ public class BeaconRangerPluginImpl implements Plugin{
             rangerAdminRESTClient.importRangerPolicies(dataset, rangerExportPolicyList);
             LOG.info("Ranger policy import finished");
         }
+    }
+
+    @Override
+    public boolean isEnabled(String cluster) throws BeaconException {
+        if (StringUtils.isEmpty(cluster)) {
+            return false;
+        }
+        BeaconCluster beaconCluster = new BeaconCluster(ClusterHelper.getActiveCluster(cluster));
+        return StringUtils.isNotEmpty(beaconCluster.getRangerEndpoint());
     }
 
     public static String getSourceRangerEndpoint(DataSet dataSet) {
@@ -200,10 +203,9 @@ public class BeaconRangerPluginImpl implements Plugin{
      * Return plugin specific information.
      *
      * @return Plugin info
-     * @throws BeaconException
      */
     @Override
-    public PluginInfo getInfo() throws BeaconException{
+    public PluginInfo getInfo() {
         PluginInfo info = new PluginInfo() {
             @Override
             public String getName() {
@@ -221,15 +223,8 @@ public class BeaconRangerPluginImpl implements Plugin{
             }
 
             @Override
-            public String getDependencies() {
-                return null;
-            }
-
-            @Override
-            public String getStagingDir() throws BeaconException {
-                Path path =  new Path(BeaconConfig.getInstance().getEngine().getPluginStagingPath());
-                String stagingPath = path + File.separator + PLUGIN_NAME;
-                return stagingPath;
+            public List<String> getDependencies() {
+                return new ArrayList<>();
             }
 
             @Override
@@ -263,7 +258,7 @@ public class BeaconRangerPluginImpl implements Plugin{
         return pluginStatus;
     }
 
-    private static PluginInfo getPluginDetails(final BeaconInfo beaconInfo) {
+    private static PluginInfo getPluginDetails() {
         PluginInfo info = new PluginInfo() {
             @Override
             public String getName() {
@@ -281,14 +276,8 @@ public class BeaconRangerPluginImpl implements Plugin{
             }
 
             @Override
-            public String getDependencies() {
-                return null;
-            }
-
-            @Override
-            public String getStagingDir() throws BeaconException {
-                String stagingPath = beaconInfo.getStagingDir() + File.separator + PLUGIN_NAME;
-                return stagingPath;
+            public List<String> getDependencies() {
+                return new ArrayList<>();
             }
 
             @Override

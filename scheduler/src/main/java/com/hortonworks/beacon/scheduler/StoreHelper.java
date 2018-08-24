@@ -164,6 +164,7 @@ public final class StoreHelper {
         Integer prevOffset = Integer.parseInt(currentOffset) - 1;
         String instanceId = getInstanceId(qContext.getJobDetail());
 
+        LOG.debug("Transferring jobContext from {} to {}", prevOffset, currentOffset);
         InstanceJobBean bean = new InstanceJobBean(instanceId, prevOffset);
         InstanceJobExecutor executor = new InstanceJobExecutor(bean);
         InstanceJobBean instanceJob = executor.getInstanceJob(InstanceJobExecutor.InstanceJobQuery.GET_INSTANCE_JOB);
@@ -260,6 +261,9 @@ public final class StoreHelper {
                 break;
             case KILLED:
                 BeaconEvents.createEvents(Events.KILLED, EventEntityType.POLICYINSTANCE, bean);
+                break;
+            case FAILED_ADMIN:
+                BeaconEvents.createEvents(Events.FAILED, EventEntityType.POLICYINSTANCE, bean);
                 break;
             default:
                 LOG.error("Job status: [{}] is not supported.", jobStatus.name());

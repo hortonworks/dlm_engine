@@ -178,10 +178,15 @@ public class IndependentAPIIT extends BeaconIntegrationTest {
         verifyLatestPolicyInstanceStatus(targetClient, policyName, JobStatus.SUCCESS);
 
         //Update the cluster to make only one cluster Kerberized.
-        Properties properties = new Properties();
+        Map<String, String> customProperties = new HashMap<>();
         String nnPricipal = "nnAdmin" + BeaconConstants.DOT_SEPARATOR + getTargetBeaconServerHostName();
-        properties.put(BeaconConstants.NN_PRINCIPAL, nnPricipal);
-        updateCluster(SOURCE_CLUSTER, getTargetBeaconServer(), properties);
+        customProperties.put(BeaconConstants.NN_PRINCIPAL, nnPricipal);
+
+        Properties sourceProperties = getClusterData(SOURCE_CLUSTER, getSourceBeaconServer(), srcFsEndPoint,
+                customProperties, false);
+        sourceProperties.remove("name");
+
+        updateCluster(SOURCE_CLUSTER, getTargetBeaconServer(), sourceProperties);
 
         //Make sure the cluster pair is in 'SUSPENDED' state.
         verifyClusterPairStatus(getTargetBeaconServer(), ClusterStatus.SUSPENDED);
@@ -202,8 +207,12 @@ public class IndependentAPIIT extends BeaconIntegrationTest {
         //The policy instance status should be in 'FAILED' state as the cluster pair is in 'SUSPENDED' state.
         verifyLatestPolicyInstanceStatus(targetClient, policyName, JobStatus.FAILED);
 
+        Properties targetProperties = getClusterData(TARGET_CLUSTER, getTargetBeaconServer(), tgtFsEndPoint,
+                customProperties, true);
+        targetProperties.remove("name");
+
         //Now update the other cluster as well
-        updateCluster(TARGET_CLUSTER, getTargetBeaconServer(), properties);
+        updateCluster(TARGET_CLUSTER, getTargetBeaconServer(), targetProperties);
 
         //Make sure the cluster pair is in 'PAIRED' state.
         verifyClusterPairStatus(getTargetBeaconServer(), ClusterStatus.PAIRED);

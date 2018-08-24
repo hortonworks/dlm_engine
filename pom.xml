@@ -50,7 +50,7 @@
     <name>beacon</name>
     <organization>
         <name>Hortonworks, Inc</name>
-        <url>http://www.hortonwork.com</url>
+        <url>http://www.hortonworks.com</url>
     </organization>
     <repositories>
         <repository>
@@ -948,8 +948,8 @@
 
     <properties>
         <snakeyaml.version>1.17</snakeyaml.version>
-        <hadoop.version>2.7.3.2.6.5.1000-SNAPSHOT</hadoop.version>
-        <hive.version>1.2.1000.2.6.5.1000-SNAPSHOT</hive.version>
+        <hadoop.version>2.7.3.2.6.5.1002-SNAPSHOT</hadoop.version>
+        <hive.version>1.2.1000.2.6.5.1002-SNAPSHOT</hive.version>
         <exec-maven-plugin.version>1.5.0</exec-maven-plugin.version>
         <jersey.version>1.19.3</jersey.version>
         <quartz.version>2.3.0</quartz.version>

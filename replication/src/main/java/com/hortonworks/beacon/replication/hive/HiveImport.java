@@ -30,6 +30,7 @@ import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
 import com.hortonworks.beacon.entity.util.hive.HiveServerClient;
+import com.hortonworks.beacon.entity.util.hive.ReplCommand;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.exceptions.BeaconSuspendException;
 import com.hortonworks.beacon.job.JobContext;

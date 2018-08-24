@@ -52,10 +52,6 @@ import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLogUtils;
-import com.hortonworks.beacon.plugin.service.PluginJobBuilder;
-import com.hortonworks.beacon.replication.JobBuilder;
-import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
-import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.internal.AdminJobService;
@@ -553,6 +549,9 @@ public class PolicyResource extends AbstractResourceManager {
         if (updatedPolicy.getEndTime() != null) {
             modifiedExistingPolicy.setEndTime(updatedPolicy.getEndTime());
         }
+        if (updatedPolicy.getPlugins() != null) {
+            modifiedExistingPolicy.setPlugins(updatedPolicy.getPlugins());
+        }
         modifiedExistingPolicy.setFrequencyInSec(updatedPolicy.getFrequencyInSec());
     }
 
@@ -598,27 +597,10 @@ public class PolicyResource extends AbstractResourceManager {
         try {
             RequestContext.get().startTransaction();
             ValidationUtil.validateIfAPIRequestAllowed(policy);
-            JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
-            List<ReplicationJobDetails> policyJobs = jobBuilder.buildJob(policy);
-            if (policyJobs == null || policyJobs.isEmpty()) {
-                throw BeaconWebException.newAPIException("No jobs to schedule for: {}", policy.getName());
-            }
-            // Now get plugin related jobs and add it to front of the job list
-            List<ReplicationJobDetails> pluginJobs = new PluginJobBuilder().buildJob(policy);
-
-            List<ReplicationJobDetails> jobs = new ArrayList<>();
-            if (pluginJobs != null && !pluginJobs.isEmpty()) {
-                jobs.addAll(pluginJobs);
-            }
-            jobs.addAll(policyJobs);
-
-            // Update the policy jobs in policy table
-            String jobList = getPolicyJobList(jobs);
-            policyDao.updatePolicyJobs(policy.getPolicyId(), policy.getName(), jobList);
 
             BeaconScheduler scheduler = getScheduler();
-            scheduler.schedulePolicy(jobs, false, policy.getPolicyId(), policy.getStartTime(), policy.getEndTime(),
-                    policy.getFrequencyInSec());
+            scheduler.schedulePolicy(false, policy.getName(), policy.getPolicyId(), policy.getStartTime(),
+                    policy.getEndTime(), policy.getFrequencyInSec());
             policyDao.updatePolicyStatus(policy.getPolicyId(), JobStatus.RUNNING.name());
             BeaconEvents.createEvents(Events.SCHEDULED, EventEntityType.POLICY,
                     policyDao.getPolicyBean(policy), getEventInfo(policy, false));
@@ -1080,17 +1062,6 @@ public class PolicyResource extends AbstractResourceManager {
             throw BeaconWebException.newAPIException(
                     Response.Status.fromStatusCode(e.getStatus()), e, "Remote cluster returned error: ");
         }
-    }
-
-    private static String getPolicyJobList(final List<ReplicationJobDetails> jobs) {
-        StringBuilder jobList = new StringBuilder();
-        for (ReplicationJobDetails job : jobs) {
-            if (jobList.length() > 0) {
-                jobList.append(",");
-            }
-            jobList.append(job.getIdentifier());
-        }
-        return jobList.toString();
     }
 
     private void scheduleSyncPolicyDelete(String remoteEndPoint, String remoteKnoxURL, String policyName, Exception e)

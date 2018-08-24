@@ -23,8 +23,9 @@ package com.hortonworks.beacon.plugin.atlas;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.entity.BeaconCluster;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.plugin.BeaconInfo;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.plugin.Plugin;
 import com.hortonworks.beacon.plugin.PluginInfo;
@@ -41,7 +42,6 @@ public class BeaconAtlasPlugin implements Plugin {
     private static final Logger LOG = LoggerFactory.getLogger(BeaconAtlasPlugin.class);
 
     private Status pluginStatus;
-    private BeaconInfo beaconInfo;
 
     private PluginInfo pluginInfo;
     private final AtlasPluginStats pluginStats;
@@ -70,15 +70,14 @@ public class BeaconAtlasPlugin implements Plugin {
     }
 
     @Override
-    public PluginInfo register(BeaconInfo info) {
+    public PluginInfo register() {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> BeaconAtlasPlugin.register");
         }
 
-        this.beaconInfo = info;
-        this.pluginInfo = getPluginDetails(info);
+        this.pluginInfo = getPluginDetails();
         setStatusToActive();
-        return getPluginDetails(info);
+        return getPluginDetails();
     }
 
     @Override
@@ -106,7 +105,7 @@ public class BeaconAtlasPlugin implements Plugin {
 
     @Override
     public PluginInfo getInfo() {
-        return getPluginDetails(beaconInfo);
+        return getPluginDetails();
     }
 
     @Override
@@ -133,12 +132,12 @@ public class BeaconAtlasPlugin implements Plugin {
         pluginStatus = Status.INACTIVE;
     }
 
-    private PluginInfo getPluginDetails(final BeaconInfo info) {
+    private PluginInfo getPluginDetails() {
         if (pluginInfo != null) {
             return pluginInfo;
         }
 
-        pluginInfo = new AtlasPluginInfo(info);
+        pluginInfo = new AtlasPluginInfo();
         return pluginInfo;
     }
 
@@ -156,5 +155,14 @@ public class BeaconAtlasPlugin implements Plugin {
         }
 
         LOG.debug(message, params);
+    }
+
+    @Override
+    public boolean isEnabled(String cluster) throws BeaconException {
+        if (StringUtils.isEmpty(cluster)) {
+            return false;
+        }
+        BeaconCluster beaconCluster = new BeaconCluster(ClusterHelper.getActiveCluster(cluster));
+        return StringUtils.isNotEmpty(beaconCluster.getAtlasEndpoint());
     }
 }

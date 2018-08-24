@@ -52,7 +52,7 @@ public final class ClusterHelper {
 
     public static List<String> convertToList(String tags) {
         List<String> tagList = new ArrayList<>();
-        if (org.apache.commons.lang.StringUtils.isNotBlank(tags)) {
+        if (StringUtils.isNotBlank(tags)) {
             String[] strings = tags.split(BeaconConstants.COMMA_SEPARATOR);
             tagList = Arrays.asList(strings);
         }

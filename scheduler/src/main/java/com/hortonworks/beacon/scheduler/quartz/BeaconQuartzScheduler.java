@@ -36,6 +36,7 @@ import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.service.BeaconStoreService;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobDetail;
+import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.slf4j.Logger;
@@ -181,18 +182,37 @@ public final class BeaconQuartzScheduler implements BeaconScheduler, BeaconServi
 
     // using first job for creating trigger.
     @Override
-    public String schedulePolicy(List<ReplicationJobDetails> jobs, boolean recovery, String policyId, Date startTime,
+    public String schedulePolicy(boolean recovery, String policyName, String policyId, Date startTime,
                                  Date endTime, int frequency) throws BeaconException {
-        jobs = NodeGenerator.appendNodes(jobs);
-        List<JobDetail> jobDetails = QuartzJobDetailBuilder.createJobDetailList(jobs, recovery, policyId);
+        ReplicationJobDetails startJob = NodeGenerator.getStartNode(policyName);
+        JobDetail startJobDetail = QuartzJobDetailBuilder.createStartJobDetail(startJob, recovery, policyId);
         Trigger trigger = QuartzTriggerBuilder.createTrigger(policyId, START_NODE_GROUP, startTime, endTime,
                 frequency);
         try {
-            scheduler.scheduleChainedJobs(jobDetails, trigger);
+            scheduler.scheduleJob(startJobDetail, trigger);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
         return policyId;
+    }
+
+    public void linkWorkflow(List<ReplicationJobDetails> replicationJobDetails, String policyId)
+                                                                                                throws BeaconException {
+        List<JobDetail> jobDetailList = QuartzJobDetailBuilder.createJobDetailList(replicationJobDetails, false,
+                policyId);
+        try {
+            JobKey jobKey = new JobKey(policyId, START_NODE_GROUP);
+            if (scheduler.checkExists(jobKey)) {
+                Trigger trigger  = scheduler.getTriggerForJob(jobKey); // get the triggers.
+                scheduler.scheduleChainedJobs(policyId, scheduler.getJobDetail(policyId, START_NODE_GROUP),
+                        jobDetailList, trigger);
+            } else {
+                LOG.info("Policy has been interrupted/deleted!, skipping th lineage creation.");
+            }
+        } catch (SchedulerException e) {
+            throw new BeaconException(e);
+        }
+
     }
 
     @Override
@@ -303,7 +323,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler, BeaconServi
     }
 
     public boolean checkExists(String policyId, String group) throws SchedulerException {
-        return scheduler.checkExists(policyId, group);
+        return scheduler.checkExists(new JobKey(policyId, group));
     }
 
     @Override

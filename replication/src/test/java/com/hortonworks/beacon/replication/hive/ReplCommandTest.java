@@ -26,6 +26,7 @@ package com.hortonworks.beacon.replication.hive;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
+import com.hortonworks.beacon.entity.util.hive.ReplCommand;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;

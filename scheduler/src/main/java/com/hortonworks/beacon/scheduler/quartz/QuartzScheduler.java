@@ -26,6 +26,7 @@ import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import com.hortonworks.beacon.scheduler.internal.AdminJob;
 import org.quartz.JobDetail;
+import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.JobListener;
@@ -89,17 +90,28 @@ public final class QuartzScheduler {
         scheduler.scheduleJob(jobDetail, trigger);
     }
 
-    void scheduleChainedJobs(List<JobDetail> jobs, Trigger trigger) throws SchedulerException {
+    void scheduleChainedJobs(String policyId, JobDetail startJob, List<JobDetail> jobs, Trigger trigger) throws
+            SchedulerException {
         QuartzJobListener listener = (QuartzJobListener) scheduler.getListenerManager().
                 getJobListener(BeaconQuartzScheduler.BEACON_SCHEDULER_JOB_LISTENER);
-        for (int i = 1; i < jobs.size(); i++) {
-            JobDetail firstJob = jobs.get(i - 1);
-            JobDetail secondJob = jobs.get(i);
-            listener.addJobChainLink(firstJob.getKey(), secondJob.getKey());
-            scheduler.addJob(secondJob, false);
+        listener.clearChainLinkForPolicy(policyId);
+        JobDetail firstJob = startJob;
+        for (JobDetail secondJob : jobs) {
+            listener.addJobChainLink(policyId, firstJob.getKey(), secondJob.getKey());
+            scheduler.addJob(secondJob, true);
+            firstJob = secondJob;
         }
         LOG.info("Job [key: {}] and trigger [key: {}] are being scheduled", jobs.get(0).getKey(), trigger.getKey());
-        scheduler.scheduleJob(jobs.get(0), trigger);
+    }
+
+    /**
+     * Get the only trigger created for start job.
+     * @param jobKey jobKey to get the job from quartz
+     * @return Trigger associated with the job.
+     */
+    Trigger getTriggerForJob(JobKey jobKey) throws SchedulerException {
+        List<? extends Trigger> triggerList = scheduler.getTriggersOfJob(jobKey);
+        return triggerList.get(0);
     }
 
     void rescheduleJob(String name, String group, Trigger newTrigger) throws SchedulerException {
@@ -134,10 +146,17 @@ public final class QuartzScheduler {
                 LOG.warn("Could not find job [{}] in the scheduler.", jobKey);
                 return finalResult;
             }
-            int numJobs = jobDetail.getJobDataMap().getInt(QuartzDataMapEnum.NO_OF_JOBS.getValue());
-            // It should delete all the jobs (given policy id) added to the scheduler.
-            for (int i = 0; i < numJobs; i++) {
-                JobKey key = new JobKey(name, String.valueOf(i));
+            int numJobs = getNumOfJobs(jobDetail.getJobDataMap());
+            if (numJobs != -1) {
+                // It should delete all the jobs (given policy id) added to the scheduler.
+                for (int i = 0; i < numJobs; i++) {
+                    JobKey key = new JobKey(name, String.valueOf(i));
+                    boolean deleteJob = scheduler.deleteJob(key);
+                    LOG.info("Deleting job [key: {}, result: {}] from the scheduler.", key, deleteJob);
+                    finalResult = finalResult && deleteJob;
+                }
+            } else {
+                JobKey key = new JobKey(name, String.valueOf(BeaconQuartzScheduler.START_NODE_GROUP));
                 boolean deleteJob = scheduler.deleteJob(key);
                 LOG.info("Deleting job [key: {}, result: {}] from the scheduler.", key, deleteJob);
                 finalResult = finalResult && deleteJob;
@@ -147,6 +166,16 @@ public final class QuartzScheduler {
             LOG.info("Deleting job {}", jobKey);
             return scheduler.deleteJob(jobKey);
         }
+    }
+
+    private int getNumOfJobs(JobDataMap jobDataMap) {
+        int numJobs = -1;
+        if (jobDataMap.containsKey(QuartzDataMapEnum.MAX_NO_OF_JOBS.getValue())) {
+            numJobs = jobDataMap.getInt(QuartzDataMapEnum.MAX_NO_OF_JOBS.getValue());
+        } else if (jobDataMap.containsKey(QuartzDataMapEnum.NO_OF_JOBS.getValue())) {
+            numJobs = jobDataMap.getInt(QuartzDataMapEnum.NO_OF_JOBS.getValue());
+        }
+        return numJobs;
     }
 
     JobDetail getJobDetail(String keyName, String keyGroup) throws SchedulerException {
@@ -207,8 +236,7 @@ public final class QuartzScheduler {
         return interruptJob(name, group);
     }
 
-    public boolean checkExists(String name, String group) throws SchedulerException {
-        JobKey jobKey = new JobKey(name, group);
+    public boolean checkExists(JobKey jobKey) throws SchedulerException {
         return scheduler.checkExists(jobKey);
     }
 

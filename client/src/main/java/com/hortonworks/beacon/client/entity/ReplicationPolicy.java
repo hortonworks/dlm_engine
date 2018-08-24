@@ -51,6 +51,7 @@ public class ReplicationPolicy extends Entity {
     private Date endTime;
     private int frequencyInSec;
     private List<String> tags;
+    private List<String> plugins;
     private Properties customProperties = new Properties();
     private Retry retry;
     private String user;
@@ -74,6 +75,7 @@ public class ReplicationPolicy extends Entity {
         ENDTIME("endTime"),
         FREQUENCYINSEC("frequencyInSec"),
         TAGS("tags"),
+        PLUGINS("plugins"),
         RETRYATTEMPTS("retryAttempts"),
         RETRYDELAY("retryDelay"),
         USER("user"),
@@ -109,6 +111,7 @@ public class ReplicationPolicy extends Entity {
         this.startTime = builder.startTime;
         this.endTime = builder.endTime;
         this.tags = builder.tags;
+        this.plugins = builder.plugins;
         this.frequencyInSec = builder.frequencyInSec;
         this.customProperties = builder.customProperties;
         this.retry = builder.retry;
@@ -131,6 +134,7 @@ public class ReplicationPolicy extends Entity {
         private Date endTime;
         private int frequencyInSec;
         private List<String> tags;
+        private List<String> plugins;
         private Properties customProperties;
         private Retry retry;
         private String user;
@@ -191,6 +195,11 @@ public class ReplicationPolicy extends Entity {
 
         public Builder notification(Notification notificationValue) {
             this.notification = notificationValue;
+            return this;
+        }
+
+        public Builder plugins(List<String> pluginList) {
+            this.plugins = pluginList;
             return this;
         }
 
@@ -386,6 +395,14 @@ public class ReplicationPolicy extends Entity {
         return customProperties.getProperty(ReplicationPolicy.ReplicationPolicyFields.CLOUDCRED.getName());
     }
 
+    public List<String> getPlugins() {
+        return plugins;
+    }
+
+    public void setPlugins(List<String> plugins) {
+        this.plugins = plugins;
+    }
+
     public PropertiesIgnoreCase asProperties() {
         PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
         properties.putIfNotNull(ReplicationPolicyFields.ID.getName(), policyId);
@@ -401,6 +418,7 @@ public class ReplicationPolicy extends Entity {
         properties.putIfNotNull(ReplicationPolicyFields.ENDTIME.getName(), DateUtil.formatDate(endTime));
         properties.put(ReplicationPolicyFields.FREQUENCYINSEC.getName(), frequencyInSec);
         properties.putIfNotNull(ReplicationPolicyFields.TAGS.getName(), tags);
+        properties.putIfNotNull(ReplicationPolicyFields.PLUGINS.getName(), plugins);
         if (retry != null) {
             properties.putIfNotNull(ReplicationPolicyFields.RETRYATTEMPTS.getName(), retry.getAttempts());
             properties.putIfNotNull(ReplicationPolicyFields.RETRYDELAY.getName(), retry.getDelay());

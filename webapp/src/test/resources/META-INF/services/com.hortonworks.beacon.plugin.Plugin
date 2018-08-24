@@ -18,4 +18,5 @@
 #    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
 #    OR LOSS OR CORRUPTION OF DATA.
 
-com.hortonworks.beacon.test.PluginTest
+com.hortonworks.beacon.test.RangerPluginTest
+com.hortonworks.beacon.test.AtlasPluginTest

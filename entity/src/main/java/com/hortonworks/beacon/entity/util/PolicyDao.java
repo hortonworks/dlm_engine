@@ -332,6 +332,9 @@ public final class PolicyDao {
         element.tags = StringUtils.isNotBlank(bean.getTags())
                 ? Arrays.asList(bean.getTags().split(BeaconConstants.COMMA_SEPARATOR))
                 : null;
+        element.plugins = StringUtils.isNotBlank(bean.getPlugins())
+                ? Arrays.asList(bean.getPlugins().split(BeaconConstants.COMMA_SEPARATOR))
+                : null;
         return element;
     }
 
@@ -369,6 +372,7 @@ public final class PolicyDao {
         }
         bean.setCustomProperties(propertiesBeans);
         bean.setTags(ClusterHelper.convertToString(policy.getTags()));
+        bean.setPlugins(ClusterHelper.convertToString(policy.getPlugins()));
         return bean;
     }
 
@@ -393,6 +397,7 @@ public final class PolicyDao {
         policy.setNotification(new Notification(bean.getNotificationType(), bean.getNotificationTo()));
         policy.setRetry(new Retry(bean.getRetryCount(), bean.getRetryDelay()));
         policy.setTags(ClusterHelper.convertToList(bean.getTags()));
+        policy.setPlugins(ClusterHelper.convertToList(bean.getPlugins()));
         Properties prop = getPolicyCustomProperties(bean);
         policy.setCustomProperties(prop);
         return policy;

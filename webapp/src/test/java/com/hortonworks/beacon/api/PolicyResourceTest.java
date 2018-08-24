@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.api;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Entity;
@@ -44,6 +45,8 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -148,11 +151,39 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetClient.submitAndScheduleReplicationPolicy(policyName, replicationPolicy.asProperties());
         PolicyList oldDef = targetClient.getPolicy(policyName);
         assertEquals(120, (long) oldDef.getElements()[0].frequencyInSec);
+
+        waitOnCondition(60000, "Get jobs for policy ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                RequestContext.setInitialValue();
+                EntityManager entityManager = RequestContext.get().getEntityManager();
+                String nativeQuery = "SELECT JOBS FROM BEACON_POLICY WHERE NAME = '" + policyName + "'";
+                Query query = entityManager.createNativeQuery(nativeQuery);
+                String jobs = (String) query.getSingleResult();
+                return jobs != null && jobs.equals("RANGEREXPORT,RANGERIMPORT,ATLASEXPORT,ATLASIMPORT,FS,END-NODE");
+            }
+        });
+
         ReplicationPolicy updatedPolicy = new ReplicationPolicy();
         updatedPolicy.setFrequencyInSec(240);
-        targetClient.updatePolicy(policyName, updatedPolicy.asProperties());
+        PropertiesIgnoreCase properties = updatedPolicy.asProperties();
+        properties.put("plugins", "RANGER");
+        targetClient.updatePolicy(policyName, properties);
         PolicyList newDef = targetClient.getPolicy(policyName);
         assertEquals(240, (long) newDef.getElements()[0].frequencyInSec);
+
+        waitOnCondition(20000, "Get jobs for policy ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                RequestContext.setInitialValue();
+                EntityManager entityManager = RequestContext.get().getEntityManager();
+                String nativeQuery = "SELECT JOBS FROM BEACON_POLICY WHERE NAME = '" + policyName + "'";
+                Query query = entityManager.createNativeQuery(nativeQuery);
+                String jobs = (String) query.getSingleResult();
+                return jobs != null && jobs.equals("RANGEREXPORT,RANGERIMPORT,FS,END-NODE");
+            }
+        });
+
         targetClient.deletePolicy(policyName, false);
     }
 
@@ -394,13 +425,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         when(hiveServerClientForThisTest.createStatement()).thenReturn(statementForThisTest);
         ResultSet resultSetReplStatus = mock(ResultSet.class);
         ResultSet resultSetReplDump = mock(ResultSet.class);
-        when(statementForThisTest.executeQuery(Matchers.startsWith("REPL STATUS"))).thenReturn(resultSetReplStatus);
-        when(resultSetReplStatus.next()).thenReturn(true);
-        when(resultSetReplStatus.getString(1)).thenReturn("1");
-        when(statementForThisTest.executeQuery(Matchers.startsWith("REPL DUMP"))).thenReturn(resultSetReplDump);
-        when(resultSetReplDump.next()).thenReturn(true);
-        when(resultSetReplDump.getString(1)).thenReturn(testDataGenerator.getRandomString("dumpdir"));
-        when(resultSetReplDump.getString(2)).thenReturn("2");
+        mockForRerunHiveFailedAdmin(statementForThisTest, resultSetReplStatus, resultSetReplDump);
         targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
         waitOnCondition(10000, "Instance FAILED_ADMIN ", new Condition() {
             @Override
@@ -410,6 +435,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
             }
         });
         reset(statementForThisTest);
+        mockForRerunHiveFailedAdmin(statementForThisTest, resultSetReplStatus, resultSetReplDump);
         when(((HiveStatement) statementForThisTest).executeAsync(Matchers.anyString())).thenReturn(true);
         targetClient.resumePolicy(policyName);
         targetClient.rerunPolicyInstance(policyName);
@@ -444,6 +470,17 @@ public class PolicyResourceTest extends ResourceBaseTest {
         });
         targetClient.deletePolicy(policyName, false);
 
+    }
+
+    private void mockForRerunHiveFailedAdmin(Statement statementForThisTest, ResultSet resultSetReplStatus,
+                                             ResultSet resultSetReplDump) throws SQLException {
+        when(statementForThisTest.executeQuery(Matchers.startsWith("REPL STATUS"))).thenReturn(resultSetReplStatus);
+        when(resultSetReplStatus.next()).thenReturn(true);
+        when(resultSetReplStatus.getString(1)).thenReturn("1");
+        when(statementForThisTest.executeQuery(Matchers.startsWith("REPL DUMP"))).thenReturn(resultSetReplDump);
+        when(resultSetReplDump.next()).thenReturn(true);
+        when(resultSetReplDump.getString(1)).thenReturn(testDataGenerator.getRandomString("dumpdir"));
+        when(resultSetReplDump.getString(2)).thenReturn("2");
     }
 
 

@@ -28,6 +28,7 @@ import com.hortonworks.beacon.scheduler.quartz.QuartzScheduler;
 import com.hortonworks.beacon.scheduler.quartz.QuartzTriggerBuilder;
 import com.hortonworks.beacon.service.BeaconService;
 import org.quartz.JobDetail;
+import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.slf4j.Logger;
@@ -87,7 +88,7 @@ public final class AdminJobService implements BeaconService {
         String name = adminJob.getName();
         String group = adminJob.getGroup();
         try {
-            boolean checkExists = scheduler.checkExists(name, group);
+            boolean checkExists = scheduler.checkExists(new JobKey(name, group));
             if (checkExists) {
                 LOG.info("Admin job: [{}], group: [{}], policy name: [{}] is deleted successfully.",
                         adminJob.getClass().getSimpleName(), group, name);

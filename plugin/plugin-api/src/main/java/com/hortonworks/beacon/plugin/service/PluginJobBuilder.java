@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.plugin.service;
 
+import com.google.common.collect.Sets;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -32,17 +33,25 @@ import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Properties;
-import java.util.TreeMap;
+import java.util.Set;
+
+import static com.hortonworks.beacon.util.CollectionUtil.topologicalSort;
 
 /**
  *  Plugin JobBuilder.
  */
 public class PluginJobBuilder extends JobBuilder {
+    private static final Logger LOG = LoggerFactory.getLogger(PluginJobBuilder.class);
     private static final String JOB_TYPE = ReplicationType.PLUGIN.name();
 
     @Override
@@ -52,38 +61,43 @@ public class PluginJobBuilder extends JobBuilder {
             return jobList;
         }
 
-        List<ReplicationJobDetails> nonPriorityJobList = new ArrayList<>();
-        Map<Integer, List<ReplicationJobDetails>> priorityJobMap = new TreeMap<>();
+        if (PluginManagerService.getRegisteredPlugins().isEmpty()) {
+            LOG.info("No plugin has been registered!");
+            return jobList;
+        }
 
-        for (String pluginName : PluginManagerService.getRegisteredPlugins()) {
-            for (PluginManagerService.DefaultPluginActions action
-                    : PluginManagerService.DefaultPluginActions.values()) {
-                ReplicationJobDetails jobDetails = buildReplicationJobDetails(policy, pluginName, action.getName());
-                Integer order = PluginManagerService.getPluginOrder(pluginName);
-                if (order == null) {
-                    nonPriorityJobList.add(jobDetails);
-                } else {
-                    List<ReplicationJobDetails> jobs = new ArrayList<>();
-                    if (priorityJobMap.get(order) != null) {
-                        jobs = priorityJobMap.get(order);
-                    }
-                    jobs.add(jobDetails);
-                    priorityJobMap.put(order, jobs);
+        List<String> pluginsEnabled = policy.getPlugins();
+        if (pluginsEnabled.isEmpty()) {
+            pluginsEnabled = PluginManagerService.getRegisteredPlugins();
+        }
+
+        Set<String> orderedPlugins = getPluginOrder(PluginManagerService.getRegisteredPlugins());
+        for (String pluginName: orderedPlugins) {
+            for (PluginManagerService.DefaultPluginActions action: PluginManagerService.DefaultPluginActions.values()) {
+                String clusterName = getClusterForAction(policy, action);
+                if (pluginsEnabled.contains(pluginName)
+                        && PluginManagerService.getPlugin(pluginName).isEnabled(clusterName)) {
+                    ReplicationJobDetails jobDetails = buildReplicationJobDetails(policy, pluginName, action.getName());
+                    jobList.add(jobDetails);
                 }
             }
         }
-
-        if (!priorityJobMap.isEmpty()) {
-            for (List<ReplicationJobDetails> jobs : priorityJobMap.values()) {
-                jobList.addAll(jobs);
-            }
-        }
-
-        if (!nonPriorityJobList.isEmpty()) {
-            jobList.addAll(nonPriorityJobList);
-        }
-
         return jobList;
+    }
+
+    private String getClusterForAction(ReplicationPolicy policy, PluginManagerService.DefaultPluginActions action) {
+        String cluster = StringUtils.EMPTY;
+        switch (action) {
+            case EXPORT:
+                cluster = policy.getSourceCluster();
+                break;
+            case IMPORT:
+                cluster = policy.getTargetCluster();
+                break;
+            default:
+                LOG.info("Action {} not supported", action);
+        }
+        return cluster;
     }
 
     private static ReplicationJobDetails buildReplicationJobDetails(final ReplicationPolicy policy,
@@ -137,5 +151,49 @@ public class PluginJobBuilder extends JobBuilder {
                 throw new BeaconException("Job type {} is not supported", type);
         }
         return pluginDatasetType;
+    }
+
+    private Set<String> getPluginOrder(List<String> plugins) throws BeaconException {
+        Map<String, List<String>> adjList = new HashMap<>();
+        Map<String, Integer> inDegree = new HashMap<>();
+        String startPlugin = StringUtils.EMPTY;
+        for (String plugin: plugins) {
+            inDegree.put(plugin, 0);
+            adjList.put(plugin, new ArrayList<String>());
+        }
+        for (String plugin: plugins) {
+            List<String> dependencies = PluginManagerService.getPlugin(plugin).getInfo().getDependencies();
+            if (dependencies != null && !dependencies.isEmpty()) {
+                for (String dependency: dependencies) {
+                    int inDegreeCount = 0;
+                    if (inDegree.containsKey(plugin)) {
+                        inDegreeCount = inDegree.get(plugin);
+                    }
+                    inDegreeCount += 1;
+                    inDegree.put(plugin, inDegreeCount);
+                    List<String> connections = new ArrayList<>();
+                    if (adjList.containsKey(dependency)) {
+                        connections = adjList.get(dependency);
+                    }
+                    connections.add(plugin);
+                    adjList.put(dependency, connections);
+                }
+            }
+        }
+        for (String vertex: adjList.keySet()) {
+            if (inDegree.get(vertex) == 0) {
+                startPlugin = vertex;
+            }
+        }
+        if (StringUtils.isEmpty(startPlugin)) {
+            throw new BeaconException("Cyclic plugin dependency found!");
+        }
+        Set<String> orderedPlugins = topologicalSort(startPlugin, adjList);
+        Set<String> totalPlugins = adjList.keySet();
+        Set<String> diffPlugins = Sets.difference(totalPlugins, orderedPlugins).immutableCopy();
+        if (!diffPlugins.isEmpty()) {
+            orderedPlugins.addAll(diffPlugins);
+        }
+        return orderedPlugins;
     }
 }

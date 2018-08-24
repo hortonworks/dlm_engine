@@ -78,14 +78,14 @@ public class BeaconQuartzSchedulerTest {
     @Test
     public void testSchedulePolicy() throws Exception {
         List<ReplicationJobDetails> job = getReplicationJob();
-        String jobName = scheduler.schedulePolicy(job, false, POLICY_ID, null, null, 60);
+        String jobName = scheduler.schedulePolicy(false, NAME, POLICY_ID, null, null, 60);
         Assert.assertEquals(jobName, POLICY_ID);
     }
 
     @Test
     public void testDeletePolicy() throws Exception {
         List<ReplicationJobDetails> job = getReplicationJob();
-        String jobName = scheduler.schedulePolicy(job, false, POLICY_ID,  null, null, 60);
+        String jobName = scheduler.schedulePolicy(false, NAME, POLICY_ID, null, null, 60);
         Assert.assertEquals(jobName, POLICY_ID);
         boolean deleteJob = scheduler.deletePolicy(POLICY_ID);
         Assert.assertEquals(deleteJob, true);
@@ -94,7 +94,7 @@ public class BeaconQuartzSchedulerTest {
     @Test
     public void testSuspendPolicy() throws Exception {
         List<ReplicationJobDetails> job = getReplicationJob();
-        String jobName = scheduler.schedulePolicy(job, false, POLICY_ID, null, null, 60);
+        String jobName = scheduler.schedulePolicy(false, NAME, POLICY_ID, null, null, 60);
         Assert.assertEquals(jobName, POLICY_ID);
         scheduler.suspendPolicy(POLICY_ID);
     }
@@ -102,7 +102,7 @@ public class BeaconQuartzSchedulerTest {
     @Test
     public void testResumePolicy() throws Exception {
         List<ReplicationJobDetails> job = getReplicationJob();
-        String jobName = scheduler.schedulePolicy(job, false, POLICY_ID, null, null, 60);
+        String jobName = scheduler.schedulePolicy(false, NAME, POLICY_ID, null, null, 60);
         Assert.assertEquals(jobName, POLICY_ID);
         scheduler.suspendPolicy(POLICY_ID);
         scheduler.resumePolicy(POLICY_ID);

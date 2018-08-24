@@ -75,7 +75,7 @@ public class QuartzTriggerListenerTest {
     public void testDanglingJobRemoved() throws BeaconException, InterruptedException, SchedulerException {
         BeaconQuartzScheduler scheduler = Services.get().getService(BeaconQuartzScheduler.class);
         Date startTime = new Date(System.currentTimeMillis() + 2*1000);
-        scheduler.schedulePolicy(getReplicationJob(), false, POLICY_ID, startTime, null, 10);
+        scheduler.schedulePolicy(false, NAME, POLICY_ID, startTime, null, 10);
         boolean exists = scheduler.checkExists(POLICY_ID, BeaconQuartzScheduler.START_NODE_GROUP);
         Assert.assertTrue(exists);
         Thread.sleep(5*1000);

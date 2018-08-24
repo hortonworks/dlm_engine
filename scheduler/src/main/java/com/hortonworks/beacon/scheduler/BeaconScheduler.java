@@ -23,10 +23,8 @@
 package com.hortonworks.beacon.scheduler;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.replication.ReplicationJobDetails;
 
 import java.util.Date;
-import java.util.List;
 
 /**
  * Beacon scheduler interface.
@@ -47,23 +45,25 @@ public interface BeaconScheduler {
 
     /**
      * schedule a job.
-     * @param jobs list of jobs to schedule in that order
      * @param recovery request recovery in case of failure situation
+     * @param policyName Policy name for which job is scheduled
+     * @param policyId Policy id for which job is scheduled
      * @param startTime start time for the jobs
      * @param endTime end time for the jobs
      * @param frequency frequency for jobs
      * @throws BeaconException
      */
-    String schedulePolicy(List<ReplicationJobDetails> jobs, boolean recovery, String policyId, Date startTime,
-                          Date endTime, int frequency) throws BeaconException;
-    /**
-     * reschedule a job.
-     * @param policyId policyid for the jobs
-     * @param startTime new start time for the jobs
-     * @param endTime new end time for the jobs
-     * @param frequency new frequency for jobs
-     * @throws BeaconException
-     */
+    String schedulePolicy(boolean recovery, String policyName, String policyId, Date startTime,
+                                 Date endTime, int frequency) throws BeaconException;
+
+        /**
+         * reschedule a job.
+         * @param policyId policyid for the jobs
+         * @param startTime new start time for the jobs
+         * @param endTime new end time for the jobs
+         * @param frequency new frequency for jobs
+         * @throws BeaconException
+         */
     void reschedulePolicy(String policyId, Date startTime, Date endTime, int frequency) throws BeaconException;
 
     /**

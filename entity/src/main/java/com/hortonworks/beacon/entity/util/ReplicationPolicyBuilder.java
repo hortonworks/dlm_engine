@@ -121,20 +121,7 @@ public final class ReplicationPolicyBuilder {
             }
 
             // If HCFS, both datasets are mandatory and both datasets can't be HCFS
-            if (PolicyHelper.isPolicyHCFS(sourceDataset, targetDataset)) {
-                if (StringUtils.isBlank(sourceDataset)) {
-                    throw new BeaconException("Missing parameter: {}",
-                            ReplicationPolicyProperties.SOURCEDATASET.getName());
-                }
-                if (StringUtils.isBlank(targetDataset)) {
-                    throw new BeaconException("Missing parameter: {}",
-                            ReplicationPolicyProperties.TARGETDATASET.getName());
-                }
-
-                if (FSUtils.isHCFS(new Path(sourceDataset)) && FSUtils.isHCFS(new Path(targetDataset))) {
-                    throw new BeaconException("HCFS to HCFS replication is not allowed");
-                }
-            }
+            validateHCFSDatasetParams(sourceDataset, targetDataset);
         }
 
         String localClusterName = ClusterHelper.getLocalCluster().getName();
@@ -168,6 +155,7 @@ public final class ReplicationPolicyBuilder {
         Date end = DateUtil.parseDate(requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.ENDTIME.getName()));
         String tags = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TAGS.getName());
+        String plugins = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.PLUGINS.getName());
         Integer frequencyInSec = Integer.parseInt(requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.FREQUENCY.getName()));
 
@@ -206,8 +194,27 @@ public final class ReplicationPolicyBuilder {
 
         return new ReplicationPolicy.Builder(policyName, type, sourceDataset, targetDataset,
                 sourceCluster, targetCluster, frequencyInSec).startTime(start).endTime(end)
-                .tags(ClusterHelper.convertToList(tags)).customProperties(properties).retry(retry)
+                .tags(ClusterHelper.convertToList(tags))
+                .plugins(ClusterHelper.convertToList(plugins))
+                .customProperties(properties).retry(retry)
                 .user(user).notification(notification).description(description).build();
+    }
+
+    private static void validateHCFSDatasetParams(String sourceDataset, String targetDataset) throws BeaconException {
+        if (PolicyHelper.isPolicyHCFS(sourceDataset, targetDataset)) {
+            if (StringUtils.isBlank(sourceDataset)) {
+                throw new BeaconException("Missing parameter: {}",
+                        ReplicationPolicyProperties.SOURCEDATASET.getName());
+            }
+            if (StringUtils.isBlank(targetDataset)) {
+                throw new BeaconException("Missing parameter: {}",
+                        ReplicationPolicyProperties.TARGETDATASET.getName());
+            }
+
+            if (FSUtils.isHCFS(new Path(sourceDataset)) && FSUtils.isHCFS(new Path(targetDataset))) {
+                throw new BeaconException("HCFS to HCFS replication is not allowed");
+            }
+        }
     }
 
     public static ReplicationPolicy buildPolicyWithPartialData(final PropertiesIgnoreCase requestProperties,
@@ -219,6 +226,7 @@ public final class ReplicationPolicyBuilder {
         Date end = DateUtil.parseDate(requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.ENDTIME.getName()));
         String freqInSecStr = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.FREQUENCY.getName());
+        String plugins = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.PLUGINS.getName());
         Integer frequencyInSec = -1;
         if (StringUtils.isNotBlank(freqInSecStr)) {
             frequencyInSec = Integer.parseInt(freqInSecStr);
@@ -229,6 +237,7 @@ public final class ReplicationPolicyBuilder {
                 null,
                 null,
                 frequencyInSec).startTime(start).endTime(end).customProperties(properties)
+                .plugins(ClusterHelper.convertToList(plugins))
                 .description(description).build();
     }
 

@@ -46,8 +46,6 @@ import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.plugin.service.PluginManagerService;
-import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.bean.ClusterPairBean;
 import com.hortonworks.beacon.util.ClusterStatus;
 import org.apache.commons.lang3.StringUtils;
@@ -89,14 +87,7 @@ public class ClusterResource extends AbstractResourceManager {
     @Timed(absolute = true, name="api.beacon.cluster.submit")
     public APIResult submit(@PathParam("cluster-name") String clusterName, PropertiesIgnoreCase requestProperties) {
         try {
-            String localStr = requestProperties.getPropertyIgnoreCase(Cluster.ClusterFields.LOCAL.getName());
             APIResult result = submitCluster(ClusterBuilder.buildCluster(requestProperties, clusterName));
-            if (APIResult.Status.SUCCEEDED == result.getStatus()
-                    && Services.get().isRegistered(PluginManagerService.class.getName())
-                    && Boolean.parseBoolean(localStr)) {
-                // Register all the plugins
-                Services.get().getService(PluginManagerService.class).registerPlugins();
-            }
             return result;
         } catch (EntityAlreadyExistsException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.CONFLICT);

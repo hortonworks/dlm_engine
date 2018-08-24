@@ -42,9 +42,7 @@ import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.EventSeverity;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.plugin.service.BeaconInfoImpl;
 import com.hortonworks.beacon.test.BeaconIntegrationTest;
-import com.hortonworks.beacon.test.PluginTest;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.StringFormat;
 import org.apache.hadoop.fs.FileStatus;
@@ -455,6 +453,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertPolicyEntity(dataSet, policyName, type, JobStatus.RUNNING, freq, message);
         properties.clear();
         properties.put("description", "updated policy description again");
+        properties.put("plugins", "RANGER,ATLAS");
 
         updatePolicy(policyName, getTargetBeaconServer(), properties, Response.Status.OK);
 
@@ -469,6 +468,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(jsonPolicy.get("name"), policyName);
         assertEquals(jsonPolicy.getInt("frequencyInSec"), 10);
         assertEquals(jsonPolicy.get("description"), "updated policy description again");
+        assertEquals(jsonPolicy.getJSONArray("plugins").length(), 2);
 
         //Attempt to update custom props which are not allowed to update should fail
         properties.put("description", "updated policy description again");
@@ -803,7 +803,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         targetClient.deletePolicy(policyName, false);
     }
 
-    @Test(dependsOnMethods = "testPairCluster")
+    @Test(dependsOnMethods = {"testPairCluster", "testSubmitCluster"})
     public void testPlugin() throws Exception {
         String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
         srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
@@ -824,8 +824,8 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
                 return instance != null && instance.status.equals(JobStatus.SUCCESS.name());
             }
         });
-        Path pluginStagingPath = new Path(new BeaconInfoImpl().getStagingDir(), PluginTest.getPluginName());
-        Path exportData = new Path(pluginStagingPath, new Path(replicationPath).getName());
+        Path exportData = new Path(BeaconConfig.getInstance().getEngine().getPluginStagingPath(),
+                new Path(replicationPath).getName());
         assertTrue(srcDfsCluster.getFileSystem().exists(exportData));
         assertTrue(tgtDfsCluster.getFileSystem().exists(exportData));
         Path path = new Path(exportData, "_SUCCESS");
@@ -1338,7 +1338,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     public void testServerStatus() throws Exception {
         ServerStatusResult statusResult = targetClient.getServiceStatus();
         assertEquals(statusResult.getStatus(), "RUNNING");
-        assertEquals(statusResult.getPlugins(), "None");
+        assertEquals(statusResult.getPlugins(), "RANGER,ATLAS");
         assertEquals(statusResult.getSecurity(), "None");
         assertFalse(statusResult.isWireEncryptionEnabled());
         assertFalse(statusResult.doesRangerCreateDenyPolicy());

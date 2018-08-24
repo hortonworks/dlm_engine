@@ -55,6 +55,14 @@ public final class HiveClientFactory {
         return new HS2Client(connectionString);
     }
 
+    public static HiveServerClient getHiveServerClient(String connectionString,
+                                                       Cluster cluster) throws BeaconException {
+        if (hiveServerClient != null) {
+            return hiveServerClient;
+        }
+        return new HS2Client(connectionString, cluster);
+    }
+
     public static HiveMetadataClient getMetadataClient(Cluster cluster) throws BeaconException {
         BeaconCluster beaconCluster = new BeaconCluster(cluster);
         if (hiveMetadataClient != null) {

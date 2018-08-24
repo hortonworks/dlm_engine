@@ -57,16 +57,14 @@ public interface Plugin {
     }
 
     /**
-     * Register the plugin with beacon specific information.    The BeaconInfo object will provide
-     * the beacon staging directory location and cluster name among others.  Beacon plugin system will
+     * Register the plugin with beacon specific information.  Beacon plugin system will
      * call this method on the plugin provider on discovery.   The plugin should make copy the info for
      * future usage.  The plugin should return the information on the plugin as a response.
      *
-     * @param info
      * @return
      * @throws BeaconException
      */
-    PluginInfo register(BeaconInfo info) throws BeaconException;
+    PluginInfo register() throws BeaconException;
 
     /**
      * Export the plugin specific data for the given <i>dataset</i> from the <i>srcCluster</i> to
@@ -120,4 +118,12 @@ public interface Plugin {
      * @throws BeaconException
      */
     Status getStatus() throws BeaconException;
+
+    /**
+     * Determines if the plugin would be enabled.
+     * @param cluster
+     * @return true/false based on plugin service setup in cluster.
+     * @throws BeaconException
+     */
+    boolean isEnabled(String cluster) throws BeaconException;
 }

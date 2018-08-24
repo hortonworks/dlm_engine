@@ -42,6 +42,7 @@ public enum ReplicationPolicyProperties {
     ENDTIME(ReplicationPolicyFields.ENDTIME.getName(), "End time for the job", false),
     FREQUENCY(ReplicationPolicyFields.FREQUENCYINSEC.getName(), "Frequency of job run"),
     TAGS(ReplicationPolicyFields.TAGS.getName(), "Policy tags", false),
+    PLUGINS(ReplicationPolicyFields.PLUGINS.getName(), "Policy plugins", false),
     RETRY_DELAY(ReplicationPolicyFields.RETRYDELAY.getName(), "Retry delay", false),
     RETRY_ATTEMPTS(ReplicationPolicyFields.RETRYATTEMPTS.getName(), "Retry attempts", false),
     USER(ReplicationPolicyFields.USER.getName(), "User name", false),
@@ -97,6 +98,7 @@ public enum ReplicationPolicyProperties {
         allowedUpdateProps.add(STARTTIME.getName());
         allowedUpdateProps.add(ENDTIME.getName());
         allowedUpdateProps.add(FREQUENCY.getName());
+        allowedUpdateProps.add(PLUGINS.getName());
         //custom properties
         allowedUpdateProps.add(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName());
         allowedUpdateProps.add(FSDRProperties.DISTCP_MAX_MAPS.getName());

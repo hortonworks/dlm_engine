@@ -312,7 +312,7 @@ description=primary cluster
 user=ambari-qa
 tags=consumer=consumer@xyz.com,owner=producer@xyz.com
 dfs.namenode.kerberos.principal=nn/_HOST@YOUR-REALM.COM
-hive.server2.authentication=KERBEROS
+hive.server2.authentication=KERBEROSP
 hive.server2.authentication.kerberos.principal=hive/_HOST@YOUR-REALM
 hive.metastore.kerberos.principal=hive/_HOST@YOUR-REALM
 rangerEndPoint=http://localhost:6080
@@ -531,6 +531,7 @@ sourceCluster=primaryCluster
 targetCluster=backupCluster
 tde.sameKey=true
 frequencyInSec=3600
+plugins=RANGER,ATLAS
 tags=owner=producer@xyz.com,component=sales
 user=ambari-qa
 retryAttempts=3
@@ -592,6 +593,7 @@ endTime="yyyy-MM-dd’T’HH:mm:ss"
 distcpMapBandwidth=25
 distcpMaxMaps=10
 queueName=test
+plugins=RANGER
 
 * Payload data can be subset of any of the above properties
 

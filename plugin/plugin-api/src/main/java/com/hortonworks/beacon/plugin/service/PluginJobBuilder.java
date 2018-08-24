@@ -39,26 +39,16 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  *  Plugin JobBuilder.
  */
 public class PluginJobBuilder extends JobBuilder {
-    private static final Logger LOG = LoggerFactory.getLogger(PluginJobBuilder.class);
     private static final String JOB_TYPE = ReplicationType.PLUGIN.name();
 
     @Override
     public List<ReplicationJobDetails> buildJob(ReplicationPolicy policy) throws BeaconException {
         List<ReplicationJobDetails> jobList = new ArrayList<>();
         if (!Services.get().isRegistered(PluginManagerService.class.getName())) {
-            return jobList;
-        }
-
-        if (!PluginManagerService.isPluginRegistered(PluginManagerService.DEFAULT_PLUGIN)) {
-            // If ranger is not registered then no other plugin's are considered.
-            LOG.info("Ranger plugin is not registered. Not adding any plugin jobs to add.");
             return jobList;
         }
 

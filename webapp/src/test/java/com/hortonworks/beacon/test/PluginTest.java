@@ -45,7 +45,7 @@ import java.util.Properties;
  */
 public class PluginTest implements Plugin {
     private static String stagingPath;
-    private static final String PLUGIN_NAME = PluginManagerService.DEFAULT_PLUGIN;
+    private static final String PLUGIN_NAME = PluginManagerService.RANGER_PLUGIN;
     // Used only for Beacon IT purpose
     private static boolean allowPlugin = true;
 

@@ -66,26 +66,12 @@ public abstract class FSListing<T> {
                     ? decodedPath : decodedPath + File.separator;
             LOG.debug("Path to check: {}", pathToCheck);
             updateListing(clusterName, fsEndPoint, pathToCheck);
-
-            int lastIndex = 0;
-            String tmpPathToCheck;
-
-            while (true) {
-                lastIndex = pathToCheck.indexOf(File.separator, lastIndex) + 1;
-                if (lastIndex == -1) {
-                    break;
-                }
-                tmpPathToCheck = pathToCheck.substring(0, lastIndex);
-                if (StringUtils.isEmpty(tmpPathToCheck)) {
-                    break;
-                }
-                if (contains(clusterName, tmpPathToCheck)) {
-                    return tmpPathToCheck;
-                }
-            }
+            return getBaseListing(clusterName, pathToCheck);
         }
         return null;
     }
+
+    protected abstract String getBaseListing(String clusterName, String pathToCheck);
 
     protected abstract boolean contains(String clusterName, String tmpPathToCheck);
 

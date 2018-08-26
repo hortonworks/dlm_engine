@@ -87,6 +87,14 @@ public final class SnapshotListing extends FSListing<Set> {
     }
 
     @Override
+    protected String getBaseListing(String clusterName, String pathToCheck) {
+        if (contains(clusterName, pathToCheck)) {
+            return pathToCheck;
+        }
+        return null;
+    }
+
+    @Override
     protected boolean contains(String clusterName, String path) {
         if (listingMap.containsKey(clusterName)) {
             return listingMap.get(clusterName).contains(path);

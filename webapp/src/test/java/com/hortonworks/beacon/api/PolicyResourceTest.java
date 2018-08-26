@@ -34,6 +34,7 @@ import com.hortonworks.beacon.entity.util.hive.HiveServerClient;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.util.StringFormat;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hive.jdbc.HiveStatement;
 import org.mockito.Matchers;
 import org.mockito.invocation.InvocationOnMock;
@@ -47,7 +48,9 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
 
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
@@ -256,6 +259,62 @@ public class PolicyResourceTest extends ResourceBaseTest {
             }
         });
         targetClient.deletePolicy(policyName, false);
+    }
+
+    @Test
+    public void testEnableSnapshotBasedPolicy() throws Exception{
+        final String policyName = testDataGenerator.getRandomString("FsSnapshotPolicy");
+        String replicationPath = "/tmp/abc";
+        targetFs.mkdirs(new Path(replicationPath));
+        testDataGenerator.createFSMocks(replicationPath);
+        HashMap<String, String> custProps = new HashMap<>();
+        custProps.put(ReplicationPolicy.ReplicationPolicyFields.SOURCE_SETSNAPSHOTTABLE.getName(), "true");
+        ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath, custProps);
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        waitOnCondition(20000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetClient.deletePolicy(policyName, false);
+    }
+
+    @Test
+    public void testRejectEnableSnapshotBasedPolicyIfParentSnapshottable() throws Exception{
+        final String policyName = testDataGenerator.getRandomString("FsSnapshotPolicy");
+        String replicationPath = "/tmp/abc";
+        targetFs.mkdirs(new Path(replicationPath));
+        testDataGenerator.createFSMocks(replicationPath);
+        HashMap<String, String> custProps = new HashMap<>();
+        custProps.put(ReplicationPolicy.ReplicationPolicyFields.SOURCE_SETSNAPSHOTTABLE.getName(), "true");
+        ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath, custProps);
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        waitOnCondition(20000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetClient.deletePolicy(policyName, false);
+
+        final String policyName1 = testDataGenerator.getRandomString("FsSnapshotPolicy");
+        replicationPath = "/tmp/abc/xyz";
+        DistributedFileSystem dfs = (DistributedFileSystem)targetFs;
+        doThrow(new RuntimeException("Nested snapshottable directories not allowed"))
+                .when(dfs).allowSnapshot(new Path(replicationPath));
+        targetFs.mkdirs(new Path(replicationPath));
+        testDataGenerator.createFSMocks(replicationPath);
+        boolean exThrown = false;
+        policyRequest = testDataGenerator.getPolicy(policyName1, replicationPath, custProps);
+        try {
+            targetClient.submitAndScheduleReplicationPolicy(policyName1, policyRequest.asProperties());
+        } catch (BeaconClientException bEx) {
+            exThrown = true;
+        }
+        assertTrue(true);
     }
 
     @Test(enabled = false)

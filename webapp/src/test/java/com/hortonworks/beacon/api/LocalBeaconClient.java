@@ -51,6 +51,8 @@ public class LocalBeaconClient implements BeaconClient {
 
     private PolicyResource policyResource = new PolicyResource();
 
+    private BeaconResource beaconResource = new BeaconResource();
+
     private CloudCredResource cloudCredResource = new CloudCredResource();
 
     @Override
@@ -367,8 +369,13 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public FileListResult listFiles(String path) throws BeaconClientException {
-        return null;
+    public FileListResult listFiles(final String path) throws BeaconClientException {
+        return new ClientResource<FileListResult>() {
+            @Override
+            FileListResult api() throws BeaconWebException {
+                return beaconResource.listFiles(path, null, null);
+            }
+        }.call();
     }
 
     @Override

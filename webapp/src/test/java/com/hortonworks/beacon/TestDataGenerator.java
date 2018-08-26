@@ -95,6 +95,13 @@ public abstract class TestDataGenerator {
                 new HashMap<String, String>());
     }
 
+    public ReplicationPolicy getPolicy(String policyName, String replicationPath, HashMap<String, String> custProps) {
+        return getPolicy(policyName, replicationPath, replicationPath, "FS", 120,
+                getCluster(ResourceBaseTest.ClusterType.SOURCE, false).getName(),
+                getCluster(ResourceBaseTest.ClusterType.TARGET, true).getName(),
+                custProps);
+    }
+
     public ReplicationPolicy getPolicy(String policyName, String replicationPath, String type) {
         return getPolicy(policyName, replicationPath, replicationPath, type, 120,
                 getCluster(ResourceBaseTest.ClusterType.SOURCE, false).getName(),

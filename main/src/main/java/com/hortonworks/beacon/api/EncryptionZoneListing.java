@@ -93,6 +93,27 @@ public final class EncryptionZoneListing extends FSListing<Map> {
     }
 
     @Override
+    protected String getBaseListing(String clusterName, String pathToCheck) {
+        int lastIndex = 0;
+        String tmpPathToCheck;
+
+        while (true) {
+            lastIndex = pathToCheck.indexOf(File.separator, lastIndex) + 1;
+            if (lastIndex == -1) {
+                break;
+            }
+            tmpPathToCheck = pathToCheck.substring(0, lastIndex);
+            if (StringUtils.isEmpty(tmpPathToCheck)) {
+                break;
+            }
+            if (contains(clusterName, tmpPathToCheck)) {
+                return tmpPathToCheck;
+            }
+        }
+        return null;
+    }
+
+    @Override
     protected boolean contains(String clusterName, String path) {
         if (listingMap.containsKey(clusterName)) {
             return listingMap.get(clusterName).containsKey(path);

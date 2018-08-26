@@ -595,13 +595,11 @@ public final class ValidationUtil {
                 }
                 if (markSourceSnapshottable) {
                     FSSnapshotUtils.allowSnapshot(ClusterHelper.getHAConfigurationOrDefault(clusterName), sourceDataset,
-                            new URI(cluster.getFsEndpoint()), cluster);
+                            cluster);
                 }
             }
         } catch (IOException e) {
             throw new  ValidationException(e, "Dataset {} doesn't exists.", sourceDataset);
-        } catch (URISyntaxException | InterruptedException e) {
-            throw new BeaconException(e);
         }
     }
 
@@ -699,9 +697,9 @@ public final class ValidationUtil {
                     .getStagingUri(targetCluster.getFsEndpoint(), targetDataset));
             if (!isTargetEncrypted && sourceSnapshottable && !targetSnapshottable) {
                 FSSnapshotUtils.allowSnapshot(ClusterHelper.getHAConfigurationOrDefault(clusterName),
-                        targetDataset, new URI(targetCluster.getFsEndpoint()), targetCluster);
+                        targetDataset, targetCluster);
             }
-        } catch (IOException | InterruptedException | URISyntaxException e) {
+        } catch (IOException e) {
             throw new BeaconException(e);
         }
     }

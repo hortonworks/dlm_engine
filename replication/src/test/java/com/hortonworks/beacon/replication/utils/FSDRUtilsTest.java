@@ -111,11 +111,11 @@ public class FSDRUtilsTest {
     }
 
     @Test
-    public void testIsSnapShotsAvailableWithSubDir() throws Exception {
+    public void testIsSnapShotsNotAvailableWithSubDir() throws Exception {
         Path subDirPath = new Path(sourceDir, "dir1");
         boolean isSnapshotable = FSSnapshotUtils.isSnapShotsAvailable(cluster.getName(),
                 new Path("hdfs://localhost:54137", subDirPath));
-        Assert.assertTrue(isSnapshotable);
+        Assert.assertFalse(isSnapshotable);
     }
 
     @Test(expectedExceptions = BeaconException.class, expectedExceptionsMessageRegExp =

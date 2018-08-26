@@ -195,8 +195,7 @@ public class HDFSReplicationTest {
         FSSnapshotUtils.createFSDirectory(miniDfs, fsStatus.getPermission(),
                 fsStatus.getOwner(), fsStatus.getGroup(), targetDataset);
         if (isSourceDirSnapshottable) {
-            FSSnapshotUtils.allowSnapshot(conf, targetDataset, miniDfs.getUri(),
-                    ClusterHelper.getActiveCluster(TARGET));
+            FSSnapshotUtils.allowSnapshot(conf, targetDataset, ClusterHelper.getActiveCluster(TARGET));
         }
         Assert.assertEquals(miniDfs.exists(new Path(targetDataset)), true);
         isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(TARGET, targetDataset);

@@ -38,15 +38,11 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.client.HdfsAdmin;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.jsp.el.ELException;
 import java.io.IOException;
-import java.net.URI;
-import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -308,19 +304,16 @@ public final class FSSnapshotUtils {
         }
     }
 
-    public static void allowSnapshot(final Configuration conf, String dataset, final URI fsEndPoint, Cluster cluster)
+    public static void allowSnapshot(final Configuration conf, String dataset, Cluster cluster)
             throws
-            IOException, InterruptedException, BeaconException {
+            IOException, BeaconException {
         LOG.debug("Allowing snapshot on cluster {} at path {}", cluster.getName(), dataset);
-        UserGroupInformation ugi = UserGroupInformation.getLoginUser();
-        HdfsAdmin hdfsAdmin = ugi.doAs(new PrivilegedExceptionAction<HdfsAdmin>() {
-            @Override
-            public HdfsAdmin run() throws IOException {
-                return new HdfsAdmin(fsEndPoint, conf);
-            }
-        });
-        hdfsAdmin.allowSnapshot(new Path(dataset));
-        SnapshotListing.get().updateListing(cluster.getName(), cluster.getFsEndpoint(), Path.SEPARATOR);
+        FileSystem fileSystem = FSUtils.getFileSystem(cluster.getFsEndpoint(), conf);
+        if (fileSystem instanceof DistributedFileSystem) {
+            DistributedFileSystem dfs = (DistributedFileSystem) fileSystem;
+            dfs.allowSnapshot(new Path(dataset));
+            SnapshotListing.get().updateListing(cluster.getName(), cluster.getFsEndpoint(), Path.SEPARATOR);
+        }
     }
 
     static String getLatestSnapshot(FileSystem fileSystem, String path, String snapshotPrefix) throws IOException {

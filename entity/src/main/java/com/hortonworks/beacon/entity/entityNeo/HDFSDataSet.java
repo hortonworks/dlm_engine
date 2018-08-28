@@ -29,8 +29,10 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +51,10 @@ public class HDFSDataSet extends FSDataSet {
         super(path, new BeaconCluster(clusterName).getHadoopConfiguration());
     }
 
+    public HDFSDataSet(FileSystem fileSystem, String path) throws BeaconException {
+        super(fileSystem, path);
+    }
+
     @Override
     protected Configuration getHadoopConf(String path, ReplicationPolicy policy) throws BeaconException {
         throw new IllegalStateException();
@@ -60,20 +66,32 @@ public class HDFSDataSet extends FSDataSet {
     }
 
     @Override
-    public void deleteAllSnapshots() throws IOException {
+    public void deleteAllSnapshots(final String snapshotNamePrefix) throws IOException {
         String dirName = StringUtils.removeEnd(path, Path.SEPARATOR);
         String snapshotDir = dirName + Path.SEPARATOR + SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
         FileStatus[] snapshots = fileSystem.listStatus(new Path(snapshotDir), new PathFilter() {
             @Override
             public boolean accept(Path p) {
-                return p.getName().startsWith(BeaconConstants.SNAPSHOT_PREFIX);
+                return p.getName().startsWith(snapshotNamePrefix);
             }
         });
         if (snapshots != null) {
             for (FileStatus snapshot : snapshots) {
-                LOG.info("Snapshot name: {}", snapshot.getPath().getName());
+                LOG.info("Deleting Snapshot: {}", snapshot.getPath().getName());
                 fileSystem.deleteSnapshot(new Path(dirName), snapshot.getPath().getName());
             }
         }
+    }
+
+    @Override
+    public void allowSnapshot() throws IOException {
+        DistributedFileSystem dfs = (DistributedFileSystem) fileSystem;
+        dfs.allowSnapshot(new Path(path));
+    }
+
+    @Override
+    public void disallowSnapshot() throws IOException {
+        DistributedFileSystem dfs = (DistributedFileSystem) fileSystem;
+        dfs.disallowSnapshot(new Path(path));
     }
 }

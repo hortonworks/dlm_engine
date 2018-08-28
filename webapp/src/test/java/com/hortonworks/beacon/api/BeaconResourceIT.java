@@ -1190,18 +1190,103 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, policyName));
         tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
         tgtDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
-        submitAndSchedule(policyName, 15, replicationPath, replicationPath, new Properties());
+        Properties properties = new Properties();
+        properties.setProperty(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName(), "true");
+        submitAndSchedule(policyName, 15, replicationPath, replicationPath, properties);
 
         // Added some delay for allowing progress of policy instance execution.
         Thread.sleep(500);
         deletePolicy(policyName);
         FileStatus[] fileStatus = srcDfsCluster.getFileSystem().listStatus(new Path(replicationPath, ".snapshot"));
         Assert.assertTrue(fileStatus.length > 0);
-        submitAndSchedule(policyName, 15, replicationPath, replicationPath, new Properties());
+        submitAndSchedule(policyName, 15, replicationPath, replicationPath, properties);
         deletePolicy(policyName);
         fileStatus = srcDfsCluster.getFileSystem().listStatus(new Path(replicationPath, ".snapshot"));
-        Assert.assertTrue(fileStatus.length == 0);
+        Assert.assertEquals(fileStatus.length, 0);
+    }
 
+    @Test(dependsOnMethods = "testPairCluster")
+    public void testSnapshotNoCreationOnPolicySubmission() throws Exception {
+        String policyName = getRandomString("snapshot-cleanup");
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, policyName));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
+        submitAndSchedule(policyName, 15, replicationPath, replicationPath, new Properties());
+
+        // Added some delay for allowing progress of policy instance execution.
+        Thread.sleep(500);
+        FileStatus[] fileStatus = srcDfsCluster.getFileSystem().listStatus(new Path(replicationPath, ".snapshot"));
+        Assert.assertTrue(fileStatus.length == 0);
+        deletePolicy(policyName);
+    }
+
+    @Test(dependsOnMethods = "testPairCluster")
+    public void testSnapshotDisallowOnPolicyDisable() throws Exception {
+        final String policyName = getRandomString("snapshot-cleanup");
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, policyName));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        Properties props = new Properties();
+        props.setProperty(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName(), "true");
+        submitAndSchedule(policyName, 15, replicationPath, replicationPath, props);
+
+        waitOnCondition(15000, "first instance complete", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instance = getFirstInstance(targetClient, policyName);
+                return instance != null && instance.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        FileStatus[] fileStatus = srcDfsCluster.getFileSystem().listStatus(new Path(replicationPath, ".snapshot"));
+        Assert.assertTrue(fileStatus.length > 0);
+        fileStatus = tgtDfsCluster.getFileSystem().listStatus(new Path(replicationPath, ".snapshot"));
+        Assert.assertTrue(fileStatus.length > 0);
+
+        PropertiesIgnoreCase updateProps = new PropertiesIgnoreCase();
+        updateProps.setProperty(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName(), "false");
+        updatePolicy(policyName, getTargetBeaconServer(), updateProps, Response.Status.OK);
+        Thread.sleep(15000);
+        boolean exThown = false;
+        try {
+            fileStatus = srcDfsCluster.getFileSystem().listStatus(new Path(replicationPath, ".snapshot"));
+        } catch (org.apache.hadoop.ipc.RemoteException ex) {
+            exThown = true;
+        }
+        Assert.assertTrue(exThown);
+        exThown = false;
+        try {
+            fileStatus = tgtDfsCluster.getFileSystem().listStatus(new Path(replicationPath, ".snapshot"));
+        } catch (org.apache.hadoop.ipc.RemoteException ex) {
+            exThown = true;
+        }
+        Assert.assertTrue(exThown);
+        deletePolicy(policyName);
+    }
+
+    @Test(dependsOnMethods = "testPairCluster")
+    public void testSnapshotOnPolicyEdit() throws Exception {
+        String policyName = getRandomString("snapshot-cleanup");
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        submitAndSchedule(policyName, 15, replicationPath, replicationPath, new Properties());
+
+        // Added some delay for allowing progress of policy instance execution.
+        Thread.sleep(500);
+
+        PropertiesIgnoreCase updateProps = new PropertiesIgnoreCase();
+        updateProps.put(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName(), "true");
+        updateProps.put("frequencyInSec", String.valueOf(16));
+
+        updatePolicy(policyName, getTargetBeaconServer(), updateProps, Response.Status.OK);
+        Thread.sleep(50000);
+
+        FileStatus[] fileStatus = srcDfsCluster.getFileSystem().listStatus(new Path(replicationPath, ".snapshot"));
+        Assert.assertTrue(fileStatus.length > 0);
+        deletePolicy(policyName);
     }
 
     private void abortAPI(String policyName) throws IOException, JSONException {
@@ -1356,6 +1441,8 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(status, "false");
         String snapshotReady = jsonObject.getString("enableSourceSnapshottable");
         assertEquals(snapshotReady, "true");
+        String useSourceSnapshots = jsonObject.getString("enableSnapshotBasedReplication");
+        assertEquals(useSourceSnapshots, "true");
         String clusterUpdateSupported = jsonObject.getString("clusterUpdateSupported");
         assertEquals(clusterUpdateSupported, "true");
         String policyEdit = jsonObject.getString("policy_edit");
@@ -1414,7 +1501,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
         srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, policyName));
         Properties properties = new Properties();
-        properties.setProperty(FSDRProperties.SOURCE_SETSNAPSHOTTABLE.getName(), "true");
+        properties.setProperty(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName(), "true");
         submitAndSchedule(policyName, 15, replicationPath, replicationPath, properties);
         Assert.assertTrue(isDirectorySnapshottable(srcDfsCluster.getFileSystem(), replicationPath)
                 && isDirectorySnapshottable(tgtDfsCluster.getFileSystem(), replicationPath));

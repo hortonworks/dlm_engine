@@ -73,7 +73,8 @@ Supported Replication types with properties:
     * tde.sameKey : Set to true to avoid decryption/encryption of data during replication, if same encryption key is
     used (true|false) (optional)
 
-    * source.setSnapshottable : Allow source dataset to be snapshottable (true|false) (optional)
+    * source.setSnapshottable : Allow source dataset to be snapshottable (true|false) (optional). Deprecated since DLM-1.1.3 in favour of 'enableSourceSnapshottable'
+    * enableSourceSnapshottable : Allow source dataset to be snapshottable and enforces DLM to use snapshot based replication. If set to 'false', enforces DLM to not to use snapshot based replication regardless of dataset marked to be snapshottable. (true|false) (optional)
     * sourceSnapshotRetentionAgeLimit : Delete source snapshots older than this age (optional)
     * sourceSnapshotRetentionNumber : Number of latest source snapshots to retain on source (optional)
     * targetSnapshotRetentionAgeLimit : Delete target snapshots older than this age (optional)
@@ -594,6 +595,7 @@ distcpMapBandwidth=25
 distcpMaxMaps=10
 queueName=test
 plugins=RANGER
+enableSnapshotBasedReplication=true
 
 * Payload data can be subset of any of the above properties
 
@@ -605,6 +607,8 @@ plugins=RANGER
   "message": "Policy [hdfspolicy] update successful",
   "requestId": "1917442783@qtp-1933129092-1"
 }
+
+*Note 1:* When 'enableSnapshotBasedReplication' property is updated from 'true' to 'false', all the existing snapshots for the policy are deleted.
 
 POST api/beacon/policy/dryrun/:policy-name
 ------------------------------------------
@@ -1677,7 +1681,9 @@ GET api/beacon/admin/status
     "policy_edit": true,
     "clusterUpdateSupported": true,
     "cloudHosted": false,
-    "wasbReplicationSupported": true
+    "wasbReplicationSupported": true,
+    "enableSnapshotBasedReplication": true
+
 }
 
 Response with plugins enabled:

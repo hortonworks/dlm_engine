@@ -337,7 +337,12 @@ public class HCFSReplication extends FSReplication {
             isPushRepl = true;
             boolean isTDEon = Boolean.valueOf(properties.getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
             if (!isTDEon) {
-                isSnapshot = SnapshotListing.get().isSnapshottable(sourceCN, sourceCluster.getFsEndpoint(), sourceDS);
+                boolean enableSnapshotsBasedRepl = getEnableSnapshotBasedReplication();
+                isSnapshot = enableSnapshotsBasedRepl
+                        && SnapshotListing.get().isSnapshottable(sourceCN, sourceCluster.getFsEndpoint(), sourceDS);
+                if (isSnapshot && !properties.containsKey(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName())) {
+                    super.updatePolicyCustomPropertyForSnapshot();
+                }
             }
         }
     }

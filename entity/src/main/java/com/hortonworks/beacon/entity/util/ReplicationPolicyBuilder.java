@@ -33,6 +33,7 @@ import com.hortonworks.beacon.client.entity.Retry;
 import com.hortonworks.beacon.client.util.EntityHelper;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.entity.entityNeo.WASBFSDataSet;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
@@ -141,6 +142,9 @@ public final class ReplicationPolicyBuilder {
         if (isDryRun) {
             Properties customProps = EntityHelper.getCustomProperties(requestProperties,
                     ReplicationPolicyProperties.getPolicyElements());
+            if (!customProps.containsKey(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName())) {
+                customProps.setProperty(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName(), "false");
+            }
             Retry retry = new Retry(Retry.RETRY_ATTEMPTS, Retry.RETRY_DELAY);
             return new ReplicationPolicy.Builder(policyName, type, sourceDataset, targetDataset,
                     sourceCluster,
@@ -168,6 +172,9 @@ public final class ReplicationPolicyBuilder {
         setMetaLocation(requestProperties);
         Properties properties = EntityHelper.getCustomProperties(requestProperties,
                 ReplicationPolicyProperties.getPolicyElements());
+        if (!properties.containsKey(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName())) {
+            properties.setProperty(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName(), "false");
+        }
 
         int attempts = Retry.RETRY_ATTEMPTS;
         String retryAttempts = requestProperties.getPropertyIgnoreCase(

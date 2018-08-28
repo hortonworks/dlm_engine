@@ -102,6 +102,8 @@ public class AdminResource extends AbstractResourceManager {
 
         //Beacon DLM 1.1.3 features
         result.setWasbReplicationSupported(true);
+        result.setEnableSnapshotBasedReplication(true);
+
         return result;
     }
 }

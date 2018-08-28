@@ -24,18 +24,17 @@ package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.FSDRProperties;
+import com.hortonworks.beacon.entity.entityNeo.DataSet;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.EvictionHelper;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.slf4j.Logger;
@@ -249,27 +248,6 @@ public final class FSSnapshotUtils {
         }
     }
 
-    public static void deleteAllSnapshots(DistributedFileSystem fs, String dirName, final String prefix)
-            throws BeaconException {
-        try {
-            dirName = StringUtils.removeEnd(dirName, Path.SEPARATOR);
-            String snapshotDir = dirName + Path.SEPARATOR + SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
-            FileStatus[] snapshots = fs.listStatus(new Path(snapshotDir), new PathFilter() {
-                @Override
-                public boolean accept(Path path) {
-                    return path.getName().startsWith(prefix);
-                }
-            });
-            for (FileStatus snapshot: snapshots) {
-                LOG.debug("Snapshot name: {}", snapshot.getPath().getName());
-                fs.deleteSnapshot(new Path(dirName), snapshot.getPath().getName());
-            }
-        } catch (IOException e) {
-            throw new BeaconException("Error while deleting existing snapshot(s).", e);
-        }
-    }
-
-
     static void handleSnapshotCreation(FileSystem fs, String stagingURI, String fsReplicationName)
             throws BeaconException {
         LOG.info("Creating snapshot on FS: {} for URI: {}", fs.toString(), stagingURI);
@@ -304,16 +282,20 @@ public final class FSSnapshotUtils {
         }
     }
 
-    public static void allowSnapshot(final Configuration conf, String dataset, Cluster cluster)
+    public static void allowSnapshot(Cluster cluster, DataSet dataset)
             throws
             IOException, BeaconException {
         LOG.debug("Allowing snapshot on cluster {} at path {}", cluster.getName(), dataset);
-        FileSystem fileSystem = FSUtils.getFileSystem(cluster.getFsEndpoint(), conf);
-        if (fileSystem instanceof DistributedFileSystem) {
-            DistributedFileSystem dfs = (DistributedFileSystem) fileSystem;
-            dfs.allowSnapshot(new Path(dataset));
-            SnapshotListing.get().updateListing(cluster.getName(), cluster.getFsEndpoint(), Path.SEPARATOR);
-        }
+        dataset.allowSnapshot();
+        SnapshotListing.get().updateListing(cluster.getName(), cluster.getFsEndpoint(), Path.SEPARATOR);
+    }
+
+    public static void disallowSnapshot(Cluster cluster, DataSet dataSet)
+            throws
+            IOException, BeaconException {
+        LOG.debug("Disallowing snapshot on cluster {} at path {}", cluster.getName(), dataSet.toString());
+        dataSet.disallowSnapshot();
+        SnapshotListing.get().updateListing(cluster.getName(), cluster.getFsEndpoint(), Path.SEPARATOR);
     }
 
     static String getLatestSnapshot(FileSystem fileSystem, String path, String snapshotPrefix) throws IOException {
@@ -339,10 +321,16 @@ public final class FSSnapshotUtils {
 
     static String getSnapshotName(String jobName) {
         String fsReplicationName;
+        fsReplicationName = getSnapshotNamePrefix(jobName).concat(String.valueOf(System.currentTimeMillis()));
+        return fsReplicationName;
+    }
+
+
+    public static String getSnapshotNamePrefix(String jobName) {
+        String fsReplicationName;
         fsReplicationName = SNAPSHOT_PREFIX
                 .concat(jobName)
-                .concat("-")
-                .concat(String.valueOf(System.currentTimeMillis()));
+                .concat("-");
         return fsReplicationName;
     }
 }

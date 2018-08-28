@@ -88,11 +88,22 @@ public class HDFSReplication extends FSReplication {
                     targetDataset);
             boolean isTDEon = Boolean.valueOf(properties.getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
             if (!isTDEon) {
-                isSnapshot = FSSnapshotUtils.isDirectorySnapshottable(properties.getProperty(FSDRProperties
-                                .SOURCE_CLUSTER_NAME.getName()), properties.getProperty(FSDRProperties
-                                .TARGET_CLUSTER_NAME.getName()), sourceStagingUri, targetStagingUri);
+                boolean enableSnapshotBasedReplication = getEnableSnapshotBasedReplication();
+                isSnapshot = enableSnapshotBasedReplication
+                        && FSSnapshotUtils.isDirectorySnapshottable(properties.getProperty(
+                        FSDRProperties.SOURCE_CLUSTER_NAME.getName()), properties.getProperty(FSDRProperties
+                        .TARGET_CLUSTER_NAME.getName()), sourceStagingUri, targetStagingUri);
                 if (isSnapshot) {
                     checkDataConsistency(jobContext);
+                }
+                if (isSnapshot && !properties.containsKey(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName())) {
+                    try{
+                        super.updatePolicyCustomPropertyForSnapshot();
+                    } catch (Exception ex) {
+                        LOG.warn("Couldn't update the custom property {} for policy {}",
+                                FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName(),
+                                properties.getProperty(FSDRProperties.JOB_NAME.getName()));
+                    }
                 }
             }
             initializeCustomProperties();

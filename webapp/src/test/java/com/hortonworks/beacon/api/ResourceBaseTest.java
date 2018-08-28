@@ -117,4 +117,13 @@ public abstract class ResourceBaseTest {
         }
         return null;
     }
+
+    protected PolicyInstanceList.InstanceElement getNthInstance(BeaconClient client, String policyName, int num)
+            throws BeaconClientException {
+        PolicyInstanceList policyInstanceList = client.listPolicyInstances(policyName);
+        if (policyInstanceList.getElements().length >= num) {
+            return policyInstanceList.getElements()[policyInstanceList.getElements().length - num];
+        }
+        return null;
+    }
 }

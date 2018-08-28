@@ -299,7 +299,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetFs.mkdirs(new Path(replicationPath));
         testDataGenerator.createFSMocks(replicationPath);
         HashMap<String, String> custProps = new HashMap<>();
-        custProps.put(ReplicationPolicy.ReplicationPolicyFields.CLOUD_ENCRYPTIONALGORITHM.getName(), "AES");
+        custProps.put(ReplicationPolicy.ReplicationPolicyFields.ENABLE_SNAPSHOTBASEDREPLICATION.getName(), "true");
         ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath, custProps);
         targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
         waitOnCondition(20000, "First Instance Success ", new Condition() {
@@ -319,7 +319,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetFs.mkdirs(new Path(replicationPath));
         testDataGenerator.createFSMocks(replicationPath);
         HashMap<String, String> custProps = new HashMap<>();
-        custProps.put(ReplicationPolicy.ReplicationPolicyFields.SOURCE_SETSNAPSHOTTABLE.getName(), "true");
+        custProps.put(ReplicationPolicy.ReplicationPolicyFields.ENABLE_SNAPSHOTBASEDREPLICATION.getName(), "true");
         ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath, custProps);
         targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
         waitOnCondition(20000, "First Instance Success ", new Condition() {
@@ -345,7 +345,60 @@ public class PolicyResourceTest extends ResourceBaseTest {
         } catch (BeaconClientException bEx) {
             exThrown = true;
         }
-        assertTrue(true);
+        assertTrue(exThrown);
+    }
+
+    @Test
+    public void testEnableSnapshotOnUpdatePolicy() throws Exception{
+        final String policyName = testDataGenerator.getRandomString("FsSnapshotPolicy");
+        String replicationPath = "/tmp/abc";
+        targetFs.mkdirs(new Path(replicationPath));
+        testDataGenerator.createFSMocks(replicationPath);
+        ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath);
+        policyRequest.setFrequencyInSec(15);
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        waitOnCondition(20000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        PropertiesIgnoreCase custProps = new PropertiesIgnoreCase();
+        custProps.put(ReplicationPolicy.ReplicationPolicyFields.ENABLE_SNAPSHOTBASEDREPLICATION.getName(), "true");
+        targetClient.updatePolicy(policyName, custProps);
+        waitOnCondition(20000, "Second Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getNthInstance(targetClient, policyName, 2);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetClient.deletePolicy(policyName, false);
+    }
+
+    @Test
+    public void testRejectEnableSnapshotBasedPolicyOnUpdateIfParentSnapshottable() throws Exception{
+        final String policyName1 = testDataGenerator.getRandomString("FsSnapshotPolicy");
+        String replicationPath = "/tmp/abc/xyz";
+        DistributedFileSystem dfs = (DistributedFileSystem)targetFs;
+        doThrow(new RuntimeException("Nested snapshottable directories not allowed"))
+                .when(dfs).allowSnapshot(new Path(replicationPath));
+        targetFs.mkdirs(new Path(replicationPath));
+        testDataGenerator.createFSMocks(replicationPath);
+        ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName1, replicationPath);
+        targetClient.submitAndScheduleReplicationPolicy(policyName1, policyRequest.asProperties());
+        //Now edit a policy and enable snapshot, it should fail.
+        PropertiesIgnoreCase props = new PropertiesIgnoreCase();
+        props.put(ReplicationPolicy.ReplicationPolicyFields.ENABLE_SNAPSHOTBASEDREPLICATION.getName(), "true");
+
+        boolean exThrown = false;
+        try {
+            targetClient.updatePolicy(policyName1, props);
+        } catch (BeaconClientException bEx) {
+            exThrown = true;
+        }
+        assertTrue(exThrown);
     }
 
     @Test(enabled = false)

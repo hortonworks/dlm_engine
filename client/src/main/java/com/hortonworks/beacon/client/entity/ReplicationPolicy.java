@@ -82,6 +82,7 @@ public class ReplicationPolicy extends Entity {
         NOTIFICATIONTYPE("notificationType"),
         NOTIFICATIONTO("notificationReceivers"),
         SOURCE_SETSNAPSHOTTABLE("source.setSnapshottable"),
+        ENABLE_SNAPSHOTBASEDREPLICATION("enableSnapshotBasedReplication"),
         CLOUD_ENCRYPTIONALGORITHM("cloud.encryptionAlgorithm"),
         CLOUD_ENCRYPTIONKEY("cloud.encryptionKey");
 
@@ -381,6 +382,10 @@ public class ReplicationPolicy extends Entity {
 
     public String getSourceSetSnapshottable() {
         return customProperties.getProperty(ReplicationPolicyFields.SOURCE_SETSNAPSHOTTABLE.getName());
+    }
+
+    public String getEnableSnapshotBasedReplication() {
+        return customProperties.getProperty(ReplicationPolicyFields.ENABLE_SNAPSHOTBASEDREPLICATION.getName());
     }
 
     public String getCloudEncryptionAlgorithm() {

@@ -22,8 +22,11 @@
 
 package com.hortonworks.beacon.replication.fs;
 
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.FSDRProperties;
+import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
@@ -60,6 +63,7 @@ public abstract class FSReplication extends InstanceReplication {
     protected String sourceStagingUri;
     protected String targetStagingUri;
     protected Job job;
+    private PolicyDao policyDao = new PolicyDao();
 
     FSReplication(ReplicationJobDetails details) {
         super(details);
@@ -202,5 +206,22 @@ public abstract class FSReplication extends InstanceReplication {
         } catch (IOException | InterruptedException e) {
             throw new BeaconException(e);
         }
+    }
+    protected boolean getEnableSnapshotBasedReplication() throws BeaconException {
+        boolean enableSnapshotBasedReplication = true;
+        if (properties.containsKey(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName())) {
+            enableSnapshotBasedReplication = Boolean.parseBoolean(
+                    properties.getProperty(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName()));
+        }
+        return enableSnapshotBasedReplication;
+    }
+    public void updatePolicyCustomPropertyForSnapshot() throws BeaconException {
+        ReplicationPolicy policy = policyDao.getActivePolicy(
+                properties.getProperty(FSDRProperties.JOB_NAME.getName()));
+        policy.getCustomProperties().setProperty(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName(),
+                "true");
+        PropertiesIgnoreCase propertiesIgnoreCase = new PropertiesIgnoreCase();
+        propertiesIgnoreCase.put(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName(), "true");
+        policyDao.persistNewPolicyCustomProperties(policy, propertiesIgnoreCase);
     }
 }

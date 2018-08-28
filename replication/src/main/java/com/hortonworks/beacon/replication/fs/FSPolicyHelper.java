@@ -98,6 +98,12 @@ public final class FSPolicyHelper {
         map.put(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(),
                 customProp.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(), defSnapshotRetCount));
 
+        // depends on null check later, so can't put 'false' as default in all the cases
+        if (customProp.containsKey(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName())) {
+            map.put(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName(),
+                    customProp.getProperty(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName(), "false"));
+        }
+
         if (StringUtils.isNotBlank(customProp.getProperty(FSDRProperties.QUEUE_NAME.getName()))) {
             map.put(FSDRProperties.QUEUE_NAME.getName(), customProp.getProperty(FSDRProperties.QUEUE_NAME.getName()));
         }

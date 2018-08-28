@@ -55,7 +55,17 @@ public class HCFSDataset extends FSDataSet {
     }
 
     @Override
-    public void deleteAllSnapshots() throws IOException {
+    public void deleteAllSnapshots(String snapshotNamePrefix) throws IOException {
         throw new IllegalStateException("deleteAllSnapshots doesn't apply for HCFS");
+    }
+
+    @Override
+    public void allowSnapshot() throws IOException {
+        throw new IllegalStateException("allowSnapshot doesn't apply for HCFS");
+    }
+
+    @Override
+    public void disallowSnapshot() throws IOException {
+        throw new IllegalStateException("disallowSnapshot doesn't apply for HCFS");
     }
 }

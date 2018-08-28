@@ -58,7 +58,11 @@ public enum FSDRProperties {
     TARGET_SNAPSHOT_RETENTION_NUMBER("targetSnapshotRetentionNumber",
             "Number of latest target snapshots to retain on source", false),
 
+    //Deprecated in favour of 'ENABLE_SOURCESNAPSHOTS' since DLM-1.1.3
     SOURCE_SETSNAPSHOTTABLE("source.setSnapshottable", "Source dataset to be marked as snapshottable", false),
+
+    ENABLE_SNAPSHOTBASED_REPLICATION("enableSnapshotBasedReplication",
+            "Source dataset to be enabled for snapshot based replication", false),
 
     TDE_ENCRYPTION_ENABLED("tde.enabled", "Set to true if TDE encryption is enabled", false),
     TDE_SAMEKEY("tde.sameKey", "Set to true to avoid encryption/decryption of data during replication, "

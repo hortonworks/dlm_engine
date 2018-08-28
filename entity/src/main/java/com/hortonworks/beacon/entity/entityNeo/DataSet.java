@@ -45,5 +45,9 @@ public abstract class DataSet {
 
     public abstract boolean isSnapshottable() throws IOException;
 
-    public abstract void deleteAllSnapshots() throws IOException;
+    public abstract void deleteAllSnapshots(String snapshotNamePrefix) throws IOException;
+
+    public abstract void allowSnapshot() throws IOException;
+
+    public abstract void disallowSnapshot() throws IOException;
 }

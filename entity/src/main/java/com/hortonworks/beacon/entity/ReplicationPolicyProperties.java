@@ -104,6 +104,7 @@ public enum ReplicationPolicyProperties {
         allowedUpdateProps.add(FSDRProperties.DISTCP_MAX_MAPS.getName());
         allowedUpdateProps.add(FSDRProperties.TDE_SAMEKEY.getName());
         allowedUpdateProps.add(FSDRProperties.QUEUE_NAME.getName());
+        allowedUpdateProps.add(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName());
         return allowedUpdateProps;
     }
 }

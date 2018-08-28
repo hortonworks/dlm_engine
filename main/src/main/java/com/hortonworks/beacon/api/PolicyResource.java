@@ -40,6 +40,8 @@ import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.StatusResult;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
+import com.hortonworks.beacon.entity.entityNeo.DataSet;
+import com.hortonworks.beacon.entity.entityNeo.FSDataSet;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
@@ -53,13 +55,17 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.replication.ReplicationUtils;
+import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.internal.AdminJobService;
 import com.hortonworks.beacon.scheduler.internal.SyncPolicyDeleteJob;
 import com.hortonworks.beacon.scheduler.internal.SyncStatusJob;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.Services;
+import com.hortonworks.beacon.store.BeaconStoreException;
+import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
+import com.hortonworks.beacon.store.executors.PolicyExecutor;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
@@ -79,12 +85,14 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+
 
 /**
  * Beacon policy resource management operations as REST API. Root resource (exposed at "myresource" path).
@@ -522,6 +530,7 @@ public class PolicyResource extends AbstractResourceManager {
         PropertiesIgnoreCase updatedProps = new PropertiesIgnoreCase();
         PropertiesIgnoreCase newProps = new PropertiesIgnoreCase();
         findUpdatedAndNewCustomProps(updatedPolicy, policy, updatedProps, newProps);
+        boolean snapshotsWasEnabled = Boolean.parseBoolean(policy.getEnableSnapshotBasedReplication());
         ReplicationPolicy modifiedExistingPolicy = policy;
         addNewPropsAndUpdateOlderPropsValue(modifiedExistingPolicy, updatedPolicy, newProps, updatedProps);
         // persist policy update information
@@ -531,9 +540,84 @@ public class PolicyResource extends AbstractResourceManager {
             modifiedExistingPolicy.setStartTime(updatedPolicy.getStartTime());
             syncPolicyInRemote(modifiedExistingPolicy, true);
         }
+        boolean snapshotsIsEnabled = Boolean.parseBoolean(modifiedExistingPolicy.getEnableSnapshotBasedReplication());
+        if (snapshotsWasEnabled && !snapshotsIsEnabled) {
+            deleteExistingAndDisallowSnapshots(modifiedExistingPolicy);
+        } else {
+            LOG.debug("Skipping snapshots deletion as snapshotsWasEnabled:{}, snapshotsIsEnabled:{} ",
+                    snapshotsWasEnabled, snapshotsIsEnabled);
+        }
+
         LOG.info("Request for update policy is processed successfully. Policy-name: [{}]", policy.getName());
 
     }
+
+    private void deleteExistingAndDisallowSnapshots(ReplicationPolicy policy)
+            throws BeaconException {
+        try {
+            String snapshotNamePrefix = FSSnapshotUtils.getSnapshotNamePrefix(policy.getName());
+            boolean isSourceClusterLocal = true;
+            boolean isHCFS = PolicyHelper.isPolicyHCFS(policy);
+            if (isHCFS) {
+                if (policy.getSourceCluster() != null) {
+                    isSourceClusterLocal = true;
+                } else {
+                    isSourceClusterLocal = false;
+                }
+            } else {
+                Cluster srcCluster = clusterDao.getActiveCluster(policy.getSourceCluster());
+                isSourceClusterLocal = srcCluster.isLocal();
+            }
+            if (isSourceClusterLocal) {
+                String sourceDataset = policy.getSourceDataset();
+                DataSet srcDataSet = FSDataSet.create(sourceDataset, policy.getSourceCluster(), policy);
+                deleteExistingAndDisallowSnapshots(policy.getName(), policy.getSourceCluster(), srcDataSet,
+                        snapshotNamePrefix);
+            } else {
+                String targetDataset = policy.getTargetDataset();
+                DataSet tgtDataSet = FSDataSet.create(targetDataset, policy.getTargetCluster(), policy);
+                deleteExistingAndDisallowSnapshots(policy.getName(), policy.getTargetCluster(), tgtDataSet,
+                        snapshotNamePrefix);
+            }
+        } catch (IOException ex) {
+            throw new BeaconException(ex);
+        }
+    }
+
+    private void deleteExistingAndDisallowSnapshots(String policyName, String clusterName, DataSet dataSet,
+                                                    String snapshotNamePrefix)
+            throws BeaconException, IOException {
+        if (dataSet.isSnapshottable()) {
+            LOG.info("Deleting existing snapshot(s) for dataset [{}]", dataSet);
+            dataSet.deleteAllSnapshots(snapshotNamePrefix);
+        } else {
+            LOG.warn("Target snapshots dir for dataset [{}] does not exist", dataSet);
+        }
+        // if no other policy has same source dataset, it should disallow snapshot
+        boolean datasetInRepl = isDataSetInReplication(dataSet.toString(), policyName);
+        if (!datasetInRepl) {
+            Cluster cluster = clusterDao.getActiveCluster(clusterName);
+            FSSnapshotUtils.disallowSnapshot(cluster, dataSet);
+            LOG.info("Disallowed snapshots for dataset[{}]", dataSet);
+        } else {
+            LOG.info("Active policies are using the datasource [{}], so can not disallow snapshots", dataSet);
+        }
+    }
+
+    private boolean isDataSetInReplication(String dataset, String currentPolicy) throws BeaconStoreException {
+        PolicyExecutor policyExecutor = new PolicyExecutor(new PolicyBean(ReplicationType.FS.getName()));
+        List<PolicyBean> policyBeanList = policyExecutor.getPolicies(PolicyExecutor.PolicyQuery.GET_POLICIES_FOR_TYPE);
+        boolean datasetInRepl = false;
+        for (PolicyBean policyBean: policyBeanList) {
+            if ((dataset.equals(policyBean.getSourceDataset())
+                    || dataset.equals(policyBean.getTargetDataset())) && !policyBean.getName().equals(currentPolicy)) {
+                datasetInRepl = true;
+                break;
+            }
+        }
+        return datasetInRepl;
+    }
+
     private void addNewPropsAndUpdateOlderPropsValue(ReplicationPolicy modifiedExistingPolicy,
                                                      ReplicationPolicy updatedPolicy, PropertiesIgnoreCase newProps,
                                                      PropertiesIgnoreCase updatedProps) {

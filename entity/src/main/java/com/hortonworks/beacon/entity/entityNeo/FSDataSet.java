@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.entity.entityNeo;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
@@ -53,8 +54,14 @@ public abstract class FSDataSet extends DataSet {
     protected FileSystem fileSystem;
     private Configuration conf;
 
+
     protected FSDataSet(String path, ReplicationPolicy policy) throws BeaconException {
         this(path, null, policy);
+    }
+
+    protected FSDataSet(FileSystem fileSystem, String path) {
+        this.path = path;
+        this.fileSystem = fileSystem;
     }
 
     public String getResolvedPath() {
@@ -148,5 +155,17 @@ public abstract class FSDataSet extends DataSet {
                 break;
         }
         throw new IllegalStateException("Unhandled dataset " + path);
+    }
+
+    @VisibleForTesting
+    public static FSDataSet create(FileSystem fileSystem, String path) throws BeaconException {
+        if (fileSystem != null && path != null) {
+            return new HDFSDataSet(fileSystem, path);
+        }
+        throw new IllegalStateException("Unhandled dataset " + path);
+    }
+
+    public String toString() {
+        return path;
     }
 }

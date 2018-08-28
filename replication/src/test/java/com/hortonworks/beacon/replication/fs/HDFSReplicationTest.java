@@ -28,6 +28,8 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
+import com.hortonworks.beacon.entity.entityNeo.DataSet;
+import com.hortonworks.beacon.entity.entityNeo.FSDataSet;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterDao;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
@@ -192,10 +194,11 @@ public class HDFSReplicationTest {
         Assert.assertEquals(miniDfs.exists(new Path(targetDataset)), false);
         Configuration conf = new Configuration();
         conf.set(BeaconConstants.FS_DEFAULT_NAME_KEY, FS_ENDPOINT);
+        DataSet dataSet = FSDataSet.create(miniDfs, targetDataset);
         FSSnapshotUtils.createFSDirectory(miniDfs, fsStatus.getPermission(),
                 fsStatus.getOwner(), fsStatus.getGroup(), targetDataset);
         if (isSourceDirSnapshottable) {
-            FSSnapshotUtils.allowSnapshot(conf, targetDataset, ClusterHelper.getActiveCluster(TARGET));
+            FSSnapshotUtils.allowSnapshot(ClusterHelper.getActiveCluster(TARGET), dataSet);
         }
         Assert.assertEquals(miniDfs.exists(new Path(targetDataset)), true);
         isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(TARGET, targetDataset);
@@ -337,6 +340,7 @@ public class HDFSReplicationTest {
 
     @Test
     public void testEvictSnapshots() throws Exception {
+
         miniDfs.mkdirs(evictionDir, fsPermission);
         miniDfs.allowSnapshot(evictionDir);
 

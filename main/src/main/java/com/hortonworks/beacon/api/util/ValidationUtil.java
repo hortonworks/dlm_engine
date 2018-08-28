@@ -241,6 +241,34 @@ public final class ValidationUtil {
                         frequencyInSec, deftReplicationFrequencyInSec);
             }
         }
+        boolean enableSnapshotBasedRepl = Boolean.parseBoolean(
+                properties.getPropertyIgnoreCase(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName()));
+        Cluster sourceCluster = clusterDao.getActiveCluster(existingPolicy.getSourceCluster());
+        boolean tdeEnabled = isTDEEnabled(sourceCluster, existingPolicy.getSourceDataset());
+        if (tdeEnabled && enableSnapshotBasedRepl) {
+            throw new ValidationException("Can not mark the source dataset snapshottable as it is TDE enabled");
+        }
+        String dataset = existingPolicy.getSourceDataset();
+        DataSet srcDataSet = FSDataSet.create(dataset, existingPolicy.getSourceCluster(), existingPolicy);
+        try {
+            if (enableSnapshotBasedRepl) {
+                FSSnapshotUtils.allowSnapshot(sourceCluster, srcDataSet);
+            }
+            boolean sourceSnapshottable = srcDataSet.isSnapshottable();
+            LOG.info("Is source directory: {} snapshottable: {}", dataset, sourceSnapshottable);
+
+            Cluster targetCluster = clusterDao.getActiveCluster(existingPolicy.getTargetCluster());
+            dataset = existingPolicy.getTargetDataset();
+            DataSet tgtDataSet = FSDataSet.create(dataset, existingPolicy.getTargetCluster(), existingPolicy);
+            boolean isTargetEncrypted = isTDEEnabled(targetCluster, dataset);
+            boolean targetSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(targetCluster.getName(), FSUtils
+                    .getStagingUri(targetCluster.getFsEndpoint(), dataset));
+            if (!isTargetEncrypted && sourceSnapshottable && !targetSnapshottable) {
+                FSSnapshotUtils.allowSnapshot(targetCluster, tgtDataSet);
+            }
+        } catch (IOException ex) {
+            throw new ValidationException("Unable to mark the dataset [{}] as snapshottable.", dataset, ex);
+        }
     }
 
     public static void validateWriteToPolicyCloudPath(ReplicationPolicy replicationPolicy,
@@ -495,7 +523,8 @@ public final class ValidationUtil {
             if (srcDataSet.isSnapshottable()) {
                 LOG.info("Deleting existing snapshot(s) on source directory.");
                 try {
-                    srcDataSet.deleteAllSnapshots();
+                    String snapshotNamePrefix = FSSnapshotUtils.getSnapshotNamePrefix(policy.getName());
+                    srcDataSet.deleteAllSnapshots(snapshotNamePrefix);
                 } catch (IOException e) {
                     throw new BeaconException("Error while deleting existing snapshot(s).", e);
                 }
@@ -505,7 +534,7 @@ public final class ValidationUtil {
                 Cluster cluster = clusterDao.getActiveCluster(clusterName);
                 boolean tdeEnabled = isTDEEnabled(cluster, sourceDataset);
                 boolean markSourceSnapshottable = Boolean.valueOf(policy.getCustomProperties().getProperty(
-                        FSDRProperties.SOURCE_SETSNAPSHOTTABLE.getName()));
+                        FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName()));
                 if (tdeEnabled && markSourceSnapshottable) {
                     throw new ValidationException("Can not mark the source dataset snapshottable as it is TDE enabled");
                 }
@@ -513,8 +542,7 @@ public final class ValidationUtil {
                     policy.getCustomProperties().setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
                 }
                 if (markSourceSnapshottable) {
-                    FSSnapshotUtils.allowSnapshot(ClusterHelper.getHAConfigurationOrDefault(clusterName), sourceDataset,
-                            cluster);
+                    FSSnapshotUtils.allowSnapshot(cluster, srcDataSet);
                 }
             }
         } catch (IOException e) {
@@ -551,7 +579,7 @@ public final class ValidationUtil {
         return dest == Destination.SOURCE ? policy.getSourceDataset() : policy.getTargetDataset();
     }
 
-    private static FileSystem getFileSystem(String clusterName) throws BeaconException {
+    public static FileSystem getFileSystem(String clusterName) throws BeaconException {
         Cluster cluster = clusterDao.getActiveCluster(clusterName);
         return FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration());
     }
@@ -599,8 +627,7 @@ public final class ValidationUtil {
             boolean targetSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(clusterName, FSUtils
                     .getStagingUri(targetCluster.getFsEndpoint(), targetDataset));
             if (!isTargetEncrypted && sourceSnapshottable && !targetSnapshottable) {
-                FSSnapshotUtils.allowSnapshot(ClusterHelper.getHAConfigurationOrDefault(clusterName),
-                        targetDataset, targetCluster);
+                FSSnapshotUtils.allowSnapshot(targetCluster, tgtDataSet);
             }
         } catch (IOException e) {
             throw new BeaconException(e);

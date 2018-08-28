@@ -61,6 +61,14 @@ public class PolicyUpdateExecutor  extends BaseExecutor {
         }
     }
 
+    public void persistNewPolicyProperty(PolicyBean updatedPolicy, PropertiesIgnoreCase newProps) {
+        List<PolicyPropertiesBean> policyPropertiesBeans = insertNewPolicyProps(updatedPolicy, newProps);
+        for (PolicyPropertiesBean bean : policyPropertiesBeans) {
+            getEntityManager().persist(bean);
+        }
+        LOG.info("Updated [{}] record", policyPropertiesBeans.size());
+    }
+
     private List<PolicyPropertiesBean> insertNewPolicyProps(PolicyBean updatedPolicy,
                                                               PropertiesIgnoreCase newProps) {
         List<PolicyPropertiesBean> propBeans = new ArrayList<>();

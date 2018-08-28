@@ -81,6 +81,9 @@ public class ServerStatusResult {
     @XmlElement
     private boolean wasbReplicationSupported;
 
+    @XmlElement
+    private boolean enableSnapshotBasedReplication;
+
     private boolean cloudHosted;
 
 
@@ -188,6 +191,15 @@ public class ServerStatusResult {
 
     public void setEnableSourceSnapshottable(boolean enableSourceSnapshottable) {
         this.enableSourceSnapshottable = enableSourceSnapshottable;
+    }
+
+    @JsonProperty
+    public boolean getEnableSnapshotBasedReplication() {
+        return enableSnapshotBasedReplication;
+    }
+
+    public void setEnableSnapshotBasedReplication(boolean enableSnapshotBasedReplication) {
+        this.enableSnapshotBasedReplication = enableSnapshotBasedReplication;
     }
 
     @JsonProperty

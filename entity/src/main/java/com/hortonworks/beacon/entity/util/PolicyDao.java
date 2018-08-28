@@ -522,4 +522,9 @@ public final class PolicyDao {
         PolicyUpdateExecutor executor = new PolicyUpdateExecutor();
         executor.persistUpdatedPolicy(getPolicyBean(updatedPolicy), updatedProps, newProps);
     }
+
+    public void persistNewPolicyCustomProperties(ReplicationPolicy  policy, PropertiesIgnoreCase newProps) {
+        PolicyUpdateExecutor executor = new PolicyUpdateExecutor();
+        executor.persistNewPolicyProperty(getPolicyBean(policy), newProps);
+    }
 }

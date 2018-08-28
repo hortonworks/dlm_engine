@@ -382,6 +382,10 @@ public class ReplicationPolicy extends Entity {
         return customProperties.getProperty(ReplicationPolicyFields.CLOUD_ENCRYPTIONKEY.getName());
     }
 
+    public String getCloudCred() {
+        return customProperties.getProperty(ReplicationPolicy.ReplicationPolicyFields.CLOUDCRED.getName());
+    }
+
     public PropertiesIgnoreCase asProperties() {
         PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
         properties.putIfNotNull(ReplicationPolicyFields.ID.getName(), policyId);

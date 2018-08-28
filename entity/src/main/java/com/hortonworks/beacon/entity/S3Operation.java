@@ -33,7 +33,6 @@ import org.apache.hadoop.fs.s3a.S3AUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URISyntaxException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,7 +61,7 @@ public final class S3Operation {
         amazonS3Client = new AmazonS3Client(awsCredentials);
     }
 
-    public String getBucketEndPoint(String bucketName) throws BeaconException, URISyntaxException {
+    public String getBucketEndPoint(String bucketName) throws BeaconException {
         String regionName;
         try {
             regionName = amazonS3Client.getBucketLocation(bucketName);

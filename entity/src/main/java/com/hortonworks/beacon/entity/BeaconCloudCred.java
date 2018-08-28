@@ -22,18 +22,12 @@
 
 package com.hortonworks.beacon.entity;
 
-import com.hortonworks.beacon.EncryptionAlgorithmType;
 import com.hortonworks.beacon.client.entity.CloudCred;
-import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.entity.util.ClusterHelper;
-import com.hortonworks.beacon.entity.util.PolicyHelper;
+import com.hortonworks.beacon.entity.util.CloudCredDao;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.security.BeaconCredentialProvider;
-import com.hortonworks.beacon.util.ReplicationType;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -47,7 +41,6 @@ import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * Server side logic of cloud cred, extends client bean CloudCred.
@@ -60,6 +53,9 @@ public class BeaconCloudCred extends CloudCred {
     }
     private static final Logger LOG = LoggerFactory.getLogger(BeaconCloudCred.class);
 
+    public BeaconCloudCred(String cloudCredId) {
+        this(new CloudCredDao().getCloudCred(cloudCredId));
+    }
 
     public BeaconCloudCred(CloudCred cloudCred) {
         super(cloudCred);
@@ -84,20 +80,8 @@ public class BeaconCloudCred extends CloudCred {
         List<Config> requiredConfigs = getAuthType().getRequiredConfigs();
         for (Config config : requiredConfigs) {
             if (config.isPassword() && configs.containsKey(config)) {
-                switch (this.getProvider()) {
-                    case AWS:
-                        credProvider.createCredentialEntry(config.getHadoopConfigName(), configs.get(config));
-                        break;
-                    case WASB:
-                        String hadoopConfig = config.getHadoopConfigName();
-                        for(Config cfg : requiredConfigs) {
-                            hadoopConfig = hadoopConfig.replace("{"+ cfg.getName() + "}", configs.get(cfg));
-                        }
-                        credProvider.createCredentialEntry(hadoopConfig, configs.get(config));
-                        break;
-                    default:
-                        throw new BeaconException("Specified Provider not supported");
-                }
+                String hadoopConfig = getHadoopConfigName(config);
+                credProvider.createCredentialEntry(hadoopConfig, configs.get(config));
                 credUpdated = true;
             }
         }
@@ -108,27 +92,32 @@ public class BeaconCloudCred extends CloudCred {
         }
     }
 
-    private String getHadoopCredentialPath() {
+    private String getHadoopConfigName(Config config) {
+        String configName = config.getHadoopConfigName();
+        for(Config cfg : getAuthType().getRequiredConfigs()) {
+            configName = configName.replace("{"+ cfg.getName() + "}", configs.get(cfg));
+        }
+        return configName;
+    }
+
+    public String getHadoopCredentialPath() {
         String providerPath = BeaconConfig.getInstance().getEngine().getCloudCredProviderPath();
         providerPath = providerPath + getId() + BeaconConstants.JCEKS_EXT;
         return providerPath;
     }
 
-    public Configuration getHadoopConf() {
-        return getHadoopConf(true);
-    }
-
     public Configuration getHadoopConf(boolean loadDefaults) {
         List<Config> requiredConfigs = getAuthType().getRequiredConfigs();
         Configuration conf = new Configuration(loadDefaults);
-        conf.set(BeaconConstants.FS_S3A_IMPL_DISABLE_CACHE, "true");
+        //Disable filesystem caching for cloud connectors
+        conf.set("fs." + getProvider().getHcfsScheme() + ".impl.disable.cache", "true");
         boolean isCredentialRequired = false;   //Are there any stored passwords
         for (Config config : requiredConfigs) {
             if (config.getHadoopConfigName() != null) {
                 if (config.isPassword()) {
                     isCredentialRequired = true;
                 } else {
-                    conf.set(config.getHadoopConfigName(), configs.get(config));
+                    conf.set(getHadoopConfigName(config), configs.get(config));
                 }
             }
         }
@@ -138,117 +127,6 @@ public class BeaconCloudCred extends CloudCred {
         }
         return conf;
     }
-
-    public Configuration getBucketEndpointConf(String path) throws BeaconException {
-        Configuration conf = new Configuration(false);
-        try {
-            if (isBucketEndPointConfAvailable(path)) {
-                return conf;
-            }
-            S3Operation s3Operation;
-            switch (this.getAuthType()) {
-                case AWS_ACCESSKEY:
-                    String credentialProviderPath = getHadoopCredentialPath();
-                    BeaconCredentialProvider beaconCredentialProvider = new BeaconCredentialProvider(
-                            credentialProviderPath);
-                    String accessKey = beaconCredentialProvider.resolveAlias(CloudCred.Config.AWS_ACCESS_KEY
-                            .getHadoopConfigName());
-                    String secretKey = beaconCredentialProvider.resolveAlias(CloudCred.Config.AWS_SECRET_KEY
-                            .getHadoopConfigName());
-                    s3Operation = S3OperationFactory.getINSTANCE().createS3Operation(accessKey, secretKey);
-                    break;
-                case AWS_INSTANCEPROFILE:
-                    s3Operation = S3OperationFactory.getINSTANCE().createS3Operation();
-                    break;
-                default:
-                    throw new BeaconException("AuthType {} not supported.", this.getAuthType());
-            }
-            String bucketName = new URI(path).getHost();
-            String bucketEndPoint = s3Operation.getBucketEndPoint(bucketName);
-            String bucketEndPointConfKey = getBucketEndpointConfKey(bucketName);
-            LOG.debug("Path: {}, Conf Key: {} Bucket Endpoint: {}", path, bucketEndPointConfKey, bucketEndPoint);
-            conf.set(bucketEndPointConfKey, bucketEndPoint);
-            return conf;
-        } catch (URISyntaxException e) {
-            throw new BeaconException("Path not correct: {}", path, e);
-        }
-    }
-
-
-    public Configuration getCloudEncryptionTypeConf(Properties properties, String cloudPath) throws BeaconException {
-        Configuration conf = new Configuration(false);
-        String cloudEncryptionAlgorithm = properties.getProperty(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName());
-        LOG.debug("Cloud encryption algorithm: {}", cloudEncryptionAlgorithm);
-        String bucketName = null;
-        try {
-            bucketName = new URI(cloudPath).getHost();
-        } catch (URISyntaxException e) {
-            throw new BeaconException(e, "Unable to retrieve bucket name from cloud path {}", cloudPath);
-        }
-        if (StringUtils.isNotBlank(cloudEncryptionAlgorithm)) {
-            try {
-                EncryptionAlgorithmType encryptionAlgorithmType = EncryptionAlgorithmType.valueOf(
-                        cloudEncryptionAlgorithm);
-                switch (encryptionAlgorithmType) {
-                    case AWS_SSES3:
-                        String awsSSES3AlgoConfig = String.format(encryptionAlgorithmType.getConfName(), bucketName);
-                        conf.set(awsSSES3AlgoConfig, encryptionAlgorithmType.getName());
-                        break;
-                    case AWS_SSEKMS:
-                        String awsSSEKMSAlgoConfig = String.format(encryptionAlgorithmType.getConfName(), bucketName);
-                        conf.set(awsSSEKMSAlgoConfig, encryptionAlgorithmType.getName());
-                        String sseKmsKey = properties.getProperty(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName());
-                        if (StringUtils.isNotBlank(sseKmsKey)) {
-                            String awsSSEKMSKeyConfig = String.format(BeaconConstants.AWS_SSEKMSKEY, bucketName);
-                            conf.set(awsSSEKMSKeyConfig, sseKmsKey);
-                        }
-                        break;
-                    default:
-                        LOG.error("Encryption algorithm {} not found. Data encryption won't be enabled.",
-                                cloudEncryptionAlgorithm);
-                }
-            } catch (IllegalArgumentException e) {
-                LOG.error("Encryption algorithm {} not found. Data encryption won't be enabled.",
-                        cloudEncryptionAlgorithm);
-            }
-        }
-        return conf;
-    }
-
-    public Configuration getCloudEncryptionTypeConf(ReplicationPolicy policy, String cloudPath) throws BeaconException {
-        Properties props = new Properties();
-        boolean hiveClusterEncOn = false;
-        Cluster targetCluster = null;
-        BeaconCluster beaconCluster = null;
-        boolean isHiveHCFSTarget = false;
-        if (policy.getType().equalsIgnoreCase(ReplicationType.HIVE.getName())) {
-            targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
-            beaconCluster = new BeaconCluster(targetCluster);
-            isHiveHCFSTarget = PolicyHelper.isDatasetHCFS(beaconCluster.getHiveWarehouseLocation());
-        }
-        // For a Hive target HCFS cluster, try getting enc details from Cluster, if absent, fall back to policy.
-        if (isHiveHCFSTarget) {
-            if (StringUtils.isNotBlank(beaconCluster.getHiveCloudEncryptionAlgorithm())) {
-                props.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(),
-                          beaconCluster.getHiveCloudEncryptionAlgorithm());
-                hiveClusterEncOn = true;
-            }
-            if (StringUtils.isNotBlank(beaconCluster.getHiveCloudEncryptionKey())) {
-                props.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), beaconCluster.getHiveCloudEncryptionKey());
-            }
-        }
-        if (!hiveClusterEncOn) {
-            if (StringUtils.isNotBlank(policy.getCloudEncryptionAlgorithm())) {
-                props.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(), policy.getCloudEncryptionAlgorithm());
-            }
-            if (StringUtils.isNotBlank(policy.getCloudEncryptionKey())) {
-                props.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), policy.getCloudEncryptionKey());
-            }
-        }
-        return getCloudEncryptionTypeConf(props, cloudPath);
-    }
-
-
 
     public void removeHiddenConfigs() {
         Iterator<Map.Entry<Config, String>> iterator = configs.entrySet().iterator();
@@ -314,16 +192,5 @@ public class BeaconCloudCred extends CloudCred {
             credProvider.flush();
             setOwnerForCredentialFile(credentialFile);
         }
-    }
-
-    private boolean isBucketEndPointConfAvailable(String path) throws URISyntaxException {
-        Configuration defaultConf = new Configuration();
-        String bucket = new URI(path).getHost();
-        String bucketEndPointKey = getBucketEndpointConfKey(bucket);
-        return StringUtils.isNotEmpty(defaultConf.getTrimmed(bucketEndPointKey));
-    }
-
-    private String getBucketEndpointConfKey(String bucket) {
-        return String.format(BeaconConstants.AWS_BUCKET_ENDPOINT, bucket);
     }
 }

@@ -52,7 +52,7 @@ public final class FSUtils {
 
     private static Configuration defaultConf = new Configuration();
 
-    private static Configuration getDefaultConf() {
+    public static Configuration getDefaultConf() {
         return defaultConf;
     }
 

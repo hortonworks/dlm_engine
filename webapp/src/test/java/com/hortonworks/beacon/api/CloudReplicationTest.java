@@ -22,12 +22,15 @@
 
 package com.hortonworks.beacon.api;
 
+import com.hortonworks.beacon.Destination;
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -94,6 +97,59 @@ public class CloudReplicationTest extends ResourceBaseTest {
         testDataGenerator.createFSMocks(sourceDataSet);
         targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
         waitOnCondition(50000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetClient.deletePolicy(policyName, false);
+    }
+
+    @Test
+    public void hdfsWasbReplicationTest() throws Exception {
+        CloudCred cloudCred = createWasbCloudCredAccessKey(
+                testDataGenerator.getRandomString("Submit-Cloud-Cred"));
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName = testDataGenerator.getRandomString("HDFSWasbPolicy");
+        String sourceDataSet = SOURCE_DIR + policyName;
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        ReplicationPolicy policy = testDataGenerator.getPolicy(policyName, sourceDataSet,
+                testDataGenerator.getRandomString("wasb://test-wasb/test-path"), "FS", 60,
+                sourceCluster.getName(), null, cloudProps);
+        testDataGenerator.createFSMocks(sourceDataSet);
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        waitOnCondition(50000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetClient.deletePolicy(policyName, false);
+    }
+
+    @Test
+    public void wasbHdfsReplicationTest() throws Exception {
+        CloudCred cloudCred = createWasbCloudCredAccessKey(
+                testDataGenerator.getRandomString("Submit-Cloud-Cred"));
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName = testDataGenerator.getRandomString("WasbHdfsPolicy");
+        String targetDataSet = SOURCE_DIR + policyName;
+        String sourceDataSet = testDataGenerator.getRandomString("wasb://test-wasb/test-path");
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        ReplicationPolicy policy = testDataGenerator.getPolicy(policyName, sourceDataSet,
+                targetDataSet, "FS", 60,
+                null, sourceCluster.getName(), cloudProps);
+        // Resetting the request context as next call create mocks is not an api call.
+        RequestContext.setInitialValue();
+        testDataGenerator.createFSMocks(FSPolicyHelper.getDatasetWithScheme(policy, Destination.SOURCE));
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        waitOnCondition(10000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
                 PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName);

@@ -23,11 +23,21 @@
 package com.hortonworks.beacon.entity;
 
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.util.ClusterDao;
+import com.hortonworks.beacon.store.BeaconStoreException;
+import org.apache.hadoop.conf.Configuration;
+
+import java.util.Map;
 
 /**
  * Server side logic of cluster, extends client bean {@link Cluster}.
  */
 public class BeaconCluster extends Cluster {
+
+    public BeaconCluster(String clusterName) throws BeaconStoreException {
+        this(new ClusterDao().getActiveCluster(clusterName));
+    }
 
     public BeaconCluster(Cluster cluster) {
         super(cluster);
@@ -61,4 +71,14 @@ public class BeaconCluster extends Cluster {
         return customProperties.getProperty(ClusterFields.KNOX_GATEWAY_URL.getName());
     }
 
+    public Configuration getHadoopConfiguration() {
+        Configuration conf = new Configuration(false);
+        for (Map.Entry<Object, Object> property : getCustomProperties().entrySet()) {
+            if (property.getKey().toString().startsWith("dfs.")) {
+                conf.set(property.getKey().toString(), property.getValue().toString());
+            }
+        }
+        conf.set(BeaconConstants.FS_DEFAULT_NAME_KEY, getFsEndpoint());
+        return conf;
+    }
 }

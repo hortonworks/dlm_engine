@@ -24,8 +24,6 @@
 package com.hortonworks.beacon.api.util;
 
 import com.hortonworks.beacon.Destination;
-import com.hortonworks.beacon.EncryptionAlgorithmType;
-import com.hortonworks.beacon.SchemeType;
 import com.hortonworks.beacon.api.EncryptionZoneListing;
 import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
@@ -34,17 +32,20 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.ClusterValidator;
+import com.hortonworks.beacon.entity.EncryptionAlgorithmType;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
+import com.hortonworks.beacon.entity.entityNeo.DataSet;
+import com.hortonworks.beacon.entity.entityNeo.FSDataSet;
+import com.hortonworks.beacon.entity.entityNeo.S3FSDataSet;
+import com.hortonworks.beacon.entity.entityNeo.WASBFSDataSet;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.CloudCredDao;
 import com.hortonworks.beacon.entity.util.ClusterDao;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
-import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -57,41 +58,29 @@ import com.hortonworks.beacon.replication.fs.SnapshotListing;
 import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.FSUtils;
-import com.hortonworks.beacon.util.FileSystemClientFactory;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.util.StringFormat;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.RemoteIterator;
-import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.AccessDeniedException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Set;
 
 import static com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields.CLOUD_ENCRYPTIONALGORITHM;
 import static com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields.CLOUD_ENCRYPTIONKEY;
-import static com.hortonworks.beacon.constants.BeaconConstants.SNAPSHOT_PREFIX;
-import static com.hortonworks.beacon.util.FSUtils.merge;
-
 
 /**
  * Utility class to validate API requests.
@@ -254,19 +243,16 @@ public final class ValidationUtil {
         }
     }
 
-
-
-    public static void validateWriteToPolicyCloudPath(ReplicationPolicy replicationPolicy, String pathStr)
-            throws ValidationException{
+    public static void validateWriteToPolicyCloudPath(ReplicationPolicy replicationPolicy,
+                                                      String pathStr, String cluster)
+            throws BeaconException {
         CloudCred cloudCred = getCloudCred(replicationPolicy);
+        DataSet cloudDataSet = FSDataSet.create(pathStr, cluster, replicationPolicy);
         try {
-            String cloudPath = ReplicationPolicyBuilder.appendCloudSchema(cloudCred, pathStr, SchemeType.HCFS_NAME);
-            BeaconCloudCred beaconCloudCred = new BeaconCloudCred(cloudCred);
-            Configuration conf = getHCFSConfiguration(replicationPolicy, cloudPath, beaconCloudCred);
-
             switch (cloudCred.getProvider()) {
                 case AWS:
-                    checkWriteOnAWSProvider(cloudPath, conf);
+                case WASB:
+                    cloudDataSet.isWriteAllowed();
                     break;
                 default:
                     throw new ValidationException("Not a supported provider {}, for a file write access check",
@@ -277,92 +263,13 @@ public final class ValidationUtil {
         }
     }
 
-    private static Configuration getHCFSConfiguration(ReplicationPolicy replicationPolicy, String cloudPath,
-                                                      BeaconCloudCred beaconCloudCred) throws BeaconException {
-        Configuration conf = beaconCloudCred.getHadoopConf();
-        Configuration confWithS3EndPoint = beaconCloudCred.getBucketEndpointConf(cloudPath);
-        Configuration confWithSSEAlgoAndKey = beaconCloudCred.getCloudEncryptionTypeConf(replicationPolicy,
-                                                                                         cloudPath);
-        merge(conf, confWithS3EndPoint);
-        merge(conf, confWithSSEAlgoAndKey);
-        return conf;
-    }
-
-    private static void checkWriteOnAWSProvider(String cloudPath, Configuration conf) throws ValidationException {
-        String tmpfileName = ".Beacon_" + System.currentTimeMillis() + ".tmp";
-        FileSystem fileSystem = null;
-        try {
-            URI cloudPathURI = new URI(cloudPath);
-            Path bucketPath = new Path(cloudPathURI.getScheme() + "://" + cloudPathURI.getHost());
-            fileSystem = bucketPath.getFileSystem(conf);
-            Path tmpFilePath = new Path(bucketPath.toString() + Path.SEPARATOR + tmpfileName);
-            FSDataOutputStream os = fileSystem.create(tmpFilePath);
-            os.close();
-            boolean tmpDeleted = fileSystem.delete(tmpFilePath, false);
-            if (tmpDeleted) {
-                LOG.debug("Deleted the temp file {} created during policy validation process", tmpfileName);
-            } else {
-                LOG.warn("Could not delete the temp file {} created during policy validation process", tmpfileName);
-            }
-        } catch (IOException ioEx) {
-            throw new ValidationException(ioEx, ioEx.getCause().getMessage());
-        } catch (URISyntaxException e) {
-            throw new ValidationException(e, "URI from cloud path could not be obtained");
-        } finally {
-            if (fileSystem != null) {
-                try {
-                    fileSystem.close();
-                } catch (IOException e) {
-                    LOG.debug("IOException while closing fileSystem", e);
-                }
-            }
-        }
-        LOG.info("Validation for write access to cloud path {} succeeded.", cloudPath);
-    }
-
-    public static boolean validatePolicyCloudPath(ReplicationPolicy replicationPolicy, String path) {
-        CloudCred cloudCred = getCloudCred(replicationPolicy);
-        boolean cloudPathExists = validateCloudPath(cloudCred, path);
-        LOG.info("Cloud credentials validation is successful.");
-        return cloudPathExists;
-    }
-
     private static CloudCred getCloudCred(ReplicationPolicy replicationPolicy) {
-        Properties properties = replicationPolicy.getCustomProperties();
-        String cloudCredId = properties.getProperty(ReplicationPolicy.ReplicationPolicyFields.CLOUDCRED.getName());
+        String cloudCredId = replicationPolicy.getCloudCred();
         if (cloudCredId == null) {
             throw new IllegalArgumentException("Cloud cred id is missing.");
         }
 
         return cloudCredDao.getCloudCred(cloudCredId);
-    }
-
-    public static boolean validateCloudPath(CloudCred cloudCred, String pathStr) {
-        FileSystem fileSystem = null;
-        try {
-            String cloudPath = ReplicationPolicyBuilder.appendCloudSchema(cloudCred, pathStr, SchemeType.HCFS_NAME);
-            Path path = new Path(cloudPath);
-            Configuration conf = new BeaconCloudCred(cloudCred).getHadoopConf();
-            Configuration confWithS3EndPoint = new BeaconCloudCred(cloudCred).getBucketEndpointConf(cloudPath);
-            merge(conf, confWithS3EndPoint);
-            fileSystem = path.getFileSystem(conf);
-            return fileSystem.exists(path);
-        } catch (NoSuchElementException e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
-        } catch (AccessDeniedException e) {
-            throw BeaconWebException.newAPIException(Response.Status.BAD_REQUEST, e,
-                    "Invalid credentials");
-        } catch(IOException | BeaconException e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
-        } finally {
-            if (fileSystem != null) {
-                try {
-                    fileSystem.close();
-                } catch (IOException e) {
-                    LOG.error(StringFormat.format("Exception while closing file system. {}", e.getMessage()), e);
-                }
-            }
-        }
     }
 
     public static void validateIfAPIRequestAllowed(ReplicationPolicy policy) throws BeaconException {
@@ -421,7 +328,8 @@ public final class ValidationUtil {
         return false;
     }
 
-    private static void validatePolicy(final ReplicationPolicy policy, boolean validateCloud) throws BeaconException {
+    private static void validatePolicy(final ReplicationPolicy policy, boolean validateCloud)
+            throws BeaconException {
         updateListingCache(policy);
         ReplicationType replType = ReplicationHelper.getReplicationType(policy.getType());
         switch (replType) {
@@ -430,20 +338,32 @@ public final class ValidationUtil {
                 validateFSSourceDS(policy);
                 validateFSTargetDS(policy);
                 String cloudPath = null;
+                String cluster = null;
                 if (PolicyHelper.isDatasetHCFS(policy.getSourceDataset())) {
                     cloudPath = policy.getSourceDataset();
+                    cluster = policy.getSourceCluster();
                 } else if (PolicyHelper.isDatasetHCFS(policy.getTargetDataset())) {
                     cloudPath = policy.getTargetDataset();
+                    cluster = policy.getTargetCluster();
                 }
                 if (validateCloud && cloudPath != null) {
-                    boolean cloudPathExists = validatePolicyCloudPath(policy, cloudPath);
-                    if (!cloudPathExists && FSUtils.isHCFS(new Path(policy.getSourceDataset()))) {
+                    DataSet cloudDataSet = FSDataSet.create(cloudPath, cluster, policy);
+                    boolean cloudPathExists;
+                    try {
+                        cloudPathExists = cloudDataSet.exists();
+                    } catch (IOException e) {
+                        throw new BeaconException(StringFormat.format("CloudPath {} doesn't exist", cloudPath));
+                    }
+                    DataSet sourceDataSet = FSDataSet.create(policy.getSourceDataset(),
+                            policy.getSourceCluster(), policy);
+                    if (!cloudPathExists
+                            && (sourceDataSet instanceof S3FSDataSet || sourceDataSet instanceof WASBFSDataSet)) {
                         throw BeaconWebException.newAPIException(Response.Status.NOT_FOUND,
                                 "sourceDataset does not exist");
                     }
                     validateEncryptionAlgorithmType(policy);
                     if (FSUtils.isHCFS(new Path(policy.getTargetDataset()))) {
-                        validateWriteToPolicyCloudPath(policy, cloudPath);
+                        validateWriteToPolicyCloudPath(policy, cloudPath, policy.getTargetCluster());
                     }
                 }
                 if (cloudPath != null) {
@@ -462,7 +382,7 @@ public final class ValidationUtil {
     }
 
     private static void ensureCloudEncryptionAndClusterTDECompatibility(ReplicationPolicy policy)
-                                                                                               throws BeaconException {
+            throws BeaconException {
         Cluster cluster;
         String clusterDataSet;
         if (StringUtils.isNotBlank(policy.getSourceCluster())){
@@ -501,7 +421,8 @@ public final class ValidationUtil {
     }
 
 
-    private static void validateEncryptionAlgorithmType(ReplicationPolicy policy) throws BeaconException {
+    private static void validateEncryptionAlgorithmType(ReplicationPolicy policy)
+            throws BeaconException {
         Properties cloudEncProps = new Properties();
 
         if (policy.getCloudEncryptionAlgorithm() != null) {
@@ -565,21 +486,19 @@ public final class ValidationUtil {
     }
 
     private static void validateFSSourceDS(ReplicationPolicy policy) throws BeaconException {
-        FileSystem fileSystem;
         String sourceDataset = policy.getSourceDataset();
-        if (PolicyHelper.isDatasetHCFS(sourceDataset)) {
-            fileSystem = getCloudFileSystem(policy, Destination.SOURCE);
-        } else {
-            fileSystem = getFileSystem(policy.getSourceCluster());
-        }
-
+        FSDataSet srcDataSet = FSDataSet.create(sourceDataset, policy.getSourceCluster(), policy);
         try {
-            if (!fileSystem.exists(new Path(sourceDataset))) {
+            if (!srcDataSet.exists()) {
                 throw new ValidationException("Source dataset {} doesn't exists.", policy.getSourceDataset());
             }
-            if (fileSystem.exists(new Path(sourceDataset, BeaconConstants.SNAPSHOT_DIR_PREFIX))) {
+            if (srcDataSet.isSnapshottable()) {
                 LOG.info("Deleting existing snapshot(s) on source directory.");
-                FSSnapshotUtils.deleteAllSnapshots((DistributedFileSystem) fileSystem, sourceDataset, SNAPSHOT_PREFIX);
+                try {
+                    srcDataSet.deleteAllSnapshots();
+                } catch (IOException e) {
+                    throw new BeaconException("Error while deleting existing snapshot(s).", e);
+                }
             }
             if (!PolicyHelper.isDatasetHCFS(sourceDataset)) {
                 String clusterName = policy.getSourceCluster();
@@ -628,16 +547,6 @@ public final class ValidationUtil {
         }
     }
 
-    // TODO : Move it to respective Dataset class.
-    private static FileSystem getCloudFileSystem(ReplicationPolicy policy, Destination dest) throws
-            BeaconException {
-        CloudCred cloudCred = getCloudCred(policy);
-        String dataset = ReplicationPolicyBuilder.appendCloudSchema(cloudCred, getDataset(policy, dest),
-                SchemeType.HCFS_NAME);
-        Configuration conf = getHCFSConfiguration(policy, dataset, new BeaconCloudCred(cloudCred));
-        return FileSystemClientFactory.get().createFileSystem(dataset, conf);
-    }
-
     private static String getDataset(ReplicationPolicy policy, Destination dest) {
         return dest == Destination.SOURCE ? policy.getSourceDataset() : policy.getTargetDataset();
     }
@@ -649,19 +558,13 @@ public final class ValidationUtil {
 
 
     private static void validateFSTargetDS(ReplicationPolicy policy) throws BeaconException {
-        FileSystem fileSystem;
         boolean isHCFS = PolicyHelper.isPolicyHCFS(policy);
         String targetDataset = policy.getTargetDataset();
-        if (PolicyHelper.isDatasetHCFS(targetDataset)) {
-            fileSystem = getCloudFileSystem(policy, Destination.TARGET);
-        } else {
-            fileSystem = getFileSystem(policy.getTargetCluster());
-        }
+        DataSet tgtDataSet = FSDataSet.create(targetDataset, policy.getTargetCluster(), policy);
         try {
             boolean targetPathExists = false;
-            if (fileSystem.exists(new Path(targetDataset))) {
-                RemoteIterator<LocatedFileStatus> files = fileSystem.listFiles(new Path(targetDataset), true);
-                if (files != null && files.hasNext()) {
+            if (tgtDataSet.exists()) {
+                if (!tgtDataSet.isEmpty()) {
                     throw new ValidationException("Target dataset directory {} is not empty.", targetDataset);
                 }
                 targetPathExists = true;
@@ -669,7 +572,7 @@ public final class ValidationUtil {
             if (isHCFS) {
                 if (!targetPathExists) {
                     // Default permission would be set to (777 & !022) = 755.
-                    fileSystem.mkdirs(new Path(targetDataset));
+                    tgtDataSet.create();
                 }
                 return;
             }
@@ -726,7 +629,8 @@ public final class ValidationUtil {
             if (isHCFS) {
                 if (validateCloud) {
                     validateEncryptionAlgorithmType(policy);
-                    validateWriteToPolicyCloudPath(policy, beaconCluster.getHiveWarehouseLocation());
+                    validateWriteToPolicyCloudPath(policy, beaconCluster.getHiveWarehouseLocation(),
+                            policy.getTargetCluster());
                 }
                 ensureClusterTDECompatibilityForHive(policy);
             } else {
@@ -779,7 +683,7 @@ public final class ValidationUtil {
     }
 
 
-    private static void createTargetFSDirectory(ReplicationPolicy policy) throws BeaconException, IOException {
+    private static void createTargetFSDirectory(ReplicationPolicy policy) throws BeaconException {
         LOG.info("Creating a data directory on target file system: {}", policy.getTargetDataset());
         Cluster sourceCluster = clusterDao.getActiveCluster(policy.getSourceCluster());
         Cluster targetCluster = clusterDao.getActiveCluster(policy.getTargetCluster());

@@ -250,6 +250,16 @@ public class CloudCred extends Entity {
         public String getHcfsScheme() {
             return hcfsScheme;
         }
+
+        public static Provider createFromScheme(String scheme) {
+            for (Provider provider: values()) {
+                if (provider.getScheme().equalsIgnoreCase(scheme)
+                        || provider.getHcfsScheme().equalsIgnoreCase(scheme)) {
+                    return provider;
+                }
+            }
+            return null;
+        }
     }
 
     /**

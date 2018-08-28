@@ -24,12 +24,13 @@ package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.ExecutionType;
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.entity.FSDRProperties;
-import com.hortonworks.beacon.entity.util.CloudCredDao;
+import com.hortonworks.beacon.entity.entityNeo.FSDataSet;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
@@ -268,26 +269,20 @@ public class HCFSReplication extends FSReplication {
 
     private Configuration getHCFSConfiguration() throws BeaconException {
         Configuration conf = getConfiguration();
-        String cloudCredId = properties.getProperty(FSDRProperties.CLOUD_CRED.getName());
-        BeaconCloudCred cloudCred = new BeaconCloudCred(new CloudCredDao().getCloudCred(cloudCredId));
-        Configuration cloudConf = cloudCred.getHadoopConf(false);
-        String cloudPath = getCloudPath();
-        merge(cloudConf, cloudCred.getCloudEncryptionTypeConf(properties, cloudPath));
-        merge(cloudConf, getConfigurationWithBucketEndPoint(cloudCred));
-        return merge(conf, cloudConf);
+        String policyName = properties.getProperty(ReplicationPolicy.ReplicationPolicyFields.NAME.getName());
+        ReplicationPolicy policy = new PolicyDao().getActivePolicy(policyName);
+        String cloudPath = getCloudPath(policy);
+        Configuration fsConf = FSDataSet.create(cloudPath, null, policy).getHadoopConf();
+        return merge(conf, fsConf);
     }
 
-    private Configuration getConfigurationWithBucketEndPoint(BeaconCloudCred cloudCred) throws BeaconException {
-        return cloudCred.getBucketEndpointConf(getCloudPath());
-    }
-
-    private String getCloudPath() throws BeaconException {
+    private String getCloudPath(ReplicationPolicy policy) throws BeaconException {
         String cloudPath;
-        String sourcePath = properties.getProperty(FSDRProperties.SOURCE_DATASET.getName());
+        String sourcePath = policy.getSourceDataset();
         if (PolicyHelper.isDatasetHCFS(sourcePath)) {
             cloudPath = sourcePath;
         } else {
-            cloudPath = properties.getProperty(FSDRProperties.TARGET_DATASET.getName());
+            cloudPath = policy.getTargetDataset();
         }
         return cloudPath;
     }

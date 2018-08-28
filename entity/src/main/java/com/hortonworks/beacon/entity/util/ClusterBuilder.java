@@ -22,7 +22,7 @@
 
 package com.hortonworks.beacon.entity.util;
 
-import com.hortonworks.beacon.EncryptionAlgorithmType;
+import com.hortonworks.beacon.entity.EncryptionAlgorithmType;
 import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.util.EntityHelper;

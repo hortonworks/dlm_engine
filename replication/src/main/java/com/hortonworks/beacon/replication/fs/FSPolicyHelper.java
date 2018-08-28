@@ -28,9 +28,11 @@ import java.util.Properties;
 
 import javax.servlet.jsp.el.ELException;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hortonworks.beacon.Destination;
 import com.hortonworks.beacon.SchemeType;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.entityNeo.FSDataSet;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.util.FSUtils;
@@ -74,9 +76,10 @@ public final class FSPolicyHelper {
         map.put(FSDRProperties.JOB_FREQUENCY.getName(), String.valueOf(policy.getFrequencyInSec()));
         map.put(FSDRProperties.START_TIME.getName(), DateUtil.formatDate(policy.getStartTime()));
         map.put(FSDRProperties.END_TIME.getName(), DateUtil.formatDate(policy.getEndTime()));
-
-        map.put(FSDRProperties.SOURCE_DATASET.getName(), getDatasetWithScheme(policy, Destination.SOURCE));
-        map.put(FSDRProperties.TARGET_DATASET.getName(), getDatasetWithScheme(policy, Destination.TARGET));
+        FSDataSet sourceDataSet = FSDataSet.create(policy.getSourceDataset(), policy.getSourceCluster(), policy);
+        FSDataSet targetDataSet = FSDataSet.create(policy.getTargetDataset(), policy.getTargetCluster(), policy);
+        map.put(FSDRProperties.SOURCE_DATASET.getName(), sourceDataSet.getResolvedPath());
+        map.put(FSDRProperties.TARGET_DATASET.getName(), targetDataSet.getResolvedPath());
 
         Properties customProp = policy.getCustomProperties();
         map.put(FSDRProperties.DISTCP_MAX_MAPS.getName(),
@@ -129,7 +132,6 @@ public final class FSPolicyHelper {
         return prop;
     }
 
-
     public static void validateFSReplicationProperties(final Properties properties) throws BeaconException {
         for (FSDRProperties option : FSDRProperties.values()) {
             if (properties.getProperty(option.getName()) == null && option.isRequired()) {
@@ -165,7 +167,8 @@ public final class FSPolicyHelper {
         return distcpOptionsMap;
     }
 
-    private static String getDatasetWithScheme(ReplicationPolicy policy, Destination destination)
+    @VisibleForTesting
+    public static String getDatasetWithScheme(ReplicationPolicy policy, Destination destination)
             throws BeaconException {
         String datasetWithScheme;
         if (destination == Destination.SOURCE) {

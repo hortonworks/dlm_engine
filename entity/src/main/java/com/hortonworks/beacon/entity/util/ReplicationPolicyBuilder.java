@@ -34,6 +34,7 @@ import com.hortonworks.beacon.client.util.EntityHelper;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
+import com.hortonworks.beacon.entity.entityNeo.WASBFSDataSet;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
@@ -41,13 +42,17 @@ import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Properties;
+
+import static com.hortonworks.beacon.util.FSUtils.getDefaultConf;
 
 /**
  * Builder class to construct Beacon ReplicationPolicy resource.
@@ -108,11 +113,9 @@ public final class ReplicationPolicyBuilder {
                     throw new ValidationException("Either source or target cluster must be provided and only one.");
                 }
                 if (StringUtils.isBlank(sourceCluster)) {
-                    sourceDataset = appendCloudSchema(cloudEntityId, sourceDataset, SchemeType.NAME);
                     checkHDFSEnabled(ClusterHelper.getActiveCluster(targetCluster));
                 }
                 if (StringUtils.isBlank(targetCluster)) {
-                    targetDataset = appendCloudSchema(cloudEntityId, targetDataset, SchemeType.NAME);
                     checkHDFSEnabled(ClusterHelper.getActiveCluster(sourceCluster));
                 }
             }
@@ -251,21 +254,41 @@ public final class ReplicationPolicyBuilder {
 
     public static String appendCloudSchema(CloudCred cloudCred, String dataset, SchemeType schemeType)
             throws BeaconException {
-        Path path = new Path(dataset);
-        URI uri = path.toUri();
-        String scheme = uri.getScheme();
-        String replaceScheme;
-        if (schemeType == SchemeType.HCFS_NAME) {
-            replaceScheme = cloudCred.getProvider().getHcfsScheme().toLowerCase(Locale.ENGLISH);
-        } else {
-            replaceScheme = cloudCred.getProvider().getScheme().toLowerCase(Locale.ENGLISH);
+        Path filePath = new Path(dataset);
+        String scheme;
+        try {
+            URI uri = filePath.toUri();
+            scheme = uri.getScheme();
+            scheme = StringUtils.isBlank(scheme) ? FileSystem.get(uri, getDefaultConf()).getScheme() : scheme;
+            if (StringUtils.isBlank(scheme)) {
+                throw new BeaconException("Cannot get valid scheme for {}", filePath);
+            }
+        } catch (IOException e) {
+            throw new BeaconException(e);
         }
-        if (StringUtils.isNotBlank(scheme) && FSUtils.isHCFS(path)) {
-            dataset = dataset.replaceFirst(scheme, replaceScheme);
-        } else {
-            dataset = replaceScheme.concat("://").concat(dataset);
+        switch (scheme) {
+            case "s3":
+                String replaceScheme;
+                if (schemeType == SchemeType.HCFS_NAME) {
+                    replaceScheme = cloudCred.getProvider().getHcfsScheme().toLowerCase(Locale.ENGLISH);
+                } else {
+                    replaceScheme = cloudCred.getProvider().getScheme().toLowerCase(Locale.ENGLISH);
+                }
+                if (StringUtils.isNotBlank(scheme) && FSUtils.isHCFS(filePath)) {
+                    dataset = dataset.replaceFirst(scheme, replaceScheme);
+                } else {
+                    dataset = replaceScheme.concat("://").concat(dataset);
+                }
+                return dataset.endsWith(Path.SEPARATOR) ? dataset : dataset.concat(Path.SEPARATOR);
+            case "wasb":
+                String wasbAccount = cloudCred.getConfigs().get(CloudCred.Config.WASB_ACCOUNT_NAME);
+                URI uri = filePath.toUri();
+                String authority = uri.getAuthority();
+                return dataset.replace(authority, authority + "@" + wasbAccount + WASBFSDataSet.WASB_ENDPOINT);
+            default:
+                throw new BeaconException("Cloud scheme not supported.");
         }
-        return dataset.endsWith(Path.SEPARATOR) ? dataset : dataset.concat(Path.SEPARATOR);
+
     }
 
     private static void checkHDFSEnabled(Cluster cluster) throws ValidationException {

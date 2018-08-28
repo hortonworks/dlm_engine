@@ -70,6 +70,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -218,7 +219,7 @@ public class LocalTestDataGenerator extends TestDataGenerator {
 
     @Override
     public void createFSMocks(String path) throws IOException {
-        when(targetFs.exists(new Path(path))).thenReturn(true);
+        when(targetFs.exists(any(Path.class))).thenReturn(true);
         when(targetFs.create(new Path(path))).thenReturn(mock(FSDataOutputStream.class));
     }
 }

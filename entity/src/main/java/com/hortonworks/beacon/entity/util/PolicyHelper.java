@@ -22,16 +22,19 @@
 
 package com.hortonworks.beacon.entity.util;
 
-import com.hortonworks.beacon.EncryptionAlgorithmType;
+import com.hortonworks.beacon.entity.EncryptionAlgorithmType;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.FSUtils;
+import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static com.hortonworks.beacon.util.ReplicationType.HIVE;
 
 /**
  * Helper util class for Beacon ReplicationPolicy resource.
@@ -98,21 +101,6 @@ public final class PolicyHelper {
         return StringUtils.isNotEmpty(policy.getCloudEncryptionAlgorithm());
     }
 
-    public static EncryptionAlgorithmType getCloudEncryptionAlgorithm(final ReplicationPolicy policy)
-            throws BeaconException {
-        if (!isCloudEncryptionEnabled(policy)) {
-            return EncryptionAlgorithmType.NONE;
-        }
-        String cloudEncAlgo = policy.getCloudEncryptionAlgorithm();
-        try {
-            return EncryptionAlgorithmType.valueOf(cloudEncAlgo);
-        } catch (IllegalArgumentException iEx) {
-            throw new BeaconException("Invalid cloud algorithm type is specified " + cloudEncAlgo, iEx);
-        } catch (NullPointerException npe) {
-            throw new BeaconException("Cloud Encryption Algorithm cannot be null", npe);
-        }
-    }
-
     public static String getRMTokenConf() {
         StringBuilder rmTokenConf = new StringBuilder();
         rmTokenConf.append("dfs.nameservices|")
@@ -130,4 +118,27 @@ public final class PolicyHelper {
                 .append("yarn.http.policy");
         return rmTokenConf.toString();
     }
+
+    public static EncryptionAlgorithmType getCloudEncryptionAlgorithm(ReplicationPolicy policy) throws BeaconException {
+        String algorithm = policy.getCustomProperties().getProperty(
+                ReplicationPolicy.ReplicationPolicyFields.CLOUD_ENCRYPTIONALGORITHM.getName());
+        ReplicationType type = ReplicationType.valueOf(policy.getType());
+        if (type == HIVE) {
+            BeaconCluster targetCluster = new BeaconCluster(ClusterHelper.getActiveCluster(policy.getTargetCluster()));
+            algorithm = targetCluster.getHiveCloudEncryptionAlgorithm();
+        }
+        return EncryptionAlgorithmType.getEncryptionAlgorithmType(algorithm);
+    }
+
+    public static String getCloudEncryptionKey(ReplicationPolicy policy) throws BeaconException {
+        String key = policy.getCustomProperties().getProperty(
+                ReplicationPolicy.ReplicationPolicyFields.CLOUD_ENCRYPTIONKEY.getName());
+        ReplicationType type = ReplicationType.valueOf(policy.getType());
+        if (type == HIVE) {
+            BeaconCluster targetCluster = new BeaconCluster(ClusterHelper.getActiveCluster(policy.getTargetCluster()));
+            key = targetCluster.getHiveCloudEncryptionKey();
+        }
+        return key;
+    }
+
 }

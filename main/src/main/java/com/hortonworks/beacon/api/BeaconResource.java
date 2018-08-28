@@ -60,8 +60,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import static com.hortonworks.beacon.util.FSUtils.merge;
-
 /**
  * Beacon resource management operations as REST API. Root resource (exposed at "myresource" path).
  */
@@ -218,8 +216,8 @@ public class BeaconResource extends AbstractResourceManager {
     private FileListResult listCloudFiles(String path, String cloudCredId) throws BeaconException {
         path = ReplicationPolicyBuilder.appendCloudSchema(path, cloudCredId, SchemeType.HCFS_NAME);
         BeaconCloudCred cloudCred = new BeaconCloudCred(cloudCredDao.getCloudCred(cloudCredId));
-        Configuration configuration = cloudCred.getHadoopConf();
-        merge(configuration, cloudCred.getBucketEndpointConf(path));
+        Configuration configuration = cloudCred.getHadoopConf(false);
+        //merge(configuration, cloudCred.getBucketEndpointConf(path));
         return datasetListing.listCloudFiles(cloudCred.getProvider(), configuration, path);
     }
 

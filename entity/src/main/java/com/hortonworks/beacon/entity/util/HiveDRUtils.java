@@ -29,10 +29,10 @@ import com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyF
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.HiveDRProperties;
+import com.hortonworks.beacon.entity.entityNeo.FSDataSet;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.HiveActionType;
 import com.hortonworks.beacon.util.KnoxTokenUtils;
@@ -66,7 +66,6 @@ public final class HiveDRUtils {
 
     public static final String JDBC_PREFIX = "jdbc:";
     public static final String BOOTSTRAP = "bootstrap";
-    public static final String DEFAULT = "default";
     private static final String PATTERN_ZOOKEEPER_DISCOVERY = "^(.*?)serviceDiscoveryMode=zooKeeper[;]?(.*)$";
     private static final String PATTERN_ZOOKEEPER_NAMESPACE = "^(.*?)zooKeeperNamespace=[0-9a-zA-z]+[;]?(.*)$";
 
@@ -174,19 +173,14 @@ public final class HiveDRUtils {
 
             String cloudCredId = properties.getProperty(ReplicationPolicyFields.CLOUDCRED.getName());
             String warehouseDir = properties.getProperty(ClusterFields.HIVE_WAREHOUSE.getName());
+
+            //TODO use HiveCloudDataset
             if (StringUtils.isNotBlank(cloudCredId)) {
-                BeaconCloudCred cloudCred = new BeaconCloudCred(new CloudCredDao().getCloudCred(cloudCredId));
-                Configuration cloudConf = cloudCred.getHadoopConf(false);
-                appendConfig(builder, cloudConf);
-
-                appendConfig(builder, cloudCred.getBucketEndpointConf(warehouseDir));
-            }
-            String cloudEncryptionAlgorithm = properties.getProperty(
-                    FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName());
-
-            if (StringUtils.isNotBlank(cloudEncryptionAlgorithm)) {
-                appendConfig(builder, new BeaconCloudCred(new CloudCredDao().getCloudCred(cloudCredId))
-                        .getCloudEncryptionTypeConf(properties, warehouseDir));
+                String policyName = properties.getProperty(ReplicationPolicyFields.NAME.getName());
+                PolicyDao policyDao = new PolicyDao();
+                Configuration fsConf =
+                        FSDataSet.create(warehouseDir, null, policyDao.getActivePolicy(policyName)).getHadoopConf();
+                appendConfig(builder, fsConf);
             }
             setHMSKerberosProperties(builder, properties);
         }

@@ -20,41 +20,36 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon;
+package com.hortonworks.beacon.entity.entityNeo;
 
+import com.hortonworks.beacon.client.entity.CloudCred;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.util.StringFormat;
+import org.apache.hadoop.fs.Path;
 
 /**
- * Cloud Object store encryption algorithm types.
+ * Azure wasb based implementation of data set.
  */
-public enum EncryptionAlgorithmType {
-    AWS_SSES3("AES256", "fs.s3a.bucket.%s.server-side-encryption-algorithm"),
-    AWS_SSEKMS("SSE-KMS", "fs.s3a.bucket.%s.server-side-encryption-algorithm"),
-    NONE("NONE", "fs.s3a.bucket.%s.server-side-encryption-algorithm");
+public class WASBFSDataSet extends HCFSDataset {
+    //TODO remove
+    public static final String WASB_ENDPOINT = ".blob.core.windows.net";
+    private CloudCred cloudCred;
 
-    private final String name;
-    private final String confName;
-
-    EncryptionAlgorithmType(String name, String confName) {
-        this.name = name;
-        this.confName = confName;
+    public WASBFSDataSet(String path, ReplicationPolicy policy) throws BeaconException {
+        super(path, policy);
+        this.cloudCred = new BeaconCloudCred(policy.getCloudCred());
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public String getConfName() {
-        return confName;
-    }
-
-    public static EncryptionAlgorithmType getEncryptionAlgorithmType(final String name) throws BeaconException {
-        EncryptionAlgorithmType[] algorithmTypes = EncryptionAlgorithmType.values();
-        for (EncryptionAlgorithmType algorithmType: algorithmTypes) {
-            if (algorithmType.getName().equalsIgnoreCase(name)) {
-                return algorithmType;
-            }
-        }
-        throw new BeaconException("Encryption algorithm {} is not supported", name);
+    @Override
+    public String resolvePath(String path, ReplicationPolicy policy) {
+        cloudCred = new BeaconCloudCred(policy.getCloudCred());
+        String wasbAccount = cloudCred.getConfigs().get(CloudCred.Config.WASB_ACCOUNT_NAME);
+        String authority = new Path(path).toUri().getAuthority();
+        String myPath = new Path(path).toUri().getPath();
+        return StringFormat.format("{}://{}@{}.blob.core.windows.net/{}",
+                CloudCred.Provider.WASB.getHcfsScheme(), authority, wasbAccount, myPath);
     }
 }
+

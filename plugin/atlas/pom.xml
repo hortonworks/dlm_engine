@@ -31,7 +31,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.hortonworks.beacon</groupId>
-    <artifactId>beacon-ranger</artifactId>
+    <artifactId>beacon-atlas</artifactId>
     <version>1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -53,6 +53,30 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.atlas</groupId>
+            <artifactId>atlas-client-v2</artifactId>
+            <version>${atlas.client.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.atlas</groupId>
+            <artifactId>atlas-intg</artifactId>
+            <version>${atlas.client.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

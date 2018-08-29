@@ -37,5 +37,6 @@
     <modules>
         <module>plugin-api</module>
         <module>ranger</module>
+        <module>atlas</module>
     </modules>
 </project>

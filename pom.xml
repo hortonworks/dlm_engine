@@ -200,6 +200,11 @@
             </dependency>
             <dependency>
                 <groupId>com.hortonworks.beacon</groupId>
+                <artifactId>beacon-plugin-atlas</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hortonworks.beacon</groupId>
                 <artifactId>beacon-tools</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -869,7 +874,7 @@
                         <configuration>
                             <resources>
                                 <resource>
-                                    <directory>../src/conf/</directory>
+                                    <directory>${beacon.yml.location}</directory>
                                     <includes>
                                         <include>beacon.yml</include>
                                     </includes>
@@ -987,6 +992,8 @@
         <annotations.version>3.0.1</annotations.version>
         <sdk.aws.version>1.10.6</sdk.aws.version>
         <activation.version>1.2.0</activation.version>
+        <atlas.client.version>0.8.3-SNAPSHOT</atlas.client.version>
         <beacon.schemadirectory>../src/sql</beacon.schemadirectory>
+        <beacon.yml.location>../src/conf/</beacon.yml.location>
     </properties>
 </project>

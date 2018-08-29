@@ -36,6 +36,8 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AtlasProcess {
     protected static final Logger LOG = LoggerFactory.getLogger(AtlasProcess.class);
+    private static final String ATLAS_CLUSTER_NAME = "atlas.cluster.name";
+    private static final String CLUSTER_NAME_SEPERATOR = "$";
 
     private AtlasPluginStats pluginStats;
 
@@ -95,6 +97,24 @@ public abstract class AtlasProcess {
         BeaconCluster beaconCluster = new BeaconCluster(cluster);
         String knoxGatewayURL = beaconCluster.getKnoxGatewayURL();
         return builder.knoxBaseUrl(knoxGatewayURL).baseUrl(atlasEndpoint).create();
+    }
+
+    protected String getAtlasClusterName(Cluster cluster) {
+        if (cluster.getCustomProperties().contains(ATLAS_CLUSTER_NAME)) {
+            return cluster.getCustomProperties().getProperty(ATLAS_CLUSTER_NAME);
+        }
+
+        return inferClusterName(cluster);
+    }
+
+    private String inferClusterName(Cluster cluster) {
+        String clusterName = cluster.getName();
+        String atlasCluserName = clusterName;
+        if (org.apache.commons.lang.StringUtils.contains(clusterName, CLUSTER_NAME_SEPERATOR)) {
+            atlasCluserName = org.apache.commons.lang.StringUtils.split(clusterName, CLUSTER_NAME_SEPERATOR)[1];
+        }
+
+        return atlasCluserName;
     }
 
     public String getEntityGuid(Cluster cluster,

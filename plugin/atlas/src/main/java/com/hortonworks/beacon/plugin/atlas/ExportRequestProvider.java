@@ -57,11 +57,11 @@ final class ExportRequestProvider {
         DataSet.DataSetType dataSetType = dataSet.getType();
 
         Cluster sourceCluster = dataSet.getSourceCluster();
-        String sourceClusterName = sourceCluster.getName();
+        String sourceClusterName = process.getAtlasClusterName(sourceCluster);
         String sourceDataSet = dataSet.getSourceDataSet();
 
         Cluster targetCluster = dataSet.getTargetCluster();
-        String targetClusterName = targetCluster.getName();
+        String targetClusterName = process.getAtlasClusterName(targetCluster);
 
         List<AtlasObjectId> itemsToExport = getItemsToExport(dataSetType, sourceClusterName, sourceDataSet);
         String entityGuid = getEntityGuid(process, sourceCluster, itemsToExport.get(0));
@@ -160,6 +160,7 @@ final class ExportRequestProvider {
     }
 
     private static String getQualifiedName(String dataSetName, String clusterName) {
+
         String qualifiedName = String.format(QUALIFIED_NAME_FORMAT, dataSetName, clusterName);
         AtlasProcess.debugLog("getQualifiedName: {}", qualifiedName);
         return qualifiedName;

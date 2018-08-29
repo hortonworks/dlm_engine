@@ -30,6 +30,7 @@ import org.apache.atlas.ApplicationProperties;
 import org.apache.atlas.AtlasClientV2;
 import org.apache.atlas.AtlasException;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -58,6 +59,7 @@ public class RESTClientBuilder {
     private static final String ATLAS_CLIENT_DEFAULT_PASSWORD = "admin";
     private static final String ATLAS_CLIENT_USER_NAME_KEY = "atlas.client.user.name";
     private static final String ATLAS_CLIENT_USER_PASSWORD_KEY = "atlas.client.user.password";
+    private static final String URL_SEPERATOR = ",";
 
     private AuthStrategy authStrategy;
     private String userId;
@@ -66,7 +68,8 @@ public class RESTClientBuilder {
     private Cookie cookie;
     private String knoxBaseUrl;
 
-    protected String baseUrl;
+    protected String incomingUrl;
+    protected String[] baseUrls;
 
     enum AuthStrategy {
         USER_NAME_PASSWORD,
@@ -77,8 +80,14 @@ public class RESTClientBuilder {
     public RESTClientBuilder() {
     }
 
-    public RESTClientBuilder baseUrl(String url) {
-        this.baseUrl = url;
+    public RESTClientBuilder baseUrl(String urls) {
+        this.incomingUrl = urls;
+        if (urls.contains(URL_SEPERATOR)) {
+            this.baseUrls = StringUtils.split(urls, URL_SEPERATOR);
+        } else {
+            this.baseUrls = new String[]{urls};
+        }
+
         return this;
     }
 
@@ -94,7 +103,7 @@ public class RESTClientBuilder {
         }
 
         authStrategy = AuthStrategy.USER_NAME_PASSWORD;
-        logInfo("authStragegy: {}", authStrategy);
+        logInfo("authStrategy: {} : {}", authStrategy, baseUrls);
         return this;
     }
 
@@ -109,7 +118,7 @@ public class RESTClientBuilder {
             try {
                 authStrategy = AuthStrategy.KERBEROS;
                 this.userGroupInformation = UserGroupInformation.getLoginUser();
-                logInfo("authStragegy: {}", authStrategy);
+                logInfo("authStrategy: {} : {}", authStrategy, baseUrls);
             } catch (Exception e) {
                 throw new BeaconException("Error: setAuthStrategy: UserGroupInformation.getLoginUser: failed!", e);
             }
@@ -129,7 +138,7 @@ public class RESTClientBuilder {
 
         if (BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled()) {
             authStrategy = AuthStrategy.KNOX;
-            logInfo("authStragegy: {}", authStrategy);
+            logInfo("authStrategy: {}", authStrategy);
         }
 
         return this;
@@ -166,22 +175,21 @@ public class RESTClientBuilder {
 
     public RESTClient create() throws BeaconException {
         try {
-            if (StringUtils.isEmpty(baseUrl)) {
-                throw new BeaconException("baseUrl is not set.");
+            if (ArrayUtils.isEmpty(baseUrls)) {
+                throw new BeaconException("baseUrls is not set.");
             }
 
             setAuthStrategy();
             AtlasClientV2 clientV2;
-            String[] urls = new String[]{this.baseUrl};
             switch (authStrategy) {
                 case KNOX:
                     this.cookie = new Cookie(KNOX_HDP_COOKIE_NAME, getSSOToken(knoxBaseUrl));
-                    clientV2 = new AtlasClientV2(urls, this.cookie);
+                    clientV2 = new AtlasClientV2(baseUrls, this.cookie);
                     return new AtlasRESTClient(clientV2);
 
                 case KERBEROS:
                     clientV2 = new AtlasClientV2(this.userGroupInformation,
-                            this.userGroupInformation.getShortUserName(), urls);
+                            this.userGroupInformation.getShortUserName(), baseUrls);
 
                     return new AtlasRESTClient(clientV2);
 
@@ -192,7 +200,7 @@ public class RESTClientBuilder {
                     }
 
                     userIdPwd(getUserName(), getPassword());
-                    clientV2 = new AtlasClientV2(conf, urls, new String[]{userId, password});
+                    clientV2 = new AtlasClientV2(conf, baseUrls, new String[]{userId, password});
                     return new AtlasRESTClient(clientV2);
 
                 default:
@@ -271,20 +279,19 @@ public class RESTClientBuilder {
         private Map<String, RESTClient> atlasClients = new HashMap<>();
 
         public RESTClient create() {
-            String url = baseUrl;
             RESTClient client = null;
             try {
-                if (!atlasClients.containsKey(url)) {
-                    client = getRESTClient(url);
+                if (!atlasClients.containsKey(incomingUrl)) {
+                    client = getRESTClient(incomingUrl);
                     if (client == null) {
                         throw new BeaconException("AtlasClient: Could not be created!");
                     }
-                    atlasClients.put(url, client);
+                    atlasClients.put(incomingUrl, client);
                 }
 
-                return atlasClients.get(url);
+                return atlasClients.get(incomingUrl);
             } catch (Exception e) {
-                LOG.error("CachedBuilder.create: failed! URL: {}", url);
+                LOG.error("CachedBuilder.create: failed! URL: {}", incomingUrl, e);
             }
 
             return null;

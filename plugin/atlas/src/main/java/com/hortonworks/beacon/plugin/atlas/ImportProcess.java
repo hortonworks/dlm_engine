@@ -67,8 +67,9 @@ public class ImportProcess extends AtlasProcess {
 
         infoLog("importFile: importing {} ...", filePath);
         InputStream inputStream = FileSystemUtils.getInputStream(targetFS, filePath);
-        AtlasImportRequest importRequest = ImportRequestProvider.create(sourceCluster.getName(),
-                targetCluster.getName());
+        AtlasImportRequest importRequest = ImportRequestProvider.create(
+                getAtlasClusterName(sourceCluster),
+                getAtlasClusterName(targetCluster));
 
         importData(targetCluster, importRequest, inputStream);
         updateImportStats(locatedFileStatus.getLen());

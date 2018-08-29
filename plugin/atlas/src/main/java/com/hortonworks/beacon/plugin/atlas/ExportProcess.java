@@ -55,7 +55,9 @@ public class ExportProcess extends AtlasProcess {
         try {
             Cluster sourceCluster = dataset.getSourceCluster();
             Cluster targetCluster = dataset.getTargetCluster();
-            String exportFileName = getExportFileName(targetCluster.getName(), getCurrentTimestamp());
+            String targetClusterName = getAtlasClusterName(targetCluster);
+
+            String exportFileName = getExportFileName(targetClusterName, getCurrentTimestamp());
 
             AtlasExportRequest exportRequest = ExportRequestProvider.create(this, dataset);
 

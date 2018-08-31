@@ -22,7 +22,7 @@
 
 = Cloud Replication
 
-Beacon supports replication of HDFS/Hive data between underlying HDFS and cloud storage. The only cloud provider supported now is AWS S3.
+Beacon supports replication of HDFS/Hive data between underlying HDFS and cloud storage.
 
 :toc:
 
@@ -37,6 +37,14 @@ Beacon supports replication of HDFS/Hive data between underlying HDFS and cloud 
 ** https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html[SSE-S3]
 ** https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html[SSE-KMS]
 
+=== AZURE
+* Supported authentication types:
+** Account name and Access key based
+* Supported cloud storages:
+** WASB
+
+
+
 == Cloud Credentials
 Every cloud replication requires setting up cloud credentials entity in Beacon. A cloud credential contains the credentials used
 to access the cloud storage. When this credential entity is created in beacon service, an ID is generated which should be
@@ -44,7 +52,7 @@ to access the cloud storage. When this credential entity is created in beacon se
 
 Example cloud credential properties:
 
-* Access key based cloud credential properties:
+* Access key based s3 cloud credential properties:
 [source, properties]
 name=access-key-cred
 provider=AWS
@@ -52,11 +60,19 @@ authtype=AWS_ACCESSKEY
 aws.access.key=<access key>
 aws.secret.key=<secret key>
 
-* Instance profile based credential propertis,
+* Instance profile based s3 credential propertis,
 [source, properties]
 name=instance-profile-cred
 provider=AWS
 authtype=AWS_INSTANCEPROFILE
+
+* Access key based wasb cloud credential properties:
+[source, properties]
+name=access-key-wasb-cred
+provider=WASB
+wasb.account.name=<wasb account name>
+wasb.access.key=<wasb access key like AKIAJ2B5WGGW2QZKJQQA>
+authtype=WASB_ACCESSKEY
 
 Refer to link:BeaconRESTApi.adoc[REST API Documentation] for more details.
 
@@ -121,9 +137,11 @@ The cluster with data on cloud storage. The cluster minimally requires Hive Meta
 1. Hive Data Locations -
 Hive metastore requires these specific configurations to point hive data on cloud storage. Note that both
 hive.metastore.warehouse.dir and hive.repl.replica.functions.root.dir should be configured in the same bucket.
+Update these properties in the default config of hive through ambari and restart hive.
+Sync the target cluster using DLM UI.
 [source, properties]
-hive.metastore.warehouse.dir=<cloud storage>
-hive.repl.replica.functions.root.dir=<cloud storage>
+hive.metastore.warehouse.dir=<cloud storage path like wasb://wasb-hive@beaconmthakur.blob.core.windows.net/apps/hive/warehouse>
+hive.repl.replica.functions.root.dir=<cloud storage path like wasb://wasb-hive@beaconmthakur.blob.core.windows.net/apps/hive/repl>
 hive.warehouse.subdir.inherit.perms=false
 
 

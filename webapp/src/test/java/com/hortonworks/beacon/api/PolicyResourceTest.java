@@ -293,6 +293,66 @@ public class PolicyResourceTest extends ResourceBaseTest {
     }
 
     @Test
+    public void testOneToManyReplication() throws Exception {
+        final String policyName1 = testDataGenerator.getRandomString("FsPolicy1");
+        final String policyName2 = testDataGenerator.getRandomString("FsPolicy2");
+        String replicationPath = SOURCE_DIR + policyName1;
+        targetFs.mkdirs(new Path(replicationPath));
+        testDataGenerator.createFSMocks(replicationPath);
+        ReplicationPolicy policyRequest1 = testDataGenerator.getPolicy(policyName1, replicationPath);
+        targetClient.submitAndScheduleReplicationPolicy(policyName1, policyRequest1.asProperties());
+        waitOnCondition(20000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName1);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetFs.mkdirs(new Path(replicationPath));
+        testDataGenerator.createFSMocks(replicationPath);
+        ReplicationPolicy policyRequest2 = testDataGenerator.getPolicy(policyName2, replicationPath);
+        policyRequest2.setTargetDataset(TARGET_DIR);
+        targetClient.submitAndScheduleReplicationPolicy(policyName2, policyRequest2.asProperties());
+        waitOnCondition(20000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName2);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+
+        targetClient.deletePolicy(policyName1, false);
+        targetClient.deletePolicy(policyName2, false);
+    }
+
+    @Test
+    public void testOneToManyReplicationFailOnSameTarget() throws Exception {
+        final String policyName1 = testDataGenerator.getRandomString("FsPolicy1");
+        final String policyName2 = testDataGenerator.getRandomString("FsPolicy2");
+        String replicationPath = SOURCE_DIR + policyName1;
+        targetFs.mkdirs(new Path(replicationPath));
+        testDataGenerator.createFSMocks(replicationPath);
+        ReplicationPolicy policyRequest1 = testDataGenerator.getPolicy(policyName1, replicationPath);
+        targetClient.submitAndScheduleReplicationPolicy(policyName1, policyRequest1.asProperties());
+        waitOnCondition(20000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName1);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetFs.mkdirs(new Path(replicationPath));
+        testDataGenerator.createFSMocks(replicationPath);
+        ReplicationPolicy policyRequest2 = testDataGenerator.getPolicy(policyName2, replicationPath);
+        try {
+            targetClient.submitAndScheduleReplicationPolicy(policyName2, policyRequest2.asProperties());
+        } catch (BeaconClientException bex) {
+            assertTrue(bex.getMessage().contains("Target dataset already in replication"));
+        }
+
+    }
+
+    @Test
     public void testEnableSnapshotBasedPolicy() throws Exception{
         final String policyName = testDataGenerator.getRandomString("FsSnapshotPolicy");
         String replicationPath = SOURCE_DIR + policyName;

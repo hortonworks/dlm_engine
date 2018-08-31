@@ -559,11 +559,6 @@ public final class ValidationUtil {
     private static void validateEntityDataset(final ReplicationPolicy policy) throws BeaconException {
         BeaconNotification notification = new BeaconNotification();
         // TODO : Handle cases when multiple cloud object store are in picture.
-        boolean sourceDatasetConflicted = ReplicationUtils.isDatasetConflicting(ReplicationHelper
-                .getReplicationType(policy.getType()), policy.getSourceDataset(), Destination.SOURCE);
-        if (sourceDatasetConflicted) {
-            notification.addError("Source dataset already in replication, " + policy.getSourceDataset());
-        }
         boolean targetDatasetConflicted = ReplicationUtils.isDatasetConflicting(ReplicationHelper.getReplicationType(
                 policy.getType()), policy.getTargetDataset(), Destination.TARGET);
         if (targetDatasetConflicted) {

@@ -36,6 +36,7 @@ import org.testng.annotations.BeforeClass;
 public abstract class ResourceBaseTest {
 
     protected static final String SOURCE_DIR = "/apps/beacon/replication/sourceDir/";
+    protected static final String TARGET_DIR = "/apps/beacon/replication/targetDir/";
 
     private static final String SOURCE_CLUSTER_NAME = "cluster-src";
     private static final String TARGET_CLUSTER_NAME = "cluster-tgt";

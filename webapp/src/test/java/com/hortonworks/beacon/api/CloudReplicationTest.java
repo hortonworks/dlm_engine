@@ -114,7 +114,7 @@ public class CloudReplicationTest extends ResourceBaseTest {
     }
 
     @Test
-    public void testHdfsS3EncryptionBasedPolicy() throws Exception{
+    public void testHdfsS3EncryptionBasedPolicy() throws Exception {
         CloudCred cloudCred = createAwsCloudCred(testDataGenerator.getRandomString("Run-HDFS-S3-enc-repl"));
         String cloudCredId = targetClient.submitCloudCred(cloudCred);
         assertNotNull(cloudCredId);
@@ -148,13 +148,125 @@ public class CloudReplicationTest extends ResourceBaseTest {
             targetClient.dryrunPolicy(policyName, policy.asProperties());
 
         } catch (BeaconClientException ex) {
-            String errorMessage = "Encryption algorithm "+ EncryptionAlgorithmType.AWS_SSES3.getName()
+            String errorMessage = "Encryption algorithm " + EncryptionAlgorithmType.AWS_SSES3.getName()
                     + " is not supported";
             assertTrue(ex.getMessage().endsWith(errorMessage));
             shouldThrowup = true;
         }
         assertTrue(shouldThrowup);
 
+    }
+
+    @Test
+    public void hdfsS3OneToManyReplicationTest() throws Exception {
+        CloudCred cloudCred = createAwsCloudCred(testDataGenerator.getRandomString("Run-HDFS-S3-repl"));
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName1 = testDataGenerator.getRandomString("HDFSS3Policy");
+        String srcDataSet = SOURCE_DIR + policyName1;
+        String tgtDataSet1 = testDataGenerator.getRandomString("s3://dummy/test");
+        String tgtDataSet2 = testDataGenerator.getRandomString("s3://dummy/test");
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        ReplicationPolicy policy1 = testDataGenerator.getPolicy(policyName1, srcDataSet, tgtDataSet1, "FS", 60,
+                sourceCluster.getName(), null, cloudProps);
+        testDataGenerator.createFSMocks(srcDataSet);
+        targetClient.submitAndScheduleReplicationPolicy(policyName1, policy1.asProperties());
+        waitOnCondition(50000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName1);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+
+        final String policyName2 = testDataGenerator.getRandomString("HDFSS3Policy");
+        ReplicationPolicy policy2 = testDataGenerator.getPolicy(policyName2, srcDataSet, tgtDataSet2, "FS", 60,
+                sourceCluster.getName(), null, cloudProps);
+        targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties());
+        waitOnCondition(50000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName2);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetClient.deletePolicy(policyName1, false);
+        targetClient.deletePolicy(policyName2, false);
+    }
+
+    @Test
+    public void hdfsS3OneToManyReplicationSameTargetShouldFailTest() throws Exception {
+        CloudCred cloudCred = createAwsCloudCred(testDataGenerator.getRandomString("Run-HDFS-S3-repl"));
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName1 = testDataGenerator.getRandomString("HDFSS3Policy");
+        String srcDataSet = SOURCE_DIR + policyName1;
+        String tgtDataSet = testDataGenerator.getRandomString("s3://dummy/test");
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        ReplicationPolicy policy1 = testDataGenerator.getPolicy(policyName1, srcDataSet, tgtDataSet, "FS", 60,
+                sourceCluster.getName(), null, cloudProps);
+        testDataGenerator.createFSMocks(srcDataSet);
+        targetClient.submitAndScheduleReplicationPolicy(policyName1, policy1.asProperties());
+        waitOnCondition(50000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName1);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+
+        final String policyName2 = testDataGenerator.getRandomString("HDFSS3Policy");
+        ReplicationPolicy policy2 = testDataGenerator.getPolicy(policyName2, srcDataSet, tgtDataSet, "FS", 60,
+                sourceCluster.getName(), null, cloudProps);
+        try {
+            targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties());
+        } catch (BeaconClientException ex) {
+            assertTrue(ex.getMessage().contains("Target dataset already in replication"));
+        }
+    }
+
+    @Test
+    public void hdfsS3OneToManyReplicationSrcTgtSrcTest() throws Exception {
+        CloudCred cloudCred = createAwsCloudCred(testDataGenerator.getRandomString("Run-HDFS-S3-repl"));
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName1 = testDataGenerator.getRandomString("HDFSS3Policy");
+        final String policyName2 = testDataGenerator.getRandomString("HDFSS3Policy");
+
+        String srcDataSet1 = SOURCE_DIR + policyName1;
+        String tgtDataSet = testDataGenerator.getRandomString("s3://dummy/test");
+        String srcDataSet2 = SOURCE_DIR + policyName2;
+
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        ReplicationPolicy policy1 = testDataGenerator.getPolicy(policyName1, srcDataSet1, tgtDataSet, "FS", 60,
+                sourceCluster.getName(), null, cloudProps);
+        testDataGenerator.createFSMocks(srcDataSet1);
+        testDataGenerator.createFSMocks(srcDataSet2);
+
+        targetClient.submitAndScheduleReplicationPolicy(policyName1, policy1.asProperties());
+        waitOnCondition(50000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName1);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+
+        ReplicationPolicy policy2 = testDataGenerator.getPolicy(policyName2, tgtDataSet, srcDataSet2, "FS", 60,
+                null, sourceCluster.getName(), cloudProps);
+        targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties());
+        waitOnCondition(50000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName2);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetClient.deletePolicy(policyName1, false);
+        targetClient.deletePolicy(policyName2, false);
     }
 
     @Test
@@ -258,8 +370,72 @@ public class CloudReplicationTest extends ResourceBaseTest {
         targetClient.deletePolicy(policyName, false);
     }
 
+    @Test
+    public void testHiveS3OneToManyReplicationTest() throws Exception {
+        CloudCred cloudCred = createAwsCloudCred(testDataGenerator.getRandomString("Run-HIVE-S3-repl"));
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName1 = testDataGenerator.getRandomString("HiveS3Policy");
+        String sourceDataSet = SOURCE_DIR + policyName1;
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        ReplicationPolicy policy1 = testDataGenerator.getPolicy(policyName1, sourceDataSet,
+                testDataGenerator.getRandomString("HiveTestDb"), "HIVE", 60,
+                sourceCluster.getName(), targetCluster.getName(), cloudProps);
+        targetClient.submitAndScheduleReplicationPolicy(policyName1, policy1.asProperties());
+        waitOnCondition(10000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName1);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        final String policyName2 = testDataGenerator.getRandomString("HiveS3Policy");
+        ReplicationPolicy policy2 = testDataGenerator.getPolicy(policyName2, sourceDataSet,
+                testDataGenerator.getRandomString("HiveTestDb"), "HIVE", 60,
+                sourceCluster.getName(), targetCluster.getName(), cloudProps);
+        targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties());
+        waitOnCondition(10000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName2);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetClient.deletePolicy(policyName1, false);
+        targetClient.deletePolicy(policyName2, false);
+    }
 
     @Test
+    public void testHiveS3OneToManyReplicationSameTargetShouldFailTest() throws Exception {
+        CloudCred cloudCred = createAwsCloudCred(testDataGenerator.getRandomString("Run-HIVE-S3-repl"));
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName1 = testDataGenerator.getRandomString("HiveS3Policy");
+        String sourceDataSet = SOURCE_DIR + policyName1;
+        String targetDataSet = testDataGenerator.getRandomString("HiveTestDb");
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        ReplicationPolicy policy1 = testDataGenerator.getPolicy(policyName1, sourceDataSet, targetDataSet, "HIVE", 60,
+                sourceCluster.getName(), targetCluster.getName(), cloudProps);
+        targetClient.submitAndScheduleReplicationPolicy(policyName1, policy1.asProperties());
+        waitOnCondition(10000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName1);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        final String policyName2 = testDataGenerator.getRandomString("HiveS3Policy");
+        ReplicationPolicy policy2 = testDataGenerator.getPolicy(policyName2, sourceDataSet, targetDataSet, "HIVE", 60,
+                sourceCluster.getName(), targetCluster.getName(), cloudProps);
+        try {
+            targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties());
+        } catch (BeaconClientException ex) {
+            assertTrue(ex.getMessage().contains("Target dataset already in replication"));
+        }
+    }
+
     public void testHiveWASBReplicationTest() throws Exception {
         CloudCred cloudCred = createWasbCloudCredAccessKey(
                 testDataGenerator.getRandomString("Submit-Cloud-Cred"));

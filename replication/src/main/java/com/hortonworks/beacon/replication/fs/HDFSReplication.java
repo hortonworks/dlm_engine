@@ -205,7 +205,8 @@ public class HDFSReplication extends FSReplication {
         try {
             LOG.debug("Checking snapshot directory on source and target");
             if (isSnapshot && targetFs.exists(new Path(targetStagingUri))) {
-                fromSnapshot = FSSnapshotUtils.findLatestReplicatedSnapshot((DistributedFileSystem) sourceFs,
+                String jobName = properties.getProperty(FSDRProperties.SOURCE_DATASET.getName());
+                fromSnapshot = FSSnapshotUtils.findLatestReplicatedSnapshot(jobName, (DistributedFileSystem) sourceFs,
                         (DistributedFileSystem) targetFs, sourceStagingUri, targetStagingUri);
             }
         } catch (IOException e) {

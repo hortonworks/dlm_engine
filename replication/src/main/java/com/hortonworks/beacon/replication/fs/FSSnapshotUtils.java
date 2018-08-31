@@ -92,16 +92,18 @@ public final class FSSnapshotUtils {
         return isSnapShotsAvailable(clusterName, new Path(stagingUri));
     }
 
-    static String findLatestReplicatedSnapshot(DistributedFileSystem sourceFs, DistributedFileSystem targetFs,
-                                               String sourceDir, String targetDir) throws BeaconException {
+    static String findLatestReplicatedSnapshot(String jobName, DistributedFileSystem sourceFs,
+                                               DistributedFileSystem targetFs, String sourceDir, String targetDir)
+            throws BeaconException {
         try {
-            FileStatus[] sourceSnapshots = sourceFs.listStatus(new Path(getSnapshotDir(sourceDir)));
+            BeaconSnapshotPathFilter pathFilter = new BeaconSnapshotPathFilter(jobName);
+            FileStatus[] sourceSnapshots = sourceFs.listStatus(new Path(getSnapshotDir(sourceDir)), pathFilter);
             Set<String> sourceSnapshotNames = new HashSet<>();
             for (FileStatus snapshot : sourceSnapshots) {
                 sourceSnapshotNames.add(snapshot.getPath().getName());
             }
 
-            FileStatus[] targetSnapshots = targetFs.listStatus(new Path(getSnapshotDir(targetDir)));
+            FileStatus[] targetSnapshots = targetFs.listStatus(new Path(getSnapshotDir(targetDir)), pathFilter);
             if (targetSnapshots.length > 0) {
                 //sort target snapshots in desc order of creation time.
                 Arrays.sort(targetSnapshots, new Comparator<FileStatus>() {
@@ -202,15 +204,25 @@ public final class FSSnapshotUtils {
 
     static void evictSnapshots(DistributedFileSystem fs, String dirName, String ageLimit, int numSnapshots)
             throws BeaconException {
+        evictSnapshots(fs, dirName, ageLimit, numSnapshots, null);
+    }
+    static void evictSnapshots(DistributedFileSystem fs, String dirName, String ageLimit, int numSnapshots,
+                               String jobName) throws BeaconException {
         try {
-            LOG.info("Started evicting snapshots on dir {}, agelimit {}, numSnapshot {}", dirName, ageLimit,
-                numSnapshots);
+            LOG.info("Started evicting snapshots on dir {}, agelimit {}, numSnapshot {}, jobName {}",
+                    dirName, ageLimit, numSnapshots, jobName);
 
             long evictionTime = System.currentTimeMillis() - EvictionHelper.evalExpressionToMilliSeconds(ageLimit);
 
             dirName = StringUtils.removeEnd(dirName, Path.SEPARATOR);
             String snapshotDir = dirName + Path.SEPARATOR + SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
-            FileStatus[] snapshots = fs.listStatus(new Path(snapshotDir));
+            FileStatus[] snapshots = null;
+            if (jobName == null) {
+                snapshots = fs.listStatus(new Path(snapshotDir));
+            } else {
+                final String snapshotNamePrefix = getSnapshotNamePrefix(jobName);
+                snapshots = fs.listStatus(new Path(snapshotDir), new BeaconSnapshotPathFilter(snapshotNamePrefix));
+            }
             if (snapshots.length <= numSnapshots) {
                 LOG.info("No eviction required as number of snapshots: {} is less than numSnapshots: {}",
                     snapshots.length, numSnapshots);
@@ -261,7 +273,8 @@ public final class FSSnapshotUtils {
         int numSnapshots = Integer.parseInt(
                 fsDRProperties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()));
         LOG.info("Snapshots eviction on FS: {}", fs.toString());
-        FSSnapshotUtils.evictSnapshots((DistributedFileSystem) fs, staginURI, ageLimit, numSnapshots);
+        String jobName = fsDRProperties.getProperty(FSDRProperties.JOB_NAME.getName());
+        FSSnapshotUtils.evictSnapshots((DistributedFileSystem) fs, staginURI, ageLimit, numSnapshots, jobName);
     }
 
     private static String getSnapshotDir(String dirName) {
@@ -332,5 +345,19 @@ public final class FSSnapshotUtils {
                 .concat(jobName)
                 .concat("-");
         return fsReplicationName;
+    }
+
+    // Path filter for beacon's FS snapshots.
+    static class BeaconSnapshotPathFilter implements org.apache.hadoop.fs.PathFilter {
+        private String snapshotNamePrefix;
+        protected BeaconSnapshotPathFilter(String snapshotNamePrefix) {
+            this.snapshotNamePrefix = snapshotNamePrefix;
+        }
+        @Override
+        public boolean accept(Path path) {
+            boolean accept = path.getName().startsWith(snapshotNamePrefix);
+            LOG.debug("Accepting the snapshot file [{}] : {}", path.toString(), accept);
+            return accept;
+        }
     }
 }

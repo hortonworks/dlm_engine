@@ -1716,8 +1716,8 @@ For WASB access key based.
 
 [source, properties]
 name=cloud-cred
-provider=AWS
-wasb.account.name=test-account
+provider=WASB
+wasb.account.name=<wasb account name>
 wasb.access.key=AKIAJ2B5WGGW2QZKJQQA
 authtype=WASB_ACCESSKEY
 
@@ -1725,8 +1725,8 @@ For WASB SAS token based.
 [source, properties]
 name=cloud-cred-wasb-sas
 provider=WASB
-wasb.account.name=test-account
-wasb.container.name=test-container
+wasb.account.name=<wasb account name>
+wasb.container.name=<wasb container name>
 wasb.sas.token=jYe/fQ6wOi9ebIr5FM7emBHafx3JMzNgjxGmpZMD
 authtype=WASB_SAS_TOKEN
 

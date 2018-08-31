@@ -48,8 +48,13 @@ public class WASBFSDataSet extends HCFSDataset {
         String wasbAccount = cloudCred.getConfigs().get(CloudCred.Config.WASB_ACCOUNT_NAME);
         String authority = new Path(path).toUri().getAuthority();
         String myPath = new Path(path).toUri().getPath();
-        return StringFormat.format("{}://{}@{}.blob.core.windows.net/{}",
-                CloudCred.Provider.WASB.getHcfsScheme(), authority, wasbAccount, myPath);
+        if (path.contains(wasbAccount) && path.contains(WASB_ENDPOINT)) {
+            //path is a hive warehouse directory
+            return path;
+        } else {
+            return StringFormat.format("{}://{}@{}.blob.core.windows.net/{}",
+                    CloudCred.Provider.WASB.getHcfsScheme(), authority, wasbAccount, myPath);
+        }
     }
 }
 

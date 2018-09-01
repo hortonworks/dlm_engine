@@ -1181,7 +1181,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         targetClient.deletePolicy(policyName, false);
     }
 
-    @Test(dependsOnMethods = "testPairCluster")
+    @Test(dependsOnMethods = {"testPairCluster", "testSubmitCluster"})
     public void testSnapshotCleanupOnPolicySubmission() throws Exception {
         String policyName = getRandomString("snapshot-cleanup");
         String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";

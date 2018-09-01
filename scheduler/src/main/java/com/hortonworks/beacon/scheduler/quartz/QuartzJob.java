@@ -34,6 +34,7 @@ import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.exceptions.BeaconJobFailureException;
 import com.hortonworks.beacon.exceptions.BeaconSuspendException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.BeaconJobImplFactory;
@@ -84,6 +85,7 @@ public class QuartzJob implements InterruptableJob {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
+
         JobKey jobKey = null;
         final String methodName = this.getClass().getSimpleName() + '.'
                 + Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -91,6 +93,12 @@ public class QuartzJob implements InterruptableJob {
         Timer timer = requestContext.startTimer(methodName);
 
         try {
+            boolean isFailure = QuartzJobListener.getFlag(QuartzDataMapEnum.IS_FAILURE.getValue(),
+                    context.getJobDetail().getJobDataMap());
+            if (isFailure) {
+                throw new BeaconJobFailureException(
+                        "Job failed while building the context. Not executing the replication.");
+            }
             JobDataMap qJobDataMap = context.getJobDetail().getJobDataMap();
             jobContext = (JobContext) qJobDataMap.get(QuartzDataMapEnum.JOB_CONTEXT.getValue());
 
@@ -135,6 +143,10 @@ public class QuartzJob implements InterruptableJob {
             if (e.getErrorCode() != null) {
                 jobContext.getJobContextMap().put(ERROR_CODE, String.valueOf(e.getErrorCode()));
             }
+            throw new JobExecutionException(e);
+        } catch (BeaconJobFailureException e) {
+            LOG.error("Handling job context building failure, failing instance", e);
+            setInstanceExecDetail(JobStatus.FAILED, e.getMessage());
             throw new JobExecutionException(e);
         } catch (InterruptedException e) {
             LOG.info("Handling interrupt", e);

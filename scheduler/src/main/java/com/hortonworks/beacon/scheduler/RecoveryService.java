@@ -37,11 +37,16 @@ import com.hortonworks.beacon.store.executors.PolicyExecutor;
 import com.hortonworks.beacon.store.executors.PolicyExecutor.PolicyQuery;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInstanceQuery;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Beacon policy instance recovery service upon beacon server restart.
@@ -49,6 +54,13 @@ import java.util.List;
 public class RecoveryService implements BeaconService {
 
     private static final Logger LOG = LoggerFactory.getLogger(RecoveryService.class);
+
+    private static Queue<String> queue = new ConcurrentLinkedQueue<>();
+
+    public static boolean addToRecovery(String instanceId) {
+        LOG.info("Instance [{}] added to recovery queue", instanceId);
+        return queue.add(instanceId);
+    }
 
     @Override
     public void init() throws BeaconException {
@@ -79,6 +91,31 @@ public class RecoveryService implements BeaconService {
             RequestContext.get().rollbackTransaction();
             RequestContext.get().clear();
         }
+        attachInternalInstanceFailureListener();
+    }
+
+    private void attachInternalInstanceFailureListener() {
+        ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
+        timer.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                while (!queue.isEmpty()) {
+                    String instanceId = StringUtils.EMPTY;
+                    try {
+                        instanceId = queue.poll();
+                        markInstanceStatus(instanceId, "Instance internal failure.", JobStatus.FAILED);
+                    } catch (Throwable t) {
+                        LOG.info("Failure in marking the instance {} as killed.", instanceId);
+                        queue.add(instanceId);
+                        try {
+                            Thread.sleep(15000);
+                        } catch (InterruptedException e1) {
+                            LOG.error("Interrupted", e1);
+                        }
+                    }
+                }
+            }
+        }, 0, 1, TimeUnit.MINUTES);
     }
 
     @Override
@@ -97,7 +134,7 @@ public class RecoveryService implements BeaconService {
             markInstanceJobDeleted(instanceId, policyBean);
         } else {
             LOG.info("Marking instanceId: [{}] as killed", instanceId);
-            markInstanceKilled(instanceId);
+            markInstanceStatus(instanceId, "Another instance got triggered before recovery", JobStatus.KILLED);
         }
         RequestContext.get().commitTransaction();
     }
@@ -119,12 +156,12 @@ public class RecoveryService implements BeaconService {
         instanceExecutor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_STATUS_RETIRE);
     }
 
-    private static void markInstanceKilled(String instanceId) throws BeaconException {
+    private static void markInstanceStatus(String instanceId, String message, JobStatus jobStatus) {
         PolicyInstanceBean bean = new PolicyInstanceBean();
         bean.setInstanceId(instanceId);
         bean.setRetirementTime(new Date());
-        bean.setStatus(JobStatus.KILLED.name());
-        bean.setMessage("Another instance got triggered before recovery");
+        bean.setStatus(jobStatus.name());
+        bean.setMessage(message);
         PolicyInstanceExecutor instanceExecutor = new PolicyInstanceExecutor(bean);
         instanceExecutor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_COMPLETE);
     }

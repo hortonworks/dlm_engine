@@ -32,6 +32,7 @@ import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.hive.HiveExport;
+import com.hortonworks.beacon.scheduler.RecoveryService;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import com.hortonworks.beacon.scheduler.StoreHelper;
 import com.hortonworks.beacon.scheduler.internal.AdminJobService;
@@ -122,6 +123,7 @@ public class QuartzJobListener extends JobListenerSupport {
             RequestContext.get().commitTransaction();
         } catch (Throwable e) {
             LOG.error("Error while processing jobToBeExecuted", e);
+            context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.IS_FAILURE.getValue(), true);
         } finally {
             RequestContext.get().rollbackTransaction();
             RequestContext.get().closeEntityManager();
@@ -298,6 +300,11 @@ public class QuartzJobListener extends JobListenerSupport {
             RequestContext.get().commitTransaction();
         } catch (Throwable e) {
             LOG.error("Error while processing jobWasExecuted", e);
+            JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
+            // DB transaction didn't went through
+            jobDataMap.put(QuartzDataMapEnum.IS_FAILURE.getValue(), true);
+            JobContext jobContext = getJobContext(context);
+            RecoveryService.addToRecovery(jobContext.getJobInstanceId());
         } finally {
             RequestContext.get().rollbackTransaction();
         }
@@ -314,7 +321,7 @@ public class QuartzJobListener extends JobListenerSupport {
         adminJobService.checkAndSchedule(syncStatusJob, frequency, maxRetry);
     }
 
-    private boolean getFlag(String value, JobDataMap jobDataMap) {
+    protected static boolean getFlag(String value, JobDataMap jobDataMap) {
         return jobDataMap.getBoolean(value);
     }
 

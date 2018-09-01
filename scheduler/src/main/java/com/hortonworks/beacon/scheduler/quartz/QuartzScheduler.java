@@ -90,8 +90,7 @@ public final class QuartzScheduler {
         scheduler.scheduleJob(jobDetail, trigger);
     }
 
-    void scheduleChainedJobs(String policyId, JobDetail startJob, List<JobDetail> jobs, Trigger trigger) throws
-            SchedulerException {
+    void scheduleChainedJobs(String policyId, JobDetail startJob, List<JobDetail> jobs) throws SchedulerException {
         QuartzJobListener listener = (QuartzJobListener) scheduler.getListenerManager().
                 getJobListener(BeaconQuartzScheduler.BEACON_SCHEDULER_JOB_LISTENER);
         listener.clearChainLinkForPolicy(policyId);
@@ -101,16 +100,6 @@ public final class QuartzScheduler {
             scheduler.addJob(secondJob, true);
             firstJob = secondJob;
         }
-    }
-
-    /**
-     * Get the only trigger created for start job.
-     * @param jobKey jobKey to get the job from quartz
-     * @return Trigger associated with the job.
-     */
-    Trigger getTriggerForJob(JobKey jobKey) throws SchedulerException {
-        List<? extends Trigger> triggerList = scheduler.getTriggersOfJob(jobKey);
-        return triggerList.get(0);
     }
 
     void rescheduleJob(String name, String group, Trigger newTrigger) throws SchedulerException {

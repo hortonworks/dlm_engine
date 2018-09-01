@@ -58,18 +58,29 @@ public enum EncryptionAlgorithmType {
         return name;
     }
 
-    public static EncryptionAlgorithmType getEncryptionAlgorithmType(final String name) throws BeaconException {
+    public static EncryptionAlgorithmType getEncryptionAlgorithmByName(final String name) throws BeaconException {
         if (StringUtils.isEmpty(name)) {
             return NONE;
         }
-
         EncryptionAlgorithmType[] algorithmTypes = EncryptionAlgorithmType.values();
         for (EncryptionAlgorithmType algorithmType: algorithmTypes) {
-            if (algorithmType.getConfValue().equalsIgnoreCase(name)) {
+            if (algorithmType.getName().equalsIgnoreCase(name)) {
                 return algorithmType;
             }
         }
         throw new BeaconException("Encryption algorithm {} is not supported", name);
+    }
+
+    public static EncryptionAlgorithmType getEncryptionAlgorithmByEnumType(final String cloudEncType)
+            throws BeaconException {
+        if (StringUtils.isEmpty(cloudEncType)) {
+            return NONE;
+        }
+        try {
+            return EncryptionAlgorithmType.valueOf(cloudEncType);
+        } catch (IllegalArgumentException ex) {
+            throw new BeaconException("Encryption algorithm {} is not supported", cloudEncType, ex);
+        }
     }
 
     private String getActualConfName(String argument) {

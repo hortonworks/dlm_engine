@@ -29,8 +29,12 @@ import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
+import com.hortonworks.beacon.entity.EncryptionAlgorithmType;
+import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.Path;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -39,6 +43,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -104,6 +111,50 @@ public class CloudReplicationTest extends ResourceBaseTest {
             }
         });
         targetClient.deletePolicy(policyName, false);
+    }
+
+    @Test
+    public void testHdfsS3EncryptionBasedPolicy() throws Exception{
+        CloudCred cloudCred = createAwsCloudCred(testDataGenerator.getRandomString("Run-HDFS-S3-enc-repl"));
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName = testDataGenerator.getRandomString("HDFSS3EncryptionBasedPolicy");
+        String sourceDataSet = SOURCE_DIR + policyName;
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put(FSDRProperties.CLOUD_CRED.getName(), cloudCredId);
+        cloudProps.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(),
+                EncryptionAlgorithmType.AWS_SSES3.toString());
+        ReplicationPolicy policy = testDataGenerator.getPolicy(policyName, sourceDataSet,
+                testDataGenerator.getRandomString("s3://dummy/test"), "FS", 60,
+                sourceCluster.getName(), null, cloudProps);
+        testDataGenerator.createFSMocks(sourceDataSet);
+        when(targetFs.create(any(Path.class))).thenReturn(mock(FSDataOutputStream.class));
+        targetClient.dryrunPolicy(policyName, policy.asProperties());
+        policy.getCustomProperties().setProperty(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(), "dummyAlgo");
+        boolean shouldThrowup = false;
+        try {
+            targetClient.dryrunPolicy(policyName, policy.asProperties());
+
+        } catch (BeaconClientException ex) {
+            String errorMessage = "Encryption algorithm dummyAlgo is not supported";
+            assertTrue(ex.getMessage().endsWith(errorMessage));
+            shouldThrowup = true;
+        }
+        assertTrue(shouldThrowup);
+        policy.getCustomProperties().setProperty(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(),
+                EncryptionAlgorithmType.AWS_SSES3.getName());
+        shouldThrowup = false;
+        try {
+            targetClient.dryrunPolicy(policyName, policy.asProperties());
+
+        } catch (BeaconClientException ex) {
+            String errorMessage = "Encryption algorithm "+ EncryptionAlgorithmType.AWS_SSES3.getName()
+                    + " is not supported";
+            assertTrue(ex.getMessage().endsWith(errorMessage));
+            shouldThrowup = true;
+        }
+        assertTrue(shouldThrowup);
+
     }
 
     @Test

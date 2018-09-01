@@ -150,7 +150,14 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public void dryrunPolicy(String policyName, PropertiesIgnoreCase properties) throws BeaconClientException {
+    public void dryrunPolicy(final String policyName, final PropertiesIgnoreCase properties)
+            throws BeaconClientException {
+        new ClientResource<APIResult>() {
+            @Override
+            APIResult api() throws BeaconWebException {
+                return policyResource.validatePolicy(policyName, properties);
+            }
+        }.call();
 
     }
 

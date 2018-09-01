@@ -144,6 +144,10 @@ public final class RequestContext {
         entityManager = null;
     }
 
+    public boolean isTransactionActive() {
+        return transaction;
+    }
+
     public Timer startTimer(String methodName) {
         Timer timer = new Timer();
         methodTimers.put(methodName, timer);

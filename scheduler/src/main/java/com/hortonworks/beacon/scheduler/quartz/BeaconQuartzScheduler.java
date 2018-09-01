@@ -203,9 +203,8 @@ public final class BeaconQuartzScheduler implements BeaconScheduler, BeaconServi
         try {
             JobKey jobKey = new JobKey(policyId, START_NODE_GROUP);
             if (scheduler.checkExists(jobKey)) {
-                Trigger trigger  = scheduler.getTriggerForJob(jobKey); // get the triggers.
                 scheduler.scheduleChainedJobs(policyId, scheduler.getJobDetail(policyId, START_NODE_GROUP),
-                        jobDetailList, trigger);
+                        jobDetailList);
             } else {
                 LOG.info("Policy has been interrupted/deleted!, skipping th lineage creation.");
             }

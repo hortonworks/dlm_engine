@@ -120,14 +120,14 @@ public final class PolicyHelper {
     }
 
     public static EncryptionAlgorithmType getCloudEncryptionAlgorithm(ReplicationPolicy policy) throws BeaconException {
-        String algorithm = policy.getCustomProperties().getProperty(
+        String cloudEncAlgoType = policy.getCustomProperties().getProperty(
                 ReplicationPolicy.ReplicationPolicyFields.CLOUD_ENCRYPTIONALGORITHM.getName());
         ReplicationType type = ReplicationType.valueOf(policy.getType());
         if (type == HIVE) {
             BeaconCluster targetCluster = new BeaconCluster(ClusterHelper.getActiveCluster(policy.getTargetCluster()));
-            algorithm = targetCluster.getHiveCloudEncryptionAlgorithm();
+            cloudEncAlgoType = targetCluster.getHiveCloudEncryptionAlgorithm();
         }
-        return EncryptionAlgorithmType.getEncryptionAlgorithmType(algorithm);
+        return EncryptionAlgorithmType.getEncryptionAlgorithmByEnumType(cloudEncAlgoType);
     }
 
     public static String getCloudEncryptionKey(ReplicationPolicy policy) throws BeaconException {

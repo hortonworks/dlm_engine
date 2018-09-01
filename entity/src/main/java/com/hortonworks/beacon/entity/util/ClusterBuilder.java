@@ -89,12 +89,12 @@ public final class ClusterBuilder {
         String hiveCloudEncAlgoName = Cluster.ClusterFields.HIVE_CLOUD_ENCRYPTION_ALGORITHM.getName();
         String hiveCloudEncryptionAlgorithm = requestProperties.getPropertyIgnoreCase(hiveCloudEncAlgoName);
         if (StringUtils.isNotBlank(hiveCloudEncryptionAlgorithm)) {
-            EncryptionAlgorithmType hiveClusterEncType = EncryptionAlgorithmType.getEncryptionAlgorithmType(
+            EncryptionAlgorithmType hiveClusterEncAlgo = EncryptionAlgorithmType.getEncryptionAlgorithmByName(
                     hiveCloudEncryptionAlgorithm);
-            if (EncryptionAlgorithmType.NONE.equals(hiveClusterEncType)) {
+            if (EncryptionAlgorithmType.NONE.equals(hiveClusterEncAlgo)) {
                 throw new BeaconException("Cloud encryption algorithm NONE is not supported for cluster");
             }
-            requestProperties.setProperty(hiveCloudEncAlgoName, hiveClusterEncType.name());
+            requestProperties.setProperty(hiveCloudEncAlgoName, hiveClusterEncAlgo.name());
         }
         Properties properties = EntityHelper.getCustomProperties(requestProperties,
                 ClusterProperties.getClusterElements());

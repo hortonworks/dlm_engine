@@ -264,11 +264,11 @@ public class PolicyResourceTest extends ResourceBaseTest {
     @Test
     public void testEnableSnapshotBasedPolicy() throws Exception{
         final String policyName = testDataGenerator.getRandomString("FsSnapshotPolicy");
-        String replicationPath = "/tmp/abc";
+        String replicationPath = SOURCE_DIR + policyName;
         targetFs.mkdirs(new Path(replicationPath));
         testDataGenerator.createFSMocks(replicationPath);
         HashMap<String, String> custProps = new HashMap<>();
-        custProps.put(ReplicationPolicy.ReplicationPolicyFields.SOURCE_SETSNAPSHOTTABLE.getName(), "true");
+        custProps.put(ReplicationPolicy.ReplicationPolicyFields.CLOUD_ENCRYPTIONALGORITHM.getName(), "AES");
         ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath, custProps);
         targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
         waitOnCondition(20000, "First Instance Success ", new Condition() {

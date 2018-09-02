@@ -65,7 +65,7 @@ public class RESTClientBuilder {
     private String userId;
     private String password;
     private UserGroupInformation userGroupInformation;
-    private Cookie cookie;
+    private Cookie hdpCookie;
     private String knoxBaseUrl;
 
     protected String incomingUrl;
@@ -118,7 +118,8 @@ public class RESTClientBuilder {
             try {
                 authStrategy = AuthStrategy.KERBEROS;
                 this.userGroupInformation = UserGroupInformation.getLoginUser();
-                logInfo("authStrategy: {} : {}", authStrategy, baseUrls);
+                logInfo("authStrategy: {} : urls: {}: userGroupInformation: {}",
+                        authStrategy, baseUrls, userGroupInformation);
             } catch (Exception e) {
                 throw new BeaconException("Error: setAuthStrategy: UserGroupInformation.getLoginUser: failed!", e);
             }
@@ -183,8 +184,9 @@ public class RESTClientBuilder {
             AtlasClientV2 clientV2;
             switch (authStrategy) {
                 case KNOX:
-                    this.cookie = new Cookie(KNOX_HDP_COOKIE_NAME, getSSOToken(knoxBaseUrl));
-                    clientV2 = new AtlasClientV2(baseUrls, this.cookie);
+                    this.hdpCookie = new Cookie(KNOX_HDP_COOKIE_NAME, getSSOToken(knoxBaseUrl));
+                    logInfo("authStrategy: {} : knox hdpCookie: {}", authStrategy, hdpCookie);
+                    clientV2 = new AtlasClientV2(baseUrls, this.hdpCookie);
                     return new AtlasRESTClient(clientV2);
 
                 case KERBEROS:

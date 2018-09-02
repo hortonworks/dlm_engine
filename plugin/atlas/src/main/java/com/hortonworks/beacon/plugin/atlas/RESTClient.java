@@ -22,7 +22,7 @@
 package com.hortonworks.beacon.plugin.atlas;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import org.apache.atlas.model.impexp.AtlasCluster;
+import org.apache.atlas.model.impexp.AtlasServer;
 import org.apache.atlas.model.impexp.AtlasExportRequest;
 import org.apache.atlas.model.impexp.AtlasImportRequest;
 import org.apache.atlas.model.impexp.AtlasImportResult;
@@ -55,10 +55,10 @@ public interface RESTClient {
     /**
      * Queries Atlas for getting last synchronization information.
      *
-     * @param clusterName, name of the cluster
+     * @param serverName, name of the cluster
      * @return
      */
-    AtlasCluster getCluster(String clusterName) throws BeaconException;
+    AtlasServer getServer(String serverName) throws BeaconException;
 
     /**
      * Get entity guid from qualified name.

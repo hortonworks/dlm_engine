@@ -24,9 +24,10 @@ package com.hortonworks.beacon.plugin.atlas;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
-import org.apache.atlas.model.impexp.AtlasCluster;
+import org.apache.atlas.model.impexp.AtlasServer;
 import org.apache.atlas.model.impexp.AtlasExportRequest;
 import org.apache.atlas.model.instance.AtlasObjectId;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,27 +44,27 @@ final class ExportRequestProvider {
 
     public static final String ATTRIBUTE_QUALIFIED_NAME = "qualifiedName";
     static final String ATTRIBUTE_PATH_NAME = "path";
-
     static final String ATLAS_TYPE_HIVE_DB = "hive_db";
     static final String ATLAS_TYPE_HDFS_PATH = "hdfs_path";
+    private static final String PATH_FILE_SEPARATOR = "/";
 
     static final String QUALIFIED_NAME_FORMAT = "%s@%s";
 
     private ExportRequestProvider() {
-
     }
 
     public static AtlasExportRequest create(AtlasProcess process, DataSet dataSet) throws BeaconException {
         DataSet.DataSetType dataSetType = dataSet.getType();
 
         Cluster sourceCluster = dataSet.getSourceCluster();
-        String sourceClusterName = process.getAtlasClusterName(sourceCluster);
+        String sourceClusterName = process.getAtlasServerName(sourceCluster);
         String sourceDataSet = dataSet.getSourceDataSet();
 
         Cluster targetCluster = dataSet.getTargetCluster();
-        String targetClusterName = process.getAtlasClusterName(targetCluster);
+        String targetClusterName = process.getAtlasServerName(targetCluster);
 
         List<AtlasObjectId> itemsToExport = getItemsToExport(dataSetType, sourceClusterName, sourceDataSet);
+
         String entityGuid = getEntityGuid(process, sourceCluster, itemsToExport.get(0));
 
         long fromTimestamp = getFromTimestamp(process, targetCluster, sourceClusterName, entityGuid);
@@ -107,7 +108,7 @@ final class ExportRequestProvider {
 
         RESTClient client = process.getClient(targetCluster);
 
-        AtlasCluster cluster = client.getCluster(sourceClusterName);
+        AtlasServer cluster = client.getServer(sourceClusterName);
         long ret = (cluster != null && cluster.getAdditionalInfoRepl(entityGuid) != null)
                 ? (long) cluster.getAdditionalInfoRepl(entityGuid)
                 : 0L;
@@ -141,7 +142,8 @@ final class ExportRequestProvider {
 
         switch (dataSetType) {
             case HDFS:
-                objectId = new AtlasObjectId(typeName, ATTRIBUTE_PATH_NAME, sourceDataSet);
+                objectId = new AtlasObjectId(typeName, ATTRIBUTE_PATH_NAME,
+                                            getPathWithTrailingPathSeparator(sourceDataSet));
                 break;
 
             case HIVE:
@@ -157,6 +159,14 @@ final class ExportRequestProvider {
         return new ArrayList<AtlasObjectId>() {{
                 add(objectId);
             }};
+    }
+
+    static String getPathWithTrailingPathSeparator(String path) {
+        if (!StringUtils.endsWith(path, PATH_FILE_SEPARATOR)) {
+            return path.concat(PATH_FILE_SEPARATOR);
+        }
+
+        return path;
     }
 
     private static String getQualifiedName(String dataSetName, String clusterName) {

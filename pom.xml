@@ -225,6 +225,11 @@
             </dependency>
             <dependency>
                 <groupId>com.hortonworks.beacon</groupId>
+                <artifactId>beacon-atlas</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hortonworks.beacon</groupId>
                 <artifactId>beacon-ranger</artifactId>
                 <version>${project.version}</version>
             </dependency>

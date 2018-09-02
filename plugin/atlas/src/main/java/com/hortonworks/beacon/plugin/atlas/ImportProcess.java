@@ -68,8 +68,8 @@ public class ImportProcess extends AtlasProcess {
         infoLog("importFile: importing {} ...", filePath);
         InputStream inputStream = FileSystemUtils.getInputStream(targetFS, filePath);
         AtlasImportRequest importRequest = ImportRequestProvider.create(
-                getAtlasClusterName(sourceCluster),
-                getAtlasClusterName(targetCluster));
+                getAtlasServerName(sourceCluster),
+                getAtlasServerName(targetCluster));
 
         importData(targetCluster, importRequest, inputStream);
         updateImportStats(locatedFileStatus.getLen());
@@ -102,7 +102,7 @@ public class ImportProcess extends AtlasProcess {
 
         static final String IMPORT_TRANSFORM_FORMAT =
                 "{ \"Asset\": { \"qualifiedName\":[ \"replace:@%s:@%s\"], "
-                        + "\"*\":[ \"clearAttrValue:replicatedToCluster,replicatedFromCluster\", "
+                        + "\"*\":[ \"clearAttrValue:replicatedTo,replicatedFrom\", "
                         + "\"addClassification:"
                         + REPLICATED_TAG_NAME
                         + "\" ] } }";

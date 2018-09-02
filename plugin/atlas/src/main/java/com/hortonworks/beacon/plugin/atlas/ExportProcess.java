@@ -24,7 +24,9 @@ package com.hortonworks.beacon.plugin.atlas;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
+import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.atlas.model.impexp.AtlasExportRequest;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -55,14 +57,18 @@ public class ExportProcess extends AtlasProcess {
         try {
             Cluster sourceCluster = dataset.getSourceCluster();
             Cluster targetCluster = dataset.getTargetCluster();
-            String targetClusterName = getAtlasClusterName(targetCluster);
+            String targetClusterName = getAtlasServerName(targetCluster);
+            FileSystem targetFs = FileSystemClientFactory.get().createFileSystem(
+                                                            stagingDir.getName(), new Configuration());
 
             String exportFileName = getExportFileName(targetClusterName, getCurrentTimestamp());
 
             AtlasExportRequest exportRequest = ExportRequestProvider.create(this, dataset);
 
             InputStream inputStream = exportData(sourceCluster, exportRequest);
-            exportPath = writeDataToFile(targetCluster, stagingDir, exportFileName, inputStream);
+            exportPath = writeDataToFile(targetFs,
+                                            targetCluster.getFsEndpoint(),
+                                            stagingDir, exportFileName, inputStream);
 
             return exportPath;
         } catch (Exception ex) {
@@ -78,14 +84,13 @@ public class ExportProcess extends AtlasProcess {
         return getClient(cluster).exportData(request);
     }
 
-    private Path writeDataToFile(Cluster clusterToWriteTo, Path stagingDir,
+    private Path writeDataToFile(FileSystem fileSystem, String fsEndpoint, Path stagingDir,
                                  String exportFileName, InputStream data) throws IOException, BeaconException {
-        FileSystem fs = FileSystemUtils.getFs(clusterToWriteTo);
         Path exportedFile = new Path(stagingDir, exportFileName);
-        long numBytesWritten = FileSystemUtils.writeFile(fs, exportedFile, data);
+        long numBytesWritten = FileSystemUtils.writeFile(fileSystem, exportedFile, data);
 
         updateExportStats(numBytesWritten);
-        return new Path(clusterToWriteTo.getFsEndpoint(), exportedFile);
+        return new Path(fsEndpoint, exportedFile);
     }
 
     private String getExportFileName(String clusterName, String suffix) {

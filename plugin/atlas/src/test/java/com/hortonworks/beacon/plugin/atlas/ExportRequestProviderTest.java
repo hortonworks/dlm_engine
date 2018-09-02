@@ -76,7 +76,7 @@ public class ExportRequestProviderTest extends RequestProviderBase {
 
         assertEquals(request.getItemsToExport().get(0).getUniqueAttributes().get(
                 ExportRequestProvider.ATTRIBUTE_PATH_NAME),
-                WAREHOUSE_ACCOUNTS_PATH);
+                ExportRequestProvider.getPathWithTrailingPathSeparator(WAREHOUSE_ACCOUNTS_PATH));
 
         assertNotNull(request.getOptions());
         assertEquals(request.getOptions().size(), 5);

@@ -99,7 +99,7 @@ public abstract class AtlasProcess {
         return builder.knoxBaseUrl(knoxGatewayURL).baseUrl(atlasEndpoint).create();
     }
 
-    protected String getAtlasClusterName(Cluster cluster) {
+    protected String getAtlasServerName(Cluster cluster) {
         if (cluster.getCustomProperties().contains(ATLAS_CLUSTER_NAME)) {
             return cluster.getCustomProperties().getProperty(ATLAS_CLUSTER_NAME);
         }

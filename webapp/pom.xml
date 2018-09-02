@@ -159,6 +159,11 @@
             <groupId>com.hortonworks.beacon</groupId>
             <artifactId>beacon-ranger</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>beacon-atlas</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

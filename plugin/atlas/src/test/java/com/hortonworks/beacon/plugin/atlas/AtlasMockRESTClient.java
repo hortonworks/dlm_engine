@@ -22,21 +22,23 @@
 package com.hortonworks.beacon.plugin.atlas;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import org.apache.atlas.model.impexp.AtlasCluster;
 import org.apache.atlas.model.impexp.AtlasExportRequest;
 import org.apache.atlas.model.impexp.AtlasExportResult;
 import org.apache.atlas.model.impexp.AtlasImportRequest;
 import org.apache.atlas.model.impexp.AtlasImportResult;
+import org.apache.atlas.model.impexp.AtlasServer;
+import org.testng.SkipException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.concurrent.Callable;
 
 /**
  * Mock implementation of Atlas REST Client. Used by tests.
  */
-public class AtlasMockRESTClient implements RESTClient {
+public class AtlasMockRESTClient extends RetryingClient implements RESTClient {
     private static final String RESOURCES_PATH = "src/test/resources/atlas";
     private static final long EXPECTED_TIMESTAMP = 1534801666522L;
     private String filePath;
@@ -54,7 +56,20 @@ public class AtlasMockRESTClient implements RESTClient {
     }
 
     @Override
-    public AtlasImportResult importData(AtlasImportRequest request, InputStream inputStream) {
+    public AtlasImportResult importData(final AtlasImportRequest request, InputStream inputStream) {
+        try {
+            return invokeWithRetry(new Callable<AtlasImportResult>() {
+                @Override
+                public AtlasImportResult call() {
+                    return getDefaultAtlasImportResult(request);
+                }
+            }, getDefaultAtlasImportResult(request));
+        } catch (BeaconException e) {
+            throw new SkipException("BeaconException", e);
+        }
+    }
+
+    public AtlasImportResult getDefaultAtlasImportResult(AtlasImportRequest request) {
         return new AtlasImportResult(request,
                 "",
                 "",
@@ -63,8 +78,8 @@ public class AtlasMockRESTClient implements RESTClient {
     }
 
     @Override
-    public AtlasCluster getCluster(String targetClusterName) {
-        AtlasCluster cluster = new AtlasCluster(targetClusterName, targetClusterName);
+    public AtlasServer getServer(String serverName) {
+        AtlasServer cluster = new AtlasServer(serverName, serverName);
         cluster.setAdditionalInfoRepl(
                 getEntityGuid("", "", ""), EXPECTED_TIMESTAMP);
         return cluster;

@@ -24,10 +24,10 @@ package com.hortonworks.beacon.plugin.atlas;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.atlas.AtlasClientV2;
 import org.apache.atlas.AtlasServiceException;
-import org.apache.atlas.model.impexp.AtlasCluster;
 import org.apache.atlas.model.impexp.AtlasExportRequest;
 import org.apache.atlas.model.impexp.AtlasImportRequest;
 import org.apache.atlas.model.impexp.AtlasImportResult;
+import org.apache.atlas.model.impexp.AtlasServer;
 import org.apache.atlas.model.instance.AtlasEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,11 +35,12 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 /**
  * Implementation of RESTClient, encapsulates Atlas' REST APIs.
  */
-public class AtlasRESTClient implements RESTClient {
+public class AtlasRESTClient extends RetryingClient implements RESTClient {
     private static final Logger LOG = LoggerFactory.getLogger(AtlasRESTClient.class);
     private final AtlasClientV2 clientV2;
 
@@ -48,36 +49,43 @@ public class AtlasRESTClient implements RESTClient {
     }
 
     @Override
-    public InputStream exportData(AtlasExportRequest request) throws BeaconException {
-        try {
-            debugLog("exportData: {}", request);
-            return clientV2.exportData(request);
-        } catch (AtlasServiceException e) {
-            LOG.error("exportData", e);
-            throw new BeaconException(e);
-        }
-    }
-
-    @Override
-    public AtlasImportResult importData(AtlasImportRequest request, InputStream inputStream) throws BeaconException {
-        try {
-            if (inputStream == null) {
-                return new AtlasImportResult(request, "", "", "", 0L);
+    public InputStream exportData(final AtlasExportRequest request) throws BeaconException {
+        debugLog("exportData: {}", request);
+        return invokeWithRetry(new Callable<InputStream>() {
+            @Override
+            public InputStream call() throws Exception {
+                return clientV2.exportData(request);
             }
-
-            debugLog("importData: {}", request);
-            return clientV2.importData(request, inputStream);
-        } catch (AtlasServiceException e) {
-            LOG.error("importData", e);
-            throw new BeaconException(e);
-        }
+        }, null);
     }
 
     @Override
-    public AtlasCluster getCluster(String clusterName) throws BeaconException {
+    public AtlasImportResult importData(final AtlasImportRequest request,
+                                        final InputStream inputStream) throws BeaconException {
+        AtlasImportResult defaultResult = getDefaultAtlasImportResult(request);
+        if (inputStream == null) {
+            return defaultResult;
+        }
+
+        debugLog("importData: {}", request);
+        return invokeWithRetry(new Callable<AtlasImportResult>() {
+            @Override
+            public AtlasImportResult call() throws Exception {
+                return clientV2.importData(request, inputStream);
+            }
+        }, defaultResult);
+    }
+
+
+    private AtlasImportResult getDefaultAtlasImportResult(AtlasImportRequest request) {
+        return new AtlasImportResult(request, "", "", "", 0L);
+    }
+
+    @Override
+    public AtlasServer getServer(String serverName) throws BeaconException {
         try {
-            debugLog("getCluster: clusterName: {}", clusterName);
-            return clientV2.getCluster(clusterName);
+            debugLog("getCluster: clusterName: {}", serverName);
+            return clientV2.getServer(serverName);
         } catch (AtlasServiceException e) {
             LOG.error("getCluster", e);
         }

@@ -56,19 +56,16 @@ public class ExportProcess extends AtlasProcess {
         Path exportPath = null;
         try {
             Cluster sourceCluster = dataset.getSourceCluster();
-            Cluster targetCluster = dataset.getTargetCluster();
-            String targetClusterName = getAtlasServerName(targetCluster);
+            String sourceClusterName = getAtlasServerName(sourceCluster);
             FileSystem targetFs = FileSystemClientFactory.get().createFileSystem(
-                                                            stagingDir.getName(), new Configuration());
+                                                    stagingDir.getName(), new Configuration());
 
-            String exportFileName = getExportFileName(targetClusterName, getCurrentTimestamp());
+            String exportFileName = getExportFileName(sourceClusterName, getCurrentTimestamp());
 
             AtlasExportRequest exportRequest = ExportRequestProvider.create(this, dataset);
 
             InputStream inputStream = exportData(sourceCluster, exportRequest);
-            exportPath = writeDataToFile(targetFs,
-                                            targetCluster.getFsEndpoint(),
-                                            stagingDir, exportFileName, inputStream);
+            exportPath = writeDataToFile(targetFs, stagingDir, exportFileName, inputStream);
 
             return exportPath;
         } catch (Exception ex) {
@@ -84,13 +81,13 @@ public class ExportProcess extends AtlasProcess {
         return getClient(cluster).exportData(request);
     }
 
-    private Path writeDataToFile(FileSystem fileSystem, String fsEndpoint, Path stagingDir,
+    private Path writeDataToFile(FileSystem fileSystem, Path stagingDir,
                                  String exportFileName, InputStream data) throws IOException, BeaconException {
         Path exportedFile = new Path(stagingDir, exportFileName);
         long numBytesWritten = FileSystemUtils.writeFile(fileSystem, exportedFile, data);
 
         updateExportStats(numBytesWritten);
-        return new Path(fsEndpoint, exportedFile);
+        return new Path(stagingDir, exportedFile);
     }
 
     private String getExportFileName(String clusterName, String suffix) {

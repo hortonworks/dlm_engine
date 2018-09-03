@@ -100,7 +100,7 @@ public abstract class AtlasProcess {
     }
 
     protected String getAtlasServerName(Cluster cluster) {
-        if (cluster.getCustomProperties().contains(ATLAS_CLUSTER_NAME)) {
+        if (cluster.getCustomProperties() != null && cluster.getCustomProperties().contains(ATLAS_CLUSTER_NAME)) {
             return cluster.getCustomProperties().getProperty(ATLAS_CLUSTER_NAME);
         }
 

@@ -107,7 +107,7 @@ public class BeaconIntegrationTest {
     protected static final String FS = "FS";
 
     static {
-        String commonOptions = "-Dlog4j.configuration=beacon-log4j.xml -Dbeacon.version="
+        String commonOptions = "-Dlog4j.configuration=beacon-log4j.properties -Dbeacon.version="
                 + System.getProperty(BeaconConstants.BEACON_VERSION_CONST)
                 + " -Dbeacon.log.appender=FILE";
         sourceJVMOptions.add(commonOptions + " -Dbeacon.log.filename=beacon-application.log." + SOURCE_CLUSTER);

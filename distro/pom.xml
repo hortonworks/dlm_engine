@@ -72,7 +72,7 @@
                                 <resource>
                                     <directory>../src/conf/</directory>
                                     <includes>
-                                        <include>beacon-log4j.xml</include>
+                                        <include>beacon-log4j.properties</include>
                                     </includes>
                                     <filtering>true</filtering>
                                 </resource>
@@ -97,7 +97,7 @@
         <beacon.log.level>INFO</beacon.log.level>
         <beacon.hive.log.level>WARN</beacon.hive.log.level>
         <beacon.log.appender>FILE</beacon.log.appender>
-        <beacon.driver>org.apache.derby.jdbc.ClientDriver</beacon.driver>
+        <beacon.driver>org.apache.derby.jdbc.EmbeddedDriver</beacon.driver>
         <beacon.url>jdbc:derby:data/beacon-db;create=true;</beacon.url>
         <beacon.user>beacon</beacon.user>
         <beacon.password>beacon</beacon.password>

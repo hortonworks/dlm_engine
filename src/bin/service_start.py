@@ -82,7 +82,7 @@ jdk_options.extend(jdk_def_options)
 jdk_options.append(bc.heap)
 jdk_options.extend(bc.options)
 jdk_options.extend([os.getenv('BEACON_PROPERTIES'),
-     '-Dlog4j.configuration=beacon-log4j.xml',
+     '-Dlog4j.configuration=beacon-log4j.properties',
      '-Dbeacon.log.dir=' + bc.log_dir,
      '-Dbeacon.data=' + bc.data_dir,
      '-Dbeacon.home=' + bc.home_dir,

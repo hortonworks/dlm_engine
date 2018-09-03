@@ -231,7 +231,7 @@
                 <configuration>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
                     <systemPropertyVariables>
-                        <log4j.configuration>beacon-log4j.xml</log4j.configuration>
+                        <log4j.configuration>beacon-log4j.properties</log4j.configuration>
                         <log4.debug/>
                         <beacon.version>${project.version}</beacon.version>
                         <beacon.log.filename>beacon-application.log</beacon.log.filename>
@@ -257,7 +257,7 @@
                                 <resource>
                                     <directory>../src/conf/</directory>
                                     <includes>
-                                        <include>beacon-log4j.xml</include>
+                                        <include>beacon-log4j.properties</include>
                                     </includes>
                                     <filtering>true</filtering>
                                 </resource>

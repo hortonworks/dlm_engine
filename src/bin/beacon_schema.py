@@ -57,7 +57,7 @@ jdk_options =  [bc.heap]
 jdk_options.extend(bc.options)
 log_filename = 'beacon-schematool-' + bc.hostname + '.log'
 jdk_options.extend([os.getenv('BEACON_PROPERTIES'),
-                '-Dlog4j.configuration=beacon-log4j.xml',
+                '-Dlog4j.configuration=beacon-log4j.properties',
                 '-Dbeacon.log.dir=' + bc.log_dir,
                 '-Dbeacon.log.appender=FILE',
                 '-Dbeacon.log.level=info',

@@ -35,7 +35,7 @@
             <directory>../src/conf/</directory>
             <outputDirectory>conf</outputDirectory>
             <excludes>
-                <exclude>beacon-log4j.xml</exclude>
+                <exclude>beacon-log4j.properties</exclude>
             </excludes>
         </fileSet>
         <fileSet>
@@ -85,7 +85,7 @@
             <fileMode>0644</fileMode>
         </file>
         <file>
-            <source>target/beacon-log4j.xml</source>
+            <source>target/beacon-log4j.properties</source>
             <outputDirectory>conf</outputDirectory>
             <filtered>true</filtered>
         </file>

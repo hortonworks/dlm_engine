@@ -764,7 +764,7 @@
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
                     <systemPropertyVariables>
                         <log4j.debug/>
-                        <log4j.configuration>beacon-log4j.xml</log4j.configuration>
+                        <log4j.configuration>beacon-log4j.properties</log4j.configuration>
                         <derby.stream.error.file>${project.build.directory}/logs/</derby.stream.error.file>
                         <beacon.version>${project.version}</beacon.version>
                     </systemPropertyVariables>

@@ -49,7 +49,7 @@ bc.init_config(cmd, 'client')
 jdk_options =  [bc.heap]
 jdk_options.extend(bc.options)
 jdk_options.extend([os.getenv('BEACON_PROPERTIES'),
-                    '-Dlog4j.configuration=beacon-log4j.xml',
+                    '-Dlog4j.configuration=beacon-log4j.properties',
                     '-Dbeacon.log.appender=console',
                     '-Dbeacon.log.level=error'])
 

@@ -35,29 +35,6 @@
           <category>MASTER</category>
           <cardinality>1</cardinality>
           <versionAdvertised>false</versionAdvertised>
-          <dependencies>
-            <dependency>
-              <name>HDFS/HDFS_CLIENT</name>
-              <scope>host</scope>
-              <auto-deploy>
-                <enabled>true</enabled>
-              </auto-deploy>
-            </dependency>
-            <dependency>
-              <name>MAPREDUCE2/MAPREDUCE2_CLIENT</name>
-              <scope>host</scope>
-              <auto-deploy>
-                <enabled>true</enabled>
-              </auto-deploy>
-            </dependency>
-            <dependency>
-              <name>YARN/YARN_CLIENT</name>
-              <scope>host</scope>
-              <auto-deploy>
-                <enabled>true</enabled>
-              </auto-deploy>
-            </dependency>
-          </dependencies>
           <commandScript>
             <script>scripts/beacon_server.py</script>
             <scriptType>PYTHON</scriptType>
@@ -88,12 +65,6 @@
         <scriptType>PYTHON</scriptType>
         <timeout>300</timeout>
       </commandScript>
-
-      <requiredServices>
-        <service>HDFS</service>
-        <service>YARN</service>
-        <service>ZOOKEEPER</service>
-      </requiredServices>
 
       <themes>
         <theme>

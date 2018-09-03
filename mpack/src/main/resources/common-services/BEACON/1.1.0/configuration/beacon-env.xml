@@ -529,8 +529,13 @@
   </property>
   <property>
     <name>beacon_cloud_cred_provider_path</name>
-    <value>jceks://hdfs//user/beacon/credential</value>
+    <value>jceks://hdfs/user/beacon/credential</value>
     <description>HDFS path for storing cloud credential provider</description>
+  </property>
+  <property>
+    <name>beacon_plugin_staging_dir</name>
+    <value>hdfs://apps/beacon/plugin/stage</value>
+    <description>Staging directory for DLM plugins</description>
   </property>
   <property>
     <name>beacon_preserve_meta</name>

@@ -61,23 +61,13 @@ def beacon(type, action = None, upgrade_type=None):
   import params
 
   if action == 'config':
-    params.HdfsResource(params.beacon_home_dir,
-      type = "directory",
-      action = "create_on_execute",
-      owner = params.beacon_user,
-      mode = 0755)
+    create_directory(params.beacon_home_dir)
+    create_directory(params.beacon_plugin_staging_dir)
 
-    params.HdfsResource(params.beacon_cloud_cred_provider_dir,
-      type = "directory",
-      action = "create_on_execute",
-      owner = params.hive_user,
-      mode = 0700)
-
-    params.HdfsResource(params.beacon_plugin_staging_dir,
-      type = "directory",
-      action = "create_on_execute",
-      owner = params.beacon_user,
-      mode = 0775)
+    cloud_cred_provider = params.beacon_cloud_cred_provider_dir.split('://')[1]
+    cloud_cred_parts = cloud_cred_provider.split('/', 1)
+    cloud_cred_directory = "{0}://{1}".format(cloud_cred_parts[0], cloud_cred_parts[1])
+    create_directory(cloud_cred_directory)
 
     if params.is_hive_installed:
       if not isinstance(params.hive_repl_cmrootdir, UnknownConfiguration):
@@ -93,7 +83,6 @@ def beacon(type, action = None, upgrade_type=None):
                           owner = params.hive_user,
                           mode = 0700)
 
-    params.HdfsResource(None, action = "execute")
 
     Directory(params.beacon_pid_dir,
       owner = params.beacon_user,
@@ -273,6 +262,23 @@ def beacon(type, action = None, upgrade_type=None):
 
       File(params.server_pid_file, action = 'delete')
 
+
+def create_directory(directory):
+  Logger.info("Creating directory {0}".format(directory))
+  import params
+  if directory.startswith("file"):
+    Directory(directory[6:],
+              owner = params.beacon_user,
+              create_parents = True,
+              mode = 0755,
+              cd_access = "a")
+  elif directory.startswith("hdfs"):
+    params.HdfsResource(directory[6:],
+                        type = "directory",
+                        action = "create_on_execute",
+                        owner = params.beacon_user,
+                        mode = 0775)
+    params.HdfsResource(None, action = "execute")
 
 def download_mysql_driver():
   import params

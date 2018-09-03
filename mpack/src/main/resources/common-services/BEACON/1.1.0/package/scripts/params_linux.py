@@ -57,8 +57,6 @@ config = Script.get_config()
 tmp_dir = Script.get_tmp_dir()
 stack_root = '/usr/dlm'
 beacon_home_dir = '/user/beacon'
-beacon_cloud_cred_provider_dir = '/user/beacon/credential'
-beacon_plugin_staging_dir = '/apps/beacon/plugin/stage'
 beacon_root = 'beacon'
 beacon_webapp_dir = format('{stack_root}/current/{beacon_root}/webapp')
 beacon_home = format('{stack_root}/current/{beacon_root}')
@@ -69,6 +67,9 @@ if 'credentialStoreEnabled' in config:
 jdk_location = config['hostLevelParams']['jdk_location']
 beacon_env = config['configurations']['beacon-env']
 user_group = config['configurations']['cluster-env']['user_group']
+
+beacon_cloud_cred_provider_dir = beacon_env['beacon_cloud_cred_provider_path']
+beacon_plugin_staging_dir = beacon_env['beacon_plugin_staging_dir']
 beacon_user = beacon_env['beacon_user']
 beacon_pid_dir = beacon_env['beacon_pid_dir']
 beacon_data_dir = beacon_env['beacon_data_dir']

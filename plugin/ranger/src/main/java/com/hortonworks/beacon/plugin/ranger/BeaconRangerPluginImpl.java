@@ -176,9 +176,6 @@ public class BeaconRangerPluginImpl implements Plugin{
 
     @Override
     public boolean isEnabled(String cluster) throws BeaconException {
-        if (StringUtils.isEmpty(cluster)) {
-            return false;
-        }
         BeaconCluster beaconCluster = new BeaconCluster(ClusterHelper.getActiveCluster(cluster));
         return StringUtils.isNotEmpty(beaconCluster.getRangerEndpoint());
     }

@@ -75,7 +75,7 @@ public class PluginJobBuilder extends JobBuilder {
         for (String pluginName: orderedPlugins) {
             for (PluginManagerService.DefaultPluginActions action: PluginManagerService.DefaultPluginActions.values()) {
                 String clusterName = getClusterForAction(policy, action);
-                if (pluginsEnabled.contains(pluginName)
+                if (StringUtils.isNotEmpty(clusterName) && pluginsEnabled.contains(pluginName)
                         && PluginManagerService.getPlugin(pluginName).isEnabled(clusterName)) {
                     ReplicationJobDetails jobDetails = buildReplicationJobDetails(policy, pluginName, action.getName());
                     jobList.add(jobDetails);
@@ -153,6 +153,12 @@ public class PluginJobBuilder extends JobBuilder {
         return pluginDatasetType;
     }
 
+    /**
+     * This method builds the graph for the plugins and return the topologically sorted order of the graph.
+     * @param plugins Vertex(s) of the graph.
+     * @return Set of vertex in topologically sorted order.
+     * @throws BeaconException
+     */
     private Set<String> getPluginOrder(List<String> plugins) throws BeaconException {
         Map<String, List<String>> adjList = new HashMap<>();
         Map<String, Integer> inDegree = new HashMap<>();

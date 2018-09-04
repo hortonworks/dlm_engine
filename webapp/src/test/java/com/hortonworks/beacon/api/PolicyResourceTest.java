@@ -152,7 +152,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         PolicyList oldDef = targetClient.getPolicy(policyName);
         assertEquals(120, (long) oldDef.getElements()[0].frequencyInSec);
 
-        waitOnCondition(60000, "Get jobs for policy ", new Condition() {
+        waitOnCondition(20000, "Get jobs for policy ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
                 RequestContext.setInitialValue();

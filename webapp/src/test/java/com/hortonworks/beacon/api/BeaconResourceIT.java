@@ -377,7 +377,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(jsonObject.getString("beaconEndpoint"), getSourceBeaconServer());
     }
 
-    @Test(dependsOnMethods = "testPairCluster")
+    @Test(dependsOnMethods = {"testPairCluster", "testSubmitCluster"})
     public void testDeletePolicyOnSourceCluster() throws Exception {
         String dataSet = "/tmp/" + UUID.randomUUID();
         srcDfsCluster.getFileSystem().mkdirs(new Path(dataSet));

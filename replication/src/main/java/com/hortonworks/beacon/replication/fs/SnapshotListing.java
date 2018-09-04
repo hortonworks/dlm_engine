@@ -28,6 +28,7 @@ import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.hortonworks.beacon.entity.util.FSListing;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;

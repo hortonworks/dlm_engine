@@ -23,6 +23,7 @@
 package com.hortonworks.beacon.entity.entityNeo;
 
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.hadoop.conf.Configuration;
 
 import java.io.IOException;
@@ -50,4 +51,6 @@ public abstract class DataSet {
     public abstract void allowSnapshot() throws IOException;
 
     public abstract void disallowSnapshot() throws IOException;
+
+    public abstract boolean isEncrypted() throws BeaconException;
 }

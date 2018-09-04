@@ -26,8 +26,10 @@ import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
+import com.hortonworks.beacon.entity.EncryptionAlgorithmType;
 import com.hortonworks.beacon.entity.S3Operation;
 import com.hortonworks.beacon.entity.S3OperationFactory;
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.security.BeaconCredentialProvider;
 import org.apache.commons.lang3.StringUtils;
@@ -44,24 +46,32 @@ import static com.hortonworks.beacon.util.FSUtils.merge;
 public class S3FSDataSet extends HCFSDataset {
     public static final Logger LOG = LoggerFactory.getLogger(S3FSDataSet.class);
 
+    private ReplicationPolicy policy;
+
     public S3FSDataSet(String path, ReplicationPolicy policy) throws BeaconException {
         super(path, policy);
+        this.policy = policy;
     }
 
     @Override
-    public String resolvePath(String path, ReplicationPolicy policy) {
+    public String resolvePath(String path, ReplicationPolicy replicationPolicy) {
         return path.replaceFirst(CloudCred.Provider.AWS.getScheme(),
                 CloudCred.Provider.AWS.getHcfsScheme());
     }
 
     @Override
-    protected Configuration getHadoopConf(String path, ReplicationPolicy policy) throws BeaconException {
-        Configuration conf = super.getHadoopConf(path, policy);
+    protected Configuration getHadoopConf(String path, ReplicationPolicy replicationPolicy) throws BeaconException {
+        Configuration conf = super.getHadoopConf(path, replicationPolicy);
 
-        BeaconCloudCred cloudCred = new BeaconCloudCred(policy.getCloudCred());
+        BeaconCloudCred cloudCred = new BeaconCloudCred(replicationPolicy.getCloudCred());
         Configuration bucketConf = getBucketEndpointConf(path, cloudCred);
         merge(conf, bucketConf);
         return conf;
+    }
+
+    @Override
+    public boolean isEncrypted() throws BeaconException {
+        return !EncryptionAlgorithmType.NONE.equals(PolicyHelper.getCloudEncryptionAlgorithm(policy));
     }
 
     private boolean isBucketEndPointConfAvailable(String path) {

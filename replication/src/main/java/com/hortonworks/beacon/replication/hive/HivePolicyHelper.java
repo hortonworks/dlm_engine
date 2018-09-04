@@ -117,7 +117,7 @@ public final class HivePolicyHelper {
         if (StringUtils.isNotBlank(hiveActionType)) {
             map.put(HiveDRProperties.JOB_ACTION_TYPE.getName(), hiveActionType);
         }
-        if (ClusterHelper.isCloudEncryptionEnabled(targetCluster)) {
+        if (ClusterHelper.isCloudEncryptionEnabled(targetCluster, policy)) {
             map.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(),
                     beaconTargetCluster.getHiveCloudEncryptionAlgorithm());
             map.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), beaconTargetCluster.getHiveCloudEncryptionKey());

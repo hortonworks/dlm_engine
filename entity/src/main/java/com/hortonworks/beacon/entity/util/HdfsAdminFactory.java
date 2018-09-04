@@ -20,10 +20,9 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.api;
+package com.hortonworks.beacon.entity.util;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.hadoop.hdfs.client.HdfsAdmin;
 

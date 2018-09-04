@@ -31,6 +31,7 @@ import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.FileListResult;
 import com.hortonworks.beacon.client.result.FileListResult.FileList;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.entity.util.EncryptionZoneListing;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;

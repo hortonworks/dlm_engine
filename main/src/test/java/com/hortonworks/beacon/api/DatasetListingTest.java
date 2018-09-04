@@ -24,6 +24,7 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.result.FileListResult;
+import com.hortonworks.beacon.entity.util.EncryptionZoneListing;
 import com.hortonworks.beacon.replication.fs.SnapshotListing;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.hadoop.conf.Configuration;

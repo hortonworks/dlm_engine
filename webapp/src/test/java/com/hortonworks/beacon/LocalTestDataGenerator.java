@@ -23,7 +23,7 @@
 package com.hortonworks.beacon;
 
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.hortonworks.beacon.api.HdfsAdminFactory;
+import com.hortonworks.beacon.entity.util.HdfsAdminFactory;
 import com.hortonworks.beacon.api.LocalBeaconClient;
 import com.hortonworks.beacon.api.ResourceBaseTest;
 import com.hortonworks.beacon.client.BeaconClient;
@@ -189,6 +189,7 @@ public class LocalTestDataGenerator extends TestDataGenerator {
         cluster.setTags(Arrays.asList("test", "local", "IT"));
         Properties properties = new Properties();
         properties.put("testKey", "testVal");
+        properties.put("hive.metastore.warehouse.dir", "/apps/hive/warehouse");
         cluster.setCustomProperties(properties);
         return cluster;
     }

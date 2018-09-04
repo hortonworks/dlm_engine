@@ -82,12 +82,11 @@ public class AtlasRESTClient extends RetryingClient implements RESTClient {
     }
 
     @Override
-    public AtlasServer getServer(String serverName) throws BeaconException {
+    public AtlasServer getServer(String serverName) {
         try {
-            debugLog("getCluster: clusterName: {}", serverName);
             return clientV2.getServer(serverName);
         } catch (AtlasServiceException e) {
-            LOG.error("getCluster", e);
+            warnDebugLog("getServer of: {} returned: {}", serverName, e.getMessage(), e);
         }
 
         return null;
@@ -105,16 +104,31 @@ public class AtlasRESTClient extends RetryingClient implements RESTClient {
                     clientV2.getEntityByAttribute(entityType, attributes);
 
             if (entityWithExtInfo == null || entityWithExtInfo.getEntity() == null) {
-                LOG.error("Atlas entity cannot be retrieved using: type: {} and {} - {}",
+                LOG.warn("Atlas entity cannot be retrieved using: type: {} and {} - {}",
                         entityType, attributeName, qualifiedName);
                 return null;
             }
 
             return entityWithExtInfo.getEntity().getGuid();
         } catch (AtlasServiceException e) {
-            LOG.error("getEntityGuid", e);
+            warnDebugLog2("getEntityGuid: Could not retrieve entity guid for: {}-{}-{}",
+                    entityType, attributeName, qualifiedName, e);
             return null;
         }
+    }
+
+    private void warnDebugLog2(String formatString, String entityType, String attributeName,
+                               String qualifiedName,
+                               AtlasServiceException e) {
+        LOG.warn(formatString,
+                entityType, attributeName, qualifiedName);
+        debugLog(formatString,
+                entityType, attributeName, qualifiedName, e);
+    }
+
+    private void warnDebugLog(String formatString, String serverName, String message, AtlasServiceException e) {
+        LOG.warn(formatString, serverName, message);
+        debugLog(formatString, serverName, e);
     }
 
     private void debugLog(String s, Object... params) {

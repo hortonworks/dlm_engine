@@ -22,6 +22,7 @@
 package com.hortonworks.beacon.plugin.atlas;
 
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -46,18 +47,19 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 
 /**
  * Integration test for BeaconAtlasPlugin.
  */
 public class BeaconAtlasPluginTest extends RequestProviderBase {
-    private static final String STAGING_DIR = "/tmp";
     private static final String LOCAL_HOST_URL = "http://localhost:";
 
     private DistributedFileSystem dfs;
 
     private BeaconAtlasPlugin beaconAtlasPlugin;
     private Path actualExportedPath = null;
+    private AtlasMockRESTClient.Builder clientBuilder;
 
     @BeforeClass
     public void setup() {
@@ -83,7 +85,7 @@ public class BeaconAtlasPluginTest extends RequestProviderBase {
         InputStream inputStream = getSeekableByteArrayInputStream(getZipFilePath());
         when(dfs.open((Path) anyObject())).thenReturn(new FSDataInputStream(inputStream));
 
-        AtlasMockRESTClient.Builder clientBuilder = new AtlasMockRESTClient.Builder();
+        clientBuilder = new AtlasMockRESTClient.Builder();
         clientBuilder.setFilePath(getZipFilePath());
         beaconAtlasPlugin = new BeaconAtlasPlugin(clientBuilder);
         beaconAtlasPlugin.register();
@@ -93,11 +95,15 @@ public class BeaconAtlasPluginTest extends RequestProviderBase {
         return getFileFromResources("stocks.zip");
     }
 
+    private String getZipFilePathForEmpty() {
+        return getFileFromResources("stocks-empty.zip");
+    }
+
     @Test
     public void syncData() throws Exception {
         setupSingle();
 
-        DataSet dataSet = getDataSet();
+        DataSet dataSet = getDataSet(false);
         actualExportedPath = beaconAtlasPlugin.exportData(dataSet);
 
         AtlasPluginStats pluginStats = (AtlasPluginStats) beaconAtlasPlugin.getStats();
@@ -110,7 +116,32 @@ public class BeaconAtlasPluginTest extends RequestProviderBase {
         assertEquals(pluginStats.getExportStats(), pluginStats.getImportStats());
     }
 
-    private DataSet getDataSet() {
+    @Test
+    public void syncDataForNonExistentEntity() throws Exception {
+        setupSingle();
+        clientBuilder.returnEmptyGuid();
+
+        DataSet dataSet = getDataSet(true);
+        Path actualPath = beaconAtlasPlugin.exportData(dataSet);
+        assertNull(actualPath);
+
+        beaconAtlasPlugin.importData(dataSet, actualExportedPath);
+    }
+
+    @Test(expectedExceptions = BeaconException.class)
+    public void emptyFileExported() throws IOException, BeaconException {
+        setupSingle();
+        clientBuilder.setFilePath(getZipFilePathForEmpty());
+
+        DataSet dataSet = getDataSet(false);
+        actualExportedPath = beaconAtlasPlugin.exportData(dataSet);
+        assertNotNull(actualExportedPath);
+
+        beaconAtlasPlugin.importData(dataSet, actualExportedPath);
+    }
+
+
+    private DataSet getDataSet(final boolean nonExistentEntity) {
         return new DataSet() {
             private static final String SOURCE_CLUSTER_NAME = "cl1";
             private static final String TARGET_CLUSTER_NAME = "cl2";
@@ -127,7 +158,7 @@ public class BeaconAtlasPluginTest extends RequestProviderBase {
 
             @Override
             public String getSourceDataSet() {
-                return DATASET_NAME;
+                return DATASET_NAME + ((nonExistentEntity) ? "11111" : "");
             }
 
             @Override

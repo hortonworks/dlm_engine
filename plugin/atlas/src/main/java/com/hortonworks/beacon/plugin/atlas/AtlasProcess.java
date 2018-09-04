@@ -25,6 +25,7 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
+import org.apache.atlas.model.instance.AtlasObjectId;
 import org.apache.atlas.type.AtlasType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
@@ -36,7 +37,6 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AtlasProcess {
     protected static final Logger LOG = LoggerFactory.getLogger(AtlasProcess.class);
-    private static final String ATLAS_CLUSTER_NAME = "atlas.cluster.name";
     private static final String CLUSTER_NAME_SEPERATOR = "$";
 
     private AtlasPluginStats pluginStats;
@@ -75,6 +75,20 @@ public abstract class AtlasProcess {
         debugLog("dataSet: {}", AtlasType.toJson(dataSet));
     }
 
+    protected void errorLog(String formatText, DataSet dataset, String clusterName) {
+        LOG.error(formatText,
+                clusterName, dataset.getType(), dataset.getSourceDataSet());
+    }
+
+    protected void errorLog(String formatText, AtlasObjectId objectId) {
+        LOG.error(formatText, objectId);
+    }
+
+    protected void errorLog(String formatText, Exception ex) {
+        LOG.error(formatText, ex);
+    }
+
+
     public void setPluginStats(AtlasPluginStats pluginStats) {
         this.pluginStats = pluginStats;
     }
@@ -100,14 +114,6 @@ public abstract class AtlasProcess {
     }
 
     protected String getAtlasServerName(Cluster cluster) {
-        if (cluster.getCustomProperties() != null && cluster.getCustomProperties().contains(ATLAS_CLUSTER_NAME)) {
-            return cluster.getCustomProperties().getProperty(ATLAS_CLUSTER_NAME);
-        }
-
-        return inferClusterName(cluster);
-    }
-
-    private String inferClusterName(Cluster cluster) {
         String clusterName = cluster.getName();
         String atlasCluserName = clusterName;
         if (org.apache.commons.lang.StringUtils.contains(clusterName, CLUSTER_NAME_SEPERATOR)) {

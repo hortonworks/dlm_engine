@@ -22,13 +22,11 @@
 package com.hortonworks.beacon.plugin.atlas;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import org.apache.atlas.AtlasErrorCode;
 import org.apache.atlas.AtlasServiceException;
-import org.apache.atlas.exception.AtlasBaseException;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.Callable;
 
 /**
@@ -36,6 +34,9 @@ import java.util.concurrent.Callable;
  */
 public class RetryingClient {
     private static final Logger LOG = LoggerFactory.getLogger(RetryingClient.class);
+    private static final String ERROR_MESSAGE_NO_ENTITIES = "no entities to create/update";
+    private static final String ERROR_MESSAGE_IN_PROGRESS = "import or export is in progress";
+
     private static final int MAX_RETY_COUNT = 5;
     private static final long PAUSE_DURATION_INCREMENT_IN_MINUTES = 5 * 60 * 1000; // 5 min
 
@@ -44,15 +45,13 @@ public class RetryingClient {
             try {
                 debugLog("retrying method: {}", func.getClass().getName(), null);
                 return func.call();
-            } catch (IllegalAccessException e) {
-                LOG.error("failed with illegal access!", e);
-                throw new BeaconException(e);
-            } catch (InvocationTargetException e) {
-                LOG.error("retryingServiceOperation: failed!", e);
-                throw new BeaconException(e);
             } catch (Exception e) {
-                if (processException(e, currentRetryCount)){
+                if (processImportExportLockException(e, currentRetryCount)) {
                     continue;
+                }
+
+                if (processInvalidParameterException(e)) {
+                    return null;
                 }
 
                 LOG.error("{}", func.getClass().getName(), e);
@@ -63,13 +62,20 @@ public class RetryingClient {
         return defaultReturnValue;
     }
 
-    private boolean processException(Exception e, int currentRetryCount) throws BeaconException {
-        if (!(e instanceof AtlasServiceException) || e.getCause() == null) {
+    private boolean processInvalidParameterException(Exception e) {
+        if (!(e instanceof AtlasServiceException)) {
             return false;
         }
 
-        AtlasBaseException ex = (AtlasBaseException) e.getCause();
-        if (ex.getAtlasErrorCode() == AtlasErrorCode.FAILED_TO_OBTAIN_IMPORT_EXPORT_LOCK) {
+        return (StringUtils.contains(e.getMessage(), ERROR_MESSAGE_NO_ENTITIES));
+    }
+
+    private boolean processImportExportLockException(Exception e, int currentRetryCount) throws BeaconException {
+        if (!(e instanceof AtlasServiceException)) {
+            return false;
+        }
+
+        if (StringUtils.contains(e.getMessage(), ERROR_MESSAGE_IN_PROGRESS)) {
             try {
                 Thread.sleep(PAUSE_DURATION_INCREMENT_IN_MINUTES * currentRetryCount);
             } catch (InterruptedException intEx) {

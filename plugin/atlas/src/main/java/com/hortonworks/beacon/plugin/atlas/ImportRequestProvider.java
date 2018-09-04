@@ -22,28 +22,42 @@
 package com.hortonworks.beacon.plugin.atlas;
 
 import org.apache.atlas.model.impexp.AtlasImportRequest;
-import org.testng.annotations.Test;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import java.util.Map;
 
 /**
- * Test for ImportRequestProvider.
+ * Helper class to create import request.
  */
-public class ImportRequestProviderTest extends RequestProviderBase {
-    @Test
-    public void anyRequest() {
-        String expectedTransforms = String.format(ImportRequestProvider.IMPORT_TRANSFORM_FORMAT,
-                SOURCE_CLUSTER_NAME,
-                TARGET_CLUSTER_NAME);
+final class ImportRequestProvider {
+    private ImportRequestProvider() {
 
-        AtlasImportRequest request = ImportRequestProvider.create(
-                SOURCE_CLUSTER_NAME,
-                TARGET_CLUSTER_NAME);
+    }
 
-        assertNotNull(request);
-        assertEquals(request.getOptions().size(), 2);
-        assertEquals(request.getOptions().get(AtlasImportRequest.OPTION_KEY_REPLICATED_FROM), SOURCE_CLUSTER_NAME);
-        assertEquals(request.getOptions().get(AtlasImportRequest.TRANSFORMS_KEY), expectedTransforms);
+    private static final String REPLICATED_TAG_NAME = "REPLICATED";
+
+    static final String IMPORT_TRANSFORM_FORMAT =
+            "{ \"Asset\": { \"qualifiedName\":[ \"replace:@%s:@%s\"], "
+                    + "\"*\":[ \"clearAttrValue:replicatedTo,replicatedFrom\", "
+                    + "\"addClassification:"
+                    + REPLICATED_TAG_NAME
+                    + "\" ] } }";
+
+    public static AtlasImportRequest create(String sourceClusterName, String targetClusterName) {
+        AtlasImportRequest request = new AtlasImportRequest();
+        addTransforms(request.getOptions(), sourceClusterName, targetClusterName);
+        addMetaInfoUpdate(request.getOptions(), sourceClusterName);
+        return request;
+    }
+
+    private static void addTransforms(Map<String, String> options,
+                                      String sourceClusterName,
+                                      String targetClusterName) {
+
+        options.put(AtlasImportRequest.TRANSFORMS_KEY,
+                String.format(IMPORT_TRANSFORM_FORMAT, sourceClusterName, targetClusterName));
+    }
+
+    private static void addMetaInfoUpdate(Map<String, String> options, String sourceClusterName) {
+        options.put(AtlasImportRequest.OPTION_KEY_REPLICATED_FROM, sourceClusterName);
     }
 }

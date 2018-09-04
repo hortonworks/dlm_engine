@@ -45,7 +45,9 @@ public class RequestProviderBase {
         };
     }
 
-    protected DataSet getDataSet(final DataSet.DataSetType dataSetType, final String dataSetName) {
+    protected DataSet getDataSet(final DataSet.DataSetType dataSetType,
+                                 final String dataSetName,
+                                 final boolean targetIsNull) {
         return new DataSet() {
             @Override
             public DataSetType getType() {
@@ -69,7 +71,7 @@ public class RequestProviderBase {
 
             @Override
             public Cluster getTargetCluster() {
-                return getCluster(TARGET_CLUSTER_NAME);
+                return (targetIsNull) ? null : getCluster(TARGET_CLUSTER_NAME);
             }
 
             @Override

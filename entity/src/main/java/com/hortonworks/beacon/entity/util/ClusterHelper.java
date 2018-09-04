@@ -24,9 +24,12 @@ package com.hortonworks.beacon.entity.util;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Entity;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.BeaconCluster;
+import com.hortonworks.beacon.entity.entityNeo.DataSet;
+import com.hortonworks.beacon.entity.entityNeo.FSDataSet;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.ClusterStatus;
@@ -195,9 +198,10 @@ public final class ClusterHelper {
         return clusterDao.getActiveCluster(clusterName);
     }
 
-    public static boolean isCloudEncryptionEnabled(Cluster cluster) {
-        BeaconCluster beaconCluster = new BeaconCluster(cluster);
-        return StringUtils.isNotBlank(beaconCluster.getHiveCloudEncryptionAlgorithm());
+    public static boolean isCloudEncryptionEnabled(Cluster cluster, ReplicationPolicy policy) throws BeaconException {
+        DataSet dataSet = FSDataSet.create(new BeaconCluster(cluster).getHiveWarehouseLocation(),
+                cluster.getName(), policy);
+        return dataSet.isEncrypted();
     }
 
     public static void validateIfClustersPaired(String sourceCluster, String targetCluster) throws BeaconException {

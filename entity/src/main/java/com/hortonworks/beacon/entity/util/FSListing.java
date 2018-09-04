@@ -20,7 +20,7 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.replication.fs;
+package com.hortonworks.beacon.entity.util;
 
 
 import java.io.File;

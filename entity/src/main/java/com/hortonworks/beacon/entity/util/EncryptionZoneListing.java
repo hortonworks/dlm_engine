@@ -19,7 +19,7 @@
  *    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
  *    OR LOSS OR CORRUPTION OF DATA.
  */
-package com.hortonworks.beacon.api;
+package com.hortonworks.beacon.entity.util;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +33,6 @@ import org.apache.hadoop.hdfs.protocol.EncryptionZone;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.replication.fs.FSListing;
 
 /**
  * Cache of HDFS encryption zones.

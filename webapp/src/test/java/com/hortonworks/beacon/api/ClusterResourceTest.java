@@ -174,7 +174,7 @@ public class ClusterResourceTest extends ResourceBaseTest {
         Cluster[] clusters = clusterListWithAllDetails.getClusters();
         Assert.assertEquals(sourceCluster.getName(), clusters[1].getPeers().get(0));
         Assert.assertEquals(targetCluster.getName(), clusters[0].getPeers().get(0));
-        Assert.assertEquals(1, clusters[0].getCustomProperties().size());
+        Assert.assertEquals(3, clusters[0].getCustomProperties().size());
         ClusterList clusterListWithJustName = targetClient.getClusterList("name", "name", "asc", 0, 10);
         clusters = clusterListWithJustName.getClusters();
         Assert.assertEquals(0, clusters[0].getCustomProperties().size());

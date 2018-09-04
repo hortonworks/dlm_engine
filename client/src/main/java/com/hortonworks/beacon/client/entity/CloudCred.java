@@ -232,7 +232,7 @@ public class CloudCred extends Entity {
      */
     public enum Provider {
         AWS("s3", "s3a"),
-        WASB("wasb", "wasb");
+        WASB("wasb", "wasbs");
 
         private final String scheme;
 

@@ -25,6 +25,7 @@ package com.hortonworks.beacon.entity.entityNeo;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.BeaconCluster;
+import com.hortonworks.beacon.entity.util.EncryptionZoneListing;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -46,9 +47,11 @@ import static com.hortonworks.beacon.constants.BeaconConstants.SNAPSHOT_DIR_PREF
 public class HDFSDataSet extends FSDataSet {
 
     private static final Logger LOG = LoggerFactory.getLogger(HDFSDataSet.class);
+    private BeaconCluster beaconCluster;
 
     public HDFSDataSet(String path, String clusterName) throws BeaconException {
         super(path, new BeaconCluster(clusterName).getHadoopConfiguration());
+        this.beaconCluster = new BeaconCluster(clusterName);
     }
 
     public HDFSDataSet(FileSystem fileSystem, String path) throws BeaconException {
@@ -93,5 +96,12 @@ public class HDFSDataSet extends FSDataSet {
     public void disallowSnapshot() throws IOException {
         DistributedFileSystem dfs = (DistributedFileSystem) fileSystem;
         dfs.disallowSnapshot(new Path(path));
+    }
+
+    @Override
+    public boolean isEncrypted() throws BeaconException {
+        String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(beaconCluster.getName(),
+                beaconCluster.getFsEndpoint(), path);
+        return StringUtils.isNotEmpty(baseEncryptedPath);
     }
 }

@@ -35,7 +35,7 @@ import static com.hortonworks.beacon.util.FSUtils.merge;
 /**
  * Dataset that represents file on Hadoop Compatible Filesystem (HCFS) like S3, WASB etc.
  */
-public class HCFSDataset extends FSDataSet {
+public abstract class HCFSDataset extends FSDataSet {
     public HCFSDataset(String path, ReplicationPolicy policy) throws BeaconException {
         super(path, policy);
     }

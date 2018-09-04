@@ -139,8 +139,13 @@ public abstract class FSDataSet extends DataSet {
     }
 
     public static FSDataSet create(String path, String clusterName, ReplicationPolicy policy) throws BeaconException {
-        if (clusterName != null) {
-            return new HDFSDataSet(path, clusterName);
+        try {
+            URI uri = new URI(path);
+            if (uri.getScheme() == null) {
+                return new HDFSDataSet(path, clusterName);
+            }
+        } catch (URISyntaxException e) {
+            throw new BeaconException(e, "URI from path could not be obtained");
         }
 
         BeaconCloudCred cloudCred = new BeaconCloudCred(policy.getCloudCred());

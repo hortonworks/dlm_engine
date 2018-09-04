@@ -56,5 +56,13 @@ public class WASBFSDataSet extends HCFSDataset {
                     CloudCred.Provider.WASB.getHcfsScheme(), authority, wasbAccount, myPath);
         }
     }
+
+    @Override
+    public boolean isEncrypted() throws BeaconException {
+        /**
+         * Encryption is by default enabled in WASB store and can't be disabled also.
+         */
+        return true;
+    }
 }
 

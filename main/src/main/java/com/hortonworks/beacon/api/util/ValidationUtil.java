@@ -24,7 +24,7 @@
 package com.hortonworks.beacon.api.util;
 
 import com.hortonworks.beacon.Destination;
-import com.hortonworks.beacon.api.EncryptionZoneListing;
+import com.hortonworks.beacon.entity.util.EncryptionZoneListing;
 import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.CloudCred;
@@ -244,7 +244,7 @@ public final class ValidationUtil {
         boolean enableSnapshotBasedRepl = Boolean.parseBoolean(
                 properties.getPropertyIgnoreCase(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName()));
         Cluster sourceCluster = clusterDao.getActiveCluster(existingPolicy.getSourceCluster());
-        boolean tdeEnabled = isTDEEnabled(sourceCluster, existingPolicy.getSourceDataset());
+        boolean tdeEnabled = isTDEEnabled(sourceCluster, existingPolicy.getSourceDataset(), existingPolicy);
         if (tdeEnabled && enableSnapshotBasedRepl) {
             throw new ValidationException("Can not mark the source dataset snapshottable as it is TDE enabled");
         }
@@ -260,7 +260,7 @@ public final class ValidationUtil {
             Cluster targetCluster = clusterDao.getActiveCluster(existingPolicy.getTargetCluster());
             dataset = existingPolicy.getTargetDataset();
             DataSet tgtDataSet = FSDataSet.create(dataset, existingPolicy.getTargetCluster(), existingPolicy);
-            boolean isTargetEncrypted = isTDEEnabled(targetCluster, dataset);
+            boolean isTargetEncrypted = isTDEEnabled(targetCluster, dataset, existingPolicy);
             boolean targetSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(targetCluster.getName(), FSUtils
                     .getStagingUri(targetCluster.getFsEndpoint(), dataset));
             if (!isTargetEncrypted && sourceSnapshottable && !targetSnapshottable) {
@@ -413,16 +413,23 @@ public final class ValidationUtil {
             throws BeaconException {
         Cluster cluster;
         String clusterDataSet;
+        String cloudDataSet;
+        String cloudCluster;
         if (StringUtils.isNotBlank(policy.getSourceCluster())){
             cluster  = ClusterHelper.getActiveCluster(policy.getSourceCluster());
             clusterDataSet = policy.getSourceDataset();
+            cloudDataSet = policy.getTargetDataset();
+            cloudCluster = policy.getTargetCluster();
         } else {
             cluster  = ClusterHelper.getActiveCluster(policy.getTargetCluster());
             clusterDataSet = policy.getTargetDataset();
+            cloudDataSet = policy.getSourceDataset();
+            cloudCluster = policy.getSourceCluster();
         }
-        boolean tdeOn = isTDEEnabled(cluster, clusterDataSet);
-        boolean encOn = !EncryptionAlgorithmType.NONE.equals(PolicyHelper.getCloudEncryptionAlgorithm(policy));
-        if (tdeOn ^ encOn) {
+        boolean tdeOn = isTDEEnabled(cluster, clusterDataSet, policy);
+        DataSet dataSet = FSDataSet.create(cloudDataSet, cloudCluster, policy);
+        boolean encOn = dataSet.isEncrypted();
+        if ((tdeOn ^ encOn) && !(dataSet instanceof WASBFSDataSet)) {
             if (tdeOn && clusterDataSet.equals(policy.getSourceDataset())){
                 throw new BeaconException("Source data set is TDE enabled but target is not encryption enabled");
             }
@@ -436,8 +443,10 @@ public final class ValidationUtil {
             throws BeaconException {
         Cluster sourceCluster  = ClusterHelper.getActiveCluster(policy.getSourceCluster());
         Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
-        boolean tdeOn = isTDEEnabled(sourceCluster, new BeaconCluster(sourceCluster).getHiveWarehouseLocation());
-        boolean encOn = ClusterHelper.isCloudEncryptionEnabled(targetCluster);
+        DataSet dataSet = FSDataSet.create(new BeaconCluster(sourceCluster).getHiveWarehouseLocation(),
+                policy.getSourceCluster(), policy);
+        boolean tdeOn = dataSet.isEncrypted();
+        boolean encOn = ClusterHelper.isCloudEncryptionEnabled(targetCluster, policy);
         if (!encOn) {
             encOn = !EncryptionAlgorithmType.NONE.equals(PolicyHelper.getCloudEncryptionAlgorithm(policy));
         }
@@ -532,7 +541,7 @@ public final class ValidationUtil {
             if (!PolicyHelper.isDatasetHCFS(sourceDataset)) {
                 String clusterName = policy.getSourceCluster();
                 Cluster cluster = clusterDao.getActiveCluster(clusterName);
-                boolean tdeEnabled = isTDEEnabled(cluster, sourceDataset);
+                boolean tdeEnabled = isTDEEnabled(cluster, sourceDataset, policy);
                 boolean markSourceSnapshottable = Boolean.valueOf(policy.getCustomProperties().getProperty(
                         FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName()));
                 if (tdeEnabled && markSourceSnapshottable) {
@@ -550,10 +559,10 @@ public final class ValidationUtil {
         }
     }
 
-    private static boolean isTDEEnabled(Cluster cluster, String dataset) throws BeaconException {
-        String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
-                cluster.getFsEndpoint(), dataset);
-        return StringUtils.isNotEmpty(baseEncryptedPath);
+    private static boolean isTDEEnabled(Cluster cluster, String dataset, ReplicationPolicy policy)
+            throws BeaconException {
+        DataSet dataSet = FSDataSet.create(dataset, cluster.getName(), policy);
+        return dataSet.isEncrypted();
     }
 
     private static void validateEntityDataset(final ReplicationPolicy policy) throws BeaconException {
@@ -605,7 +614,7 @@ public final class ValidationUtil {
             String sourceDataset = policy.getSourceDataset();
             boolean isSourceEncrypted = Boolean.valueOf(policy.getCustomProperties().getProperty(
                     FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
-            boolean isTargetEncrypted = isTDEEnabled(targetCluster, targetDataset);
+            boolean isTargetEncrypted = isTDEEnabled(targetCluster, targetDataset, policy);
             if (isTargetEncrypted && !isSourceEncrypted) {
                 policy.getCustomProperties()
                         .setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
@@ -660,9 +669,8 @@ public final class ValidationUtil {
                         .TDE_ENCRYPTION_ENABLED.getName()));
                 if (dbExists && sourceEncrypted) {
                     Path dbLocation = hiveClient.getDatabaseLocation(targetDataset);
-                    String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(
-                            cluster.getName(), cluster.getFsEndpoint(), dbLocation.toString());
-                    if (StringUtils.isEmpty(baseEncryptedPath)) {
+                    DataSet dataSet = FSDataSet.create(dbLocation.toString(), cluster.getName(), policy);
+                    if (!dataSet.isEncrypted()) {
                         throw new ValidationException("Target dataset DB {} is not encrypted.",
                                 targetDataset);
                     }
@@ -694,9 +702,8 @@ public final class ValidationUtil {
         try {
             hiveClient = HiveClientFactory.getMetadataClient(cluster);
             Path dbPath = hiveClient.getDatabaseLocation(sourceDataset);
-            String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
-                    cluster.getFsEndpoint(), dbPath.toUri().getPath());
-            if (StringUtils.isNotEmpty(baseEncryptedPath)) {
+            DataSet dataSet = FSDataSet.create(dbPath.toString(), policy.getSourceCluster(), policy);
+            if (dataSet.isEncrypted()) {
                 policy.getCustomProperties().setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
             }
         } finally {

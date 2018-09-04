@@ -21,7 +21,6 @@
  */
 package com.hortonworks.beacon.plugin.atlas;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
@@ -33,7 +32,6 @@ import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 /**
  * Performs Atlas' Import.
@@ -48,10 +46,14 @@ public class ImportProcess extends AtlasProcess {
         debugDatasetLog(dataset);
         infoLog("==> ImportProcess.run: Starting...");
         try {
+            if (checkEmptyPath(exportedDataPath)) {
+                return exportedDataPath;
+            }
+
             importFile(exportedDataPath, dataset.getSourceCluster(), dataset.getTargetCluster());
             return exportedDataPath;
         } catch (Exception e) {
-            LOG.error("importData", e);
+            errorLog("importData", e);
             throw new BeaconException(e);
         } finally {
             infoLog("<== ImportProcess.run: Done!");
@@ -59,6 +61,10 @@ public class ImportProcess extends AtlasProcess {
     }
 
     private void importFile(Path filePath, Cluster sourceCluster, Cluster targetCluster) throws Exception {
+        if (checkEmptyPath(filePath)) {
+            return;
+        }
+
         FileSystem targetFS = FileSystemUtils.getFs(targetCluster);
         LocatedFileStatus locatedFileStatus = locateFile(filePath, targetFS);
         if (locatedFileStatus == null) {
@@ -71,9 +77,22 @@ public class ImportProcess extends AtlasProcess {
                 getAtlasServerName(sourceCluster),
                 getAtlasServerName(targetCluster));
 
-        importData(targetCluster, importRequest, inputStream);
+        AtlasImportResult result = importData(targetCluster, importRequest, inputStream);
+        if (result == null) {
+            debugLog("No entities found!");
+            return;
+        }
+
         updateImportStats(locatedFileStatus.getLen());
         inputStream.close();
+    }
+
+    private boolean checkEmptyPath(Path filePath) {
+        if (filePath == null) {
+            debugLog("Empty path encountered.");
+            return true;
+        }
+        return false;
     }
 
     private LocatedFileStatus locateFile(Path filePath, FileSystem targetFS) throws IOException {
@@ -96,34 +115,4 @@ public class ImportProcess extends AtlasProcess {
         return getClient(cluster).importData(request, inputStream);
     }
 
-    @VisibleForTesting
-    static class ImportRequestProvider {
-        private static final String REPLICATED_TAG_NAME = "REPLICATED";
-
-        static final String IMPORT_TRANSFORM_FORMAT =
-                "{ \"Asset\": { \"qualifiedName\":[ \"replace:@%s:@%s\"], "
-                        + "\"*\":[ \"clearAttrValue:replicatedTo,replicatedFrom\", "
-                        + "\"addClassification:"
-                        + REPLICATED_TAG_NAME
-                        + "\" ] } }";
-
-        public static AtlasImportRequest create(String sourceClusterName, String targetClusterName) {
-            AtlasImportRequest request = new AtlasImportRequest();
-            addTransforms(request.getOptions(), sourceClusterName, targetClusterName);
-            addMetaInfoUpdate(request.getOptions(), sourceClusterName);
-            return request;
-        }
-
-        private static void addTransforms(Map<String, String> options,
-                                          String sourceClusterName,
-                                          String targetClusterName) {
-
-            options.put(AtlasImportRequest.TRANSFORMS_KEY,
-                    String.format(IMPORT_TRANSFORM_FORMAT, sourceClusterName, targetClusterName));
-        }
-
-        private static void addMetaInfoUpdate(Map<String, String> options, String sourceClusterName) {
-            options.put(AtlasImportRequest.OPTION_KEY_REPLICATED_FROM, sourceClusterName);
-        }
-    }
 }

@@ -22,13 +22,19 @@
 package com.hortonworks.beacon.plugin.atlas;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import org.apache.atlas.AtlasBaseClient;
+import org.apache.atlas.AtlasErrorCode;
+import org.apache.atlas.AtlasServiceException;
+import org.apache.atlas.exception.AtlasBaseException;
 import org.apache.atlas.model.impexp.AtlasExportRequest;
 import org.apache.atlas.model.impexp.AtlasExportResult;
 import org.apache.atlas.model.impexp.AtlasImportRequest;
 import org.apache.atlas.model.impexp.AtlasImportResult;
 import org.apache.atlas.model.impexp.AtlasServer;
+import org.apache.commons.lang.StringUtils;
 import org.testng.SkipException;
 
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -39,9 +45,11 @@ import java.util.concurrent.Callable;
  * Mock implementation of Atlas REST Client. Used by tests.
  */
 public class AtlasMockRESTClient extends RetryingClient implements RESTClient {
+    public static final String DEFAULT_GUID = "ABCD-DEF";
     private static final String RESOURCES_PATH = "src/test/resources/atlas";
     private static final long EXPECTED_TIMESTAMP = 1534801666522L;
     private String filePath;
+    private boolean returnEmptyGuid;
 
     @Override
     public InputStream exportData(AtlasExportRequest request) throws BeaconException {
@@ -58,6 +66,19 @@ public class AtlasMockRESTClient extends RetryingClient implements RESTClient {
     @Override
     public AtlasImportResult importData(final AtlasImportRequest request, InputStream inputStream) {
         try {
+            if (StringUtils.contains(filePath, "empty")) {
+                return invokeWithRetry(new Callable<AtlasImportResult>() {
+                    @Override
+                    public AtlasImportResult call() throws AtlasServiceException {
+                        throw new AtlasServiceException(
+                                new AtlasBaseClient.API("importData",
+                                        "importData",
+                                        Response.Status.SEE_OTHER),
+                                new AtlasBaseException(AtlasErrorCode.INVALID_PARAMETERS, "empty file!"));
+                    }
+                }, getDefaultAtlasImportResult(request));
+            }
+
             return invokeWithRetry(new Callable<AtlasImportResult>() {
                 @Override
                 public AtlasImportResult call() {
@@ -91,7 +112,7 @@ public class AtlasMockRESTClient extends RetryingClient implements RESTClient {
 
     @Override
     public String getEntityGuid(String entityType, String attributeName, String qualifiedName) {
-        return "ABCD-DEF";
+        return returnEmptyGuid ? StringUtils.EMPTY : DEFAULT_GUID;
     }
 
     private static String getResourceFilePath(String fileName) {
@@ -99,20 +120,31 @@ public class AtlasMockRESTClient extends RetryingClient implements RESTClient {
         return String.format("%s/%s/%s", userDir, RESOURCES_PATH, fileName);
     }
 
+    public void setReturnEmptyGuid(boolean b) {
+        this.returnEmptyGuid = b;
+    }
+
     /**
      * Builder for AtlasMockRESTClient.
      */
     public static class Builder extends RESTClientBuilder {
         private String filePath;
+        private boolean returnEmptyGuidProperty;
 
         public RESTClient create() {
             AtlasMockRESTClient restClient = new AtlasMockRESTClient();
             restClient.setFilePath(filePath);
+
+            restClient.setReturnEmptyGuid(returnEmptyGuidProperty);
             return restClient;
         }
 
         public void setFilePath(String filePath) {
             this.filePath = filePath;
+        }
+
+        public void returnEmptyGuid() {
+            this.returnEmptyGuidProperty = true;
         }
     }
 }

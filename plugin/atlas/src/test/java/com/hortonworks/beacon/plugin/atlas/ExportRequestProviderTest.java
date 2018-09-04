@@ -41,32 +41,53 @@ public class ExportRequestProviderTest extends RequestProviderBase {
     @Test
     public void hiveRequest() throws BeaconException {
         AtlasExportRequest request = ExportRequestProvider.create(getMockProcess(),
-                getDataSet(DataSet.DataSetType.HIVE, SOURCE_DB_NAME));
+                getDataSet(DataSet.DataSetType.HIVE, SOURCE_DB_NAME, false),
+                AtlasMockRESTClient.DEFAULT_GUID);
 
         String expectedQualifiedName = String.format(
                 ExportRequestProvider.QUALIFIED_NAME_FORMAT, SOURCE_DB_NAME, SOURCE_CLUSTER_NAME);
 
+        assertHiveRequest(request, expectedQualifiedName, 4, expectedTimestamp);
+    }
+
+    @Test
+    public void hiveRequestWithNullTargetCluster() throws BeaconException {
+        AtlasExportRequest request = ExportRequestProvider.create(getMockProcess(),
+                getDataSet(DataSet.DataSetType.HIVE, SOURCE_DB_NAME, true),
+                AtlasMockRESTClient.DEFAULT_GUID);
+
+        String expectedQualifiedName = String.format(
+                ExportRequestProvider.QUALIFIED_NAME_FORMAT, SOURCE_DB_NAME, SOURCE_CLUSTER_NAME);
+
+        assertHiveRequest(request, expectedQualifiedName, 3, 0L);
+    }
+
+    private void assertHiveRequest(AtlasExportRequest request, String expectedQualifiedName,
+                                   int expectedOptionsCount, long timestamp) {
         assertNotNull(request);
         assertEquals(request.getItemsToExport().size(), 1);
         assertEquals(request.getItemsToExport().get(0).getUniqueAttributes().size(), 1);
         assertEquals(request.getItemsToExport().get(0).getTypeName(),
                 ExportRequestProvider.ATLAS_TYPE_HIVE_DB);
         assertEquals(request.getItemsToExport().get(0).getUniqueAttributes().get(
-                        ExportRequestProvider.ATTRIBUTE_QUALIFIED_NAME),
+                ExportRequestProvider.ATTRIBUTE_QUALIFIED_NAME),
                 expectedQualifiedName);
 
         assertNotNull(request.getOptions());
-        assertEquals(request.getOptions().size(), 4);
-        assertEquals(request.getOptions().get(AtlasExportRequest.OPTION_KEY_REPLICATED_TO), TARGET_CLUSTER_NAME);
-        assertEquals(request.getOptions().get(AtlasExportRequest.FETCH_TYPE_INCREMENTAL_FROM_TIME), expectedTimestamp);
+        assertEquals(request.getOptions().size(), expectedOptionsCount);
+        assertEquals(request.getOptions().get(AtlasExportRequest.FETCH_TYPE_INCREMENTAL_FROM_TIME), timestamp);
         assertEquals(request.getOptions().get(AtlasExportRequest.OPTION_SKIP_LINEAGE), true);
         assertNull(request.getOptions().get(AtlasExportRequest.OPTION_ATTR_MATCH_TYPE));
+
+        if (expectedOptionsCount > 3) {
+            assertEquals(request.getOptions().get(AtlasExportRequest.OPTION_KEY_REPLICATED_TO), TARGET_CLUSTER_NAME);
+        }
     }
 
     @Test
     public void hdfsRequest() throws BeaconException {
         AtlasExportRequest request = ExportRequestProvider.create(getMockProcess(),
-                getDataSet(DataSet.DataSetType.HDFS, WAREHOUSE_ACCOUNTS_PATH));
+                getDataSet(DataSet.DataSetType.HDFS, WAREHOUSE_ACCOUNTS_PATH, false), AtlasMockRESTClient.DEFAULT_GUID);
 
         assertNotNull(request);
         assertEquals(request.getItemsToExport().size(), 1);

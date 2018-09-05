@@ -162,6 +162,10 @@ beacon_dbsetup_tool = 'com.hortonworks.beacon.tools.BeaconDBSetup'
 
 hive_server_hosts = default('/clusterHostInfo/hive_server_host', [])
 is_hive_installed = not len(hive_server_hosts) == 0
+
+hdfs_namenode_hosts = default("/clusterHostInfo/namenode_host", [])
+is_hdfs_installed = not len(hdfs_namenode_hosts) == 0
+
 hive_site = config['configurations']['hive-site']
 if 'hive-env' in config['configurations']:
   hive_user = config['configurations']['hive-env']['hive_user']

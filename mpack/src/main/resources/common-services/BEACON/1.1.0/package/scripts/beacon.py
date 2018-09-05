@@ -66,8 +66,7 @@ def beacon(type, action = None, upgrade_type=None):
 
     cloud_cred_provider = params.beacon_cloud_cred_provider_dir.split('://')[1]
     cloud_cred_parts = cloud_cred_provider.split('/', 1)
-    cloud_cred_directory = "{0}://{1}".format(cloud_cred_parts[0], cloud_cred_parts[1])
-    create_directory(cloud_cred_directory)
+    create_directory("/" + cloud_cred_parts[1], cloud_cred_parts[0])
 
     if params.is_hive_installed:
       if not isinstance(params.hive_repl_cmrootdir, UnknownConfiguration):
@@ -263,17 +262,24 @@ def beacon(type, action = None, upgrade_type=None):
       File(params.server_pid_file, action = 'delete')
 
 
-def create_directory(directory):
-  Logger.info("Creating directory {0}".format(directory))
+def create_directory(directory, scheme = None):
   import params
-  if directory.startswith("file"):
-    Directory(directory[6:],
+
+  if (scheme is None or scheme == ''):
+    if params.is_hdfs_installed:
+      scheme = 'hdfs'
+    else:
+      scheme = 'file'
+
+  Logger.info("Creating directory {0}:/{1}".format(scheme, directory))
+  if scheme == 'file':
+    Directory(directory,
               owner = params.beacon_user,
               create_parents = True,
               mode = 0755,
               cd_access = "a")
-  elif directory.startswith("hdfs"):
-    params.HdfsResource(directory[6:],
+  elif scheme == 'hdfs':
+    params.HdfsResource(directory,
                         type = "directory",
                         action = "create_on_execute",
                         owner = params.beacon_user,

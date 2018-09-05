@@ -534,7 +534,7 @@
   </property>
   <property>
     <name>beacon_plugin_staging_dir</name>
-    <value>hdfs://apps/beacon/plugin/stage</value>
+    <value>/apps/beacon/plugin/stage</value>
     <description>Staging directory for DLM plugins</description>
   </property>
   <property>

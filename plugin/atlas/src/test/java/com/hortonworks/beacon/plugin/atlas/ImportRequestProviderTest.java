@@ -35,7 +35,8 @@ public class ImportRequestProviderTest extends RequestProviderBase {
     public void anyRequest() {
         String expectedTransforms = String.format(ImportRequestProvider.IMPORT_TRANSFORM_FORMAT,
                 SOURCE_CLUSTER_NAME,
-                TARGET_CLUSTER_NAME);
+                TARGET_CLUSTER_NAME,
+                SOURCE_CLUSTER_NAME);
 
         AtlasImportRequest request = ImportRequestProvider.create(
                 SOURCE_CLUSTER_NAME,

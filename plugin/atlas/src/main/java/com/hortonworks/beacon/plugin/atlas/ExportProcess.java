@@ -34,6 +34,8 @@ import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Performs Atlas' Export.
@@ -47,13 +49,13 @@ public class ExportProcess extends AtlasProcess {
 
     public Path run(DataSet dataset, Path stagingDir, AtlasPluginStats pluginStats) throws BeaconException {
         debugDatasetLog(dataset);
-        infoLog("==> ExportProcess.run: Starting...");
+        infoLog("==> ExportProcess.run: Starting: {} ...", stagingDir);
         Path exportPath = null;
         try {
             Cluster sourceCluster = dataset.getSourceCluster();
             AtlasExportRequest exportRequest;
-            String entityGuid = checkEntityExists(sourceCluster, dataset);
-            if (StringUtils.isEmpty(entityGuid)) {
+            String entityGuid = checkHiveEntityExists(sourceCluster, dataset);
+            if (dataset.getType() == DataSet.DataSetType.HIVE && StringUtils.isEmpty(entityGuid)) {
                 return null;
             }
 
@@ -69,15 +71,19 @@ public class ExportProcess extends AtlasProcess {
 
             return exportPath;
         } catch (Exception ex) {
-            errorLog("ExportProcess", ex);
-            throw new BeaconException(ex);
+            infoLog("ExportProcess: failed! - {}", ex.getMessage());
+            return null;
         } finally {
-            infoLog("<== ExportProcess.run: {}: Done!",
+            infoLog("<== ExportProcess.run: {} - {}: Done!", stagingDir,
                     (exportPath != null) ? exportPath.toString() : "");
         }
     }
 
-    private String checkEntityExists(Cluster cluster, DataSet dataset) {
+    private String checkHiveEntityExists(Cluster cluster, DataSet dataset) {
+        if (dataset.getType() != DataSet.DataSetType.HIVE) {
+            return StringUtils.EMPTY;
+        }
+
         String clusterName = getAtlasServerName(cluster);
         AtlasObjectId objectId = null;
         try {
@@ -90,12 +96,17 @@ public class ExportProcess extends AtlasProcess {
             return StringUtils.EMPTY;
         }
 
-        String guid = getEntityGuid(cluster, objectId.getTypeName(),
-                ExportRequestProvider.ATTRIBUTE_QUALIFIED_NAME,
-                (String) objectId.getUniqueAttributes().get(ExportRequestProvider.ATTRIBUTE_QUALIFIED_NAME));
+        Iterator<Map.Entry<String, Object>> iterator = objectId.getUniqueAttributes().entrySet().iterator();
+        if (iterator == null || !iterator.hasNext()) {
+            errorLog("Could find entries in objectId for: {} - {} - {}", dataset, clusterName);
+            return StringUtils.EMPTY;
+        }
+
+        Map.Entry<String, Object> item  = iterator.next();
+        String guid = getEntityGuid(cluster, objectId.getTypeName(), item.getKey(), (String) item.getValue());
 
         if (StringUtils.isEmpty(guid)) {
-            errorLog("Entity not found: {}. Atlas Export will not happen.", objectId);
+            errorLog("Entity not found: {}. Export skipped!", objectId);
         }
 
         return guid;
@@ -110,6 +121,7 @@ public class ExportProcess extends AtlasProcess {
         Path exportedFile = new Path(stagingDir, exportFileName);
         long numBytesWritten = FileSystemUtils.writeFile(fileSystem, exportedFile, data);
 
+        infoLog("ExportProcess: writing {} ({} bytes)", exportFileName, numBytesWritten);
         updateExportStats(numBytesWritten);
         return new Path(stagingDir, exportedFile);
     }

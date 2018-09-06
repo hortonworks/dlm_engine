@@ -84,6 +84,9 @@ public class ServerStatusResult {
     @XmlElement
     private boolean enableSnapshotBasedReplication;
 
+    @XmlElement
+    private boolean fileListingFilterEnabled;
+
     private boolean cloudHosted;
 
 
@@ -252,6 +255,15 @@ public class ServerStatusResult {
 
     public void setWasbReplicationSupported(boolean wasbReplicationSupported) {
         this.wasbReplicationSupported = wasbReplicationSupported;
+    }
+
+    @JsonProperty
+    public boolean getFileListingFilterEnabled() {
+        return fileListingFilterEnabled;
+    }
+
+    public void setFileListingFilterEnabled(boolean fileListingFilterEnabled) {
+        this.fileListingFilterEnabled = fileListingFilterEnabled;
     }
 
     public boolean isCloudHosted() {

@@ -80,7 +80,7 @@ final class DatasetListing {
             }
             while (iterator.hasNext()) {
                 FileStatus fileStatus = iterator.next();
-                if (fileStatusList.size() <= maxFilePerPage && fileStatus.getPath().getName().contains(filter)) {
+                if (fileStatusList.size() < maxFilePerPage && fileStatus.getPath().getName().contains(filter)) {
                     fileStatusList.add(fileStatus);
                 }
                 totalResults++;

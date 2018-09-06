@@ -101,7 +101,6 @@ public final class QuartzScheduler {
             scheduler.addJob(secondJob, true);
             firstJob = secondJob;
         }
-        LOG.info("Job [key: {}] and trigger [key: {}] are being scheduled", jobs.get(0).getKey(), trigger.getKey());
     }
 
     /**

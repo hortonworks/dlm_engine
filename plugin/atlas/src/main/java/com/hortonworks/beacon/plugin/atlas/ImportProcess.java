@@ -44,19 +44,20 @@ public class ImportProcess extends AtlasProcess {
     @Override
     public Path run(DataSet dataset, Path exportedDataPath, AtlasPluginStats pluginStats) throws BeaconException {
         debugDatasetLog(dataset);
-        infoLog("==> ImportProcess.run: Starting...");
         try {
             if (checkEmptyPath(exportedDataPath)) {
+                infoLog("==> ImportProcess.run: empty path found! Exiting!");
                 return exportedDataPath;
             }
 
+            infoLog("==> ImportProcess.run: Starting {} ...", exportedDataPath.getName());
             importFile(exportedDataPath, dataset.getSourceCluster(), dataset.getTargetCluster());
             return exportedDataPath;
         } catch (Exception e) {
             errorLog("importData", e);
             throw new BeaconException(e);
         } finally {
-            infoLog("<== ImportProcess.run: Done!");
+            infoLog("<== ImportProcess.run: {}: Done!", exportedDataPath.getName());
         }
     }
 
@@ -83,13 +84,14 @@ public class ImportProcess extends AtlasProcess {
             return;
         }
 
+        infoLog("importFile: imported! {} ({} bytes)...", filePath.getName(), locatedFileStatus.getLen());
         updateImportStats(locatedFileStatus.getLen());
         inputStream.close();
     }
 
     private boolean checkEmptyPath(Path filePath) {
         if (filePath == null) {
-            debugLog("Empty path encountered.");
+            debugLog("Empty path encountered!");
             return true;
         }
         return false;

@@ -33,7 +33,7 @@ final class ImportRequestProvider {
 
     }
 
-    private static final String REPLICATED_TAG_NAME = "REPLICATED";
+    private static final String REPLICATED_TAG_NAME = "%s_replicated";
 
     static final String IMPORT_TRANSFORM_FORMAT =
             "{ \"Asset\": { \"qualifiedName\":[ \"replace:@%s:@%s\"], "
@@ -54,7 +54,7 @@ final class ImportRequestProvider {
                                       String targetClusterName) {
 
         options.put(AtlasImportRequest.TRANSFORMS_KEY,
-                String.format(IMPORT_TRANSFORM_FORMAT, sourceClusterName, targetClusterName));
+                String.format(IMPORT_TRANSFORM_FORMAT, sourceClusterName, targetClusterName, sourceClusterName));
     }
 
     private static void addMetaInfoUpdate(Map<String, String> options, String sourceClusterName) {

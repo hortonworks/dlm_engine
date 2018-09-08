@@ -23,6 +23,7 @@
 package com.hortonworks.beacon.entity.entityNeo;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
@@ -73,6 +74,7 @@ public abstract class FSDataSet extends DataSet {
 
     private FSDataSet(String path, Configuration conf, ReplicationPolicy policy) throws BeaconException {
         this.path = resolvePath(path, policy);
+        LOG.info("Resolved path: {}", this.path);
         this.conf = conf != null ? conf : getHadoopConf(path, policy);
         Configuration defaultConf = new Configuration(true);
         merge(defaultConf, this.conf);
@@ -139,17 +141,34 @@ public abstract class FSDataSet extends DataSet {
     }
 
     public static FSDataSet create(String path, String clusterName, ReplicationPolicy policy) throws BeaconException {
-        try {
-            URI uri = new URI(path);
-            if (uri.getScheme() == null) {
-                return new HDFSDataSet(path, clusterName);
-            }
-        } catch (URISyntaxException e) {
-            throw new BeaconException(e, "URI from path could not be obtained");
+
+        CloudCred.Provider provider = null;
+        String scheme = new Path(path).toUri().getScheme();
+        FSDataSet dataset = null;
+
+        if (scheme != null) {
+            provider = CloudCred.Provider.createFromScheme(scheme);
+            dataset = getDataset(provider, path, policy);
         }
 
-        BeaconCloudCred cloudCred = new BeaconCloudCred(policy.getCloudCred());
-        switch (cloudCred.getProvider()) {
+        if (dataset == null && clusterName != null) {
+            dataset = new HDFSDataSet(path, clusterName);
+        }
+
+        if (dataset == null && policy.getCloudCred() != null) {
+            BeaconCloudCred cloudCred = new BeaconCloudCred(policy.getCloudCred());
+            dataset = getDataset(cloudCred.getProvider(), path, policy);
+        }
+        return dataset;
+    }
+
+    private static FSDataSet getDataset(CloudCred.Provider provider, String path, ReplicationPolicy policy)
+            throws BeaconException {
+        if (provider == null) {
+            return null;
+        }
+
+        switch (provider) {
             case AWS:
                 return new S3FSDataSet(path, policy);
 
@@ -159,7 +178,7 @@ public abstract class FSDataSet extends DataSet {
             default:
                 break;
         }
-        throw new IllegalStateException("Unhandled dataset " + path);
+        return null;
     }
 
     @VisibleForTesting

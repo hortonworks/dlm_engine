@@ -38,6 +38,8 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
+
 import static com.hortonworks.beacon.util.FSUtils.merge;
 
 /**
@@ -55,8 +57,8 @@ public class S3FSDataSet extends HCFSDataset {
 
     @Override
     public String resolvePath(String path, ReplicationPolicy replicationPolicy) {
-        return path.replaceFirst(CloudCred.Provider.AWS.getScheme(),
-                CloudCred.Provider.AWS.getHcfsScheme());
+        URI uri = new Path(path).toUri();
+        return String.format("%s://%s%s", CloudCred.Provider.AWS.getHcfsScheme(), uri.getAuthority(), uri.getPath());
     }
 
     @Override

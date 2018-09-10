@@ -103,7 +103,7 @@ public class RESTClientBuilder {
         }
 
         authStrategy = AuthStrategy.USER_NAME_PASSWORD;
-        logInfo("authStrategy: {} : {}", authStrategy, baseUrls);
+        LOG.info("BeaconAtlasPlugin: authStrategy: {} : {}", authStrategy, baseUrls);
         return this;
     }
 
@@ -118,7 +118,7 @@ public class RESTClientBuilder {
             try {
                 authStrategy = AuthStrategy.KERBEROS;
                 this.userGroupInformation = UserGroupInformation.getLoginUser();
-                logInfo("authStrategy: {} : urls: {}: userGroupInformation: {}",
+                LOG.info("BeaconAtlasPlugin: authStrategy: {} : urls: {}: userGroupInformation: {}",
                         authStrategy, baseUrls, userGroupInformation);
             } catch (Exception e) {
                 throw new BeaconException("Error: setAuthStrategy: UserGroupInformation.getLoginUser: failed!", e);
@@ -128,10 +128,6 @@ public class RESTClientBuilder {
         return this;
     }
 
-    private void logInfo(String message, Object... params) {
-        LOG.info(message, params);
-    }
-
     private RESTClientBuilder inferKnoxAuthStrategy() {
         if (authStrategy != null) {
             return this;
@@ -139,7 +135,7 @@ public class RESTClientBuilder {
 
         if (BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled()) {
             authStrategy = AuthStrategy.KNOX;
-            logInfo("authStrategy: {}", authStrategy);
+            LOG.info("BeaconAtlasPlugin: authStrategy: {}", authStrategy);
         }
 
         return this;
@@ -185,7 +181,7 @@ public class RESTClientBuilder {
             switch (authStrategy) {
                 case KNOX:
                     this.hdpCookie = new Cookie(KNOX_HDP_COOKIE_NAME, getSSOToken(knoxBaseUrl));
-                    logInfo("authStrategy: {} : knox hdpCookie: {}", authStrategy, hdpCookie);
+                    LOG.info("BeaconAtlasPlugin: authStrategy: {} : knox hdpCookie: {}", authStrategy, hdpCookie);
                     clientV2 = new AtlasClientV2(baseUrls, this.hdpCookie);
                     return new AtlasRESTClient(clientV2);
 
@@ -208,29 +204,28 @@ public class RESTClientBuilder {
                 default:
                     throw new BeaconException("Unsupported auth strategy!");
             }
-        } catch (BeaconException ex) {
+        } catch (Exception ex) {
             LOG.error("Unable to create RESTClient: {}", authStrategy, ex);
-            throw ex;
+            throw new AtlasRestClientException("AtlasRESTClient: Error fetching configuration", ex);
         }
     }
 
-    private String getPassword() {
+    private String getPassword() throws AtlasException {
         return getDefaultConfiguration().getString(ATLAS_CLIENT_USER_NAME_KEY, ATLAS_CLIENT_DEFAULT_USER);
     }
 
-    private String getUserName() {
+    private String getUserName() throws AtlasException {
         return getDefaultConfiguration().getString(ATLAS_CLIENT_USER_PASSWORD_KEY, ATLAS_CLIENT_DEFAULT_PASSWORD);
     }
 
 
-    private Configuration getDefaultConfiguration() {
+    private Configuration getDefaultConfiguration() throws AtlasException {
         try {
             return ApplicationProperties.get();
         } catch (AtlasException e) {
             LOG.error("AtlasRESTClient: Error fetching configuration!", e);
+            throw e;
         }
-
-        return null;
     }
 
     @VisibleForTesting
@@ -280,7 +275,7 @@ public class RESTClientBuilder {
     public static class CachedBuilder extends RESTClientBuilder {
         private Map<String, RESTClient> atlasClients = new HashMap<>();
 
-        public RESTClient create() {
+        public RESTClient create() throws BeaconException {
             RESTClient client = null;
             try {
                 if (!atlasClients.containsKey(incomingUrl)) {
@@ -292,11 +287,10 @@ public class RESTClientBuilder {
                 }
 
                 return atlasClients.get(incomingUrl);
-            } catch (Exception e) {
+            } catch (AtlasRestClientException e) {
                 LOG.error("CachedBuilder.create: failed! URL: {}", incomingUrl, e);
+                throw e;
             }
-
-            return null;
         }
 
         private RESTClient getRESTClient(String url) throws BeaconException {

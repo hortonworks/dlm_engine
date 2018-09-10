@@ -25,7 +25,6 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
-import org.apache.atlas.model.instance.AtlasObjectId;
 import org.apache.atlas.type.AtlasType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
@@ -37,7 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AtlasProcess {
     protected static final Logger LOG = LoggerFactory.getLogger(AtlasProcess.class);
-    private static final String CLUSTER_NAME_SEPERATOR = "$";
+    private static final String CLUSTER_NAME_SEPARATOR = "$";
 
     private AtlasPluginStats pluginStats;
 
@@ -47,10 +46,6 @@ public abstract class AtlasProcess {
         this.builder = builder;
     }
 
-    protected static void infoLog(String message, Object... params) {
-        LOG.info(message, params);
-    }
-
     protected void setBuilder(RESTClientBuilder builder) {
         this.builder = builder;
     }
@@ -58,36 +53,6 @@ public abstract class AtlasProcess {
     protected RESTClientBuilder getBuilder() {
         return this.builder;
     }
-
-    protected static void debugLog(String message, Object... params) {
-        if (!LOG.isDebugEnabled()) {
-            return;
-        }
-
-        LOG.debug(message, params);
-    }
-
-    protected void debugDatasetLog(DataSet dataSet) {
-        if (!LOG.isDebugEnabled()) {
-            return;
-        }
-
-        debugLog("dataSet: {}", AtlasType.toJson(dataSet));
-    }
-
-    protected void errorLog(String formatText, DataSet dataset, String clusterName) {
-        LOG.error(formatText,
-                clusterName, dataset.getType(), dataset.getSourceDataSet());
-    }
-
-    protected void errorLog(String formatText, AtlasObjectId objectId) {
-        LOG.error(formatText, objectId);
-    }
-
-    protected void errorLog(String formatText, Exception ex) {
-        LOG.error(formatText, ex);
-    }
-
 
     public void setPluginStats(AtlasPluginStats pluginStats) {
         this.pluginStats = pluginStats;
@@ -116,8 +81,8 @@ public abstract class AtlasProcess {
     protected String getAtlasServerName(Cluster cluster) {
         String clusterName = cluster.getName();
         String atlasCluserName = clusterName;
-        if (org.apache.commons.lang.StringUtils.contains(clusterName, CLUSTER_NAME_SEPERATOR)) {
-            atlasCluserName = org.apache.commons.lang.StringUtils.split(clusterName, CLUSTER_NAME_SEPERATOR)[1];
+        if (org.apache.commons.lang.StringUtils.contains(clusterName, CLUSTER_NAME_SEPARATOR)) {
+            atlasCluserName = org.apache.commons.lang.StringUtils.split(clusterName, CLUSTER_NAME_SEPARATOR)[1];
         }
 
         return atlasCluserName;

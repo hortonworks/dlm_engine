@@ -87,7 +87,10 @@ final class ExportRequestProvider {
                 setOptions(options);
             }};
 
-        AtlasProcess.debugLog("createRequest: {}", request);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("createRequest: {}", request);
+        }
+
         return request;
     }
 
@@ -106,7 +109,10 @@ final class ExportRequestProvider {
                 ? (long) cluster.getAdditionalInfoRepl(entityGuid)
                 : 0L;
 
-        AtlasProcess.debugLog("fromTimestamp: {}", ret);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("AtlasProcess: fromTimestamp: {}", ret);
+        }
+
         return ret;
     }
 
@@ -176,7 +182,11 @@ final class ExportRequestProvider {
     public static String getQualifiedName(String dataSetName, String clusterName) {
 
         String qualifiedName = String.format(QUALIFIED_NAME_FORMAT, dataSetName, clusterName);
-        AtlasProcess.debugLog("getQualifiedName: {}", qualifiedName);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("AtlasProcess: getQualifiedName: {}", qualifiedName);
+        }
+
         return qualifiedName;
     }
 

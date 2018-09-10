@@ -24,13 +24,13 @@ package com.hortonworks.beacon.plugin.atlas;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
-import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.atlas.model.impexp.AtlasExportRequest;
 import org.apache.atlas.model.instance.AtlasObjectId;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,15 +41,20 @@ import java.util.Map;
  * Performs Atlas' Export.
  */
 public class ExportProcess extends AtlasProcess {
+    protected static final Logger LOG = LoggerFactory.getLogger(ExportProcess.class);
+
     private static final String ATLAS_EXPORTED_FILE_NAME_TEMPLATE = "atlas-export-%s-%s.zip";
 
     public ExportProcess(RESTClientBuilder builder) {
         super(builder);
     }
 
-    public Path run(DataSet dataset, Path stagingDir, AtlasPluginStats pluginStats) throws BeaconException {
-        debugDatasetLog(dataset);
-        infoLog("==> ExportProcess.run: Starting: {} ...", stagingDir);
+    public Path run(DataSet dataset, Path stagingDir, AtlasPluginStats pluginStats) throws AtlasRestClientException {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("BeaconAtlasPlugin: AtlasProcess: dataset: {}, stagingDir: {}", dataset, stagingDir);
+        }
+
+        LOG.info("BeaconAtlasPlugin: AtlasProcess: ==> ExportProcess.run: Starting: {} ...", stagingDir);
         Path exportPath = null;
         try {
             Cluster sourceCluster = dataset.getSourceCluster();
@@ -63,18 +68,19 @@ public class ExportProcess extends AtlasProcess {
 
             String exportFileName = getExportFileName(sourceCluster, getCurrentTimestamp());
 
-            FileSystem targetFs = FileSystemClientFactory.get().createFileSystem(
-                                                    stagingDir.getName(), new Configuration());
+            FileSystem targetFs = FileSystemUtils.getFs(stagingDir.toString());
 
             InputStream inputStream = exportData(sourceCluster, exportRequest);
             exportPath = writeDataToFile(targetFs, stagingDir, exportFileName, inputStream);
 
             return exportPath;
+        } catch (AtlasRestClientException ex) {
+            throw ex;
         } catch (Exception ex) {
-            infoLog("ExportProcess: failed! - {}", ex.getMessage());
+            LOG.info("BeaconAtlasPlugin: AtlasProcess: ExportProcess: failed! - {}", ex.getMessage());
             return null;
         } finally {
-            infoLog("<== ExportProcess.run: {} - {}: Done!", stagingDir,
+            LOG.info("BeaconAtlasPlugin: AtlasProcess: <== ExportProcess.run: {} - {}: Done!", stagingDir,
                     (exportPath != null) ? exportPath.toString() : "");
         }
     }
@@ -92,13 +98,13 @@ public class ExportProcess extends AtlasProcess {
                     clusterName,
                     dataset.getSourceDataSet());
         } catch (BeaconException e) {
-            errorLog("Could not create objectId for: {} - {} - {}", dataset, clusterName);
+            LOG.error("BeaconAtlasPlugin: Could not create objectId for: {} - {} - {}", dataset, clusterName);
             return StringUtils.EMPTY;
         }
 
         Iterator<Map.Entry<String, Object>> iterator = objectId.getUniqueAttributes().entrySet().iterator();
         if (iterator == null || !iterator.hasNext()) {
-            errorLog("Could find entries in objectId for: {} - {} - {}", dataset, clusterName);
+            LOG.error("BeaconAtlasPlugin: Could find entries in objectId for: {} - {} - {}", dataset, clusterName);
             return StringUtils.EMPTY;
         }
 
@@ -106,7 +112,7 @@ public class ExportProcess extends AtlasProcess {
         String guid = getEntityGuid(cluster, objectId.getTypeName(), item.getKey(), (String) item.getValue());
 
         if (StringUtils.isEmpty(guid)) {
-            errorLog("Entity not found: {}. Export skipped!", objectId);
+            LOG.error("BeaconAtlasPlugin: Entity not found: {}. Export skipped!", objectId);
         }
 
         return guid;
@@ -121,7 +127,9 @@ public class ExportProcess extends AtlasProcess {
         Path exportedFile = new Path(stagingDir, exportFileName);
         long numBytesWritten = FileSystemUtils.writeFile(fileSystem, exportedFile, data);
 
-        infoLog("ExportProcess: writing {} ({} bytes)", exportFileName, numBytesWritten);
+        LOG.info("BeaconAtlasPlugin: AtlasProcess: ExportProcess: writing {} ({} bytes)",
+                exportFileName, numBytesWritten);
+
         updateExportStats(numBytesWritten);
         return new Path(stagingDir, exportedFile);
     }
@@ -129,7 +137,11 @@ public class ExportProcess extends AtlasProcess {
     private String getExportFileName(Cluster cluster, String suffix) {
         String clusterName = getAtlasServerName(cluster);
         String s = String.format(ATLAS_EXPORTED_FILE_NAME_TEMPLATE, clusterName, suffix);
-        debugLog("getExportFileName: {}", s);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("BeaconAtlasPlugin: AtlasProcess: getExportFileName: {}", s);
+        }
+
         return s;
     }
 

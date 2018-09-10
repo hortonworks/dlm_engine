@@ -26,9 +26,11 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
 import org.apache.atlas.model.impexp.AtlasImportRequest;
 import org.apache.atlas.model.impexp.AtlasImportResult;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,27 +39,38 @@ import java.io.InputStream;
  * Performs Atlas' Import.
  */
 public class ImportProcess extends AtlasProcess {
+    protected static final Logger LOG = LoggerFactory.getLogger(ImportProcess.class);
+
     public ImportProcess(RESTClientBuilder builder) {
         super(builder);
     }
 
     @Override
     public Path run(DataSet dataset, Path exportedDataPath, AtlasPluginStats pluginStats) throws BeaconException {
-        debugDatasetLog(dataset);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("BeaconAtlasPlugin: dataset: {}, path: {}", dataset, exportedDataPath);
+        }
+
         try {
             if (checkEmptyPath(exportedDataPath)) {
-                infoLog("==> ImportProcess.run: empty path found! Exiting!");
+                LOG.info("BeaconAtlasPlugin: AtlasProcess: ==> ImportProcess.run: empty path found! Exiting!");
                 return exportedDataPath;
             }
 
-            infoLog("==> ImportProcess.run: Starting {} ...", exportedDataPath.getName());
+            LOG.info("BeaconAtlasPlugin: AtlasProcess: ==> ImportProcess.run: Starting {} ...",
+                    exportedDataPath.getName());
+
             importFile(exportedDataPath, dataset.getSourceCluster(), dataset.getTargetCluster());
+
             return exportedDataPath;
+        } catch (AtlasRestClientException e) {
+            throw e;
         } catch (Exception e) {
-            errorLog("importData", e);
+            LOG.error("BeaconAtlasPlugin: importData", e);
             throw new BeaconException(e);
         } finally {
-            infoLog("<== ImportProcess.run: {}: Done!", exportedDataPath.getName());
+            LOG.info("BeaconAtlasPlugin: AtlasProcess: <== ImportProcess.run: {}: Done!",
+                    (exportedDataPath != null) ? exportedDataPath.getName() : "<empty path>");
         }
     }
 
@@ -66,13 +79,13 @@ public class ImportProcess extends AtlasProcess {
             return;
         }
 
-        FileSystem targetFS = FileSystemUtils.getFs(targetCluster);
-        LocatedFileStatus locatedFileStatus = locateFile(filePath, targetFS);
-        if (locatedFileStatus == null) {
+        FileSystem targetFS = FileSystemUtils.getFs(filePath.toString());
+        FileStatus fileStatus = locateFile(filePath, targetFS);
+        if (fileStatus == null) {
             return;
         }
 
-        infoLog("importFile: importing {} ...", filePath);
+        LOG.info("BeaconAtlasPlugin: AtlasProcess: importFile: importing {} ...", filePath);
         InputStream inputStream = FileSystemUtils.getInputStream(targetFS, filePath);
         AtlasImportRequest importRequest = ImportRequestProvider.create(
                 getAtlasServerName(sourceCluster),
@@ -80,31 +93,40 @@ public class ImportProcess extends AtlasProcess {
 
         AtlasImportResult result = importData(targetCluster, importRequest, inputStream);
         if (result == null) {
-            debugLog("No entities found!");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("No entities found!");
+            }
+
             return;
         }
 
-        infoLog("importFile: imported! {} ({} bytes)...", filePath.getName(), locatedFileStatus.getLen());
-        updateImportStats(locatedFileStatus.getLen());
+        LOG.info("BeaconAtlasPlugin: AtlasProcess: importFile: imported! {} ({} bytes)...",
+                filePath.getName(),
+                fileStatus.getLen());
+
+        updateImportStats(fileStatus.getLen());
         inputStream.close();
     }
 
     private boolean checkEmptyPath(Path filePath) {
         if (filePath == null) {
-            debugLog("Empty path encountered!");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("BeaconAtlasPlugin: AtlasProcess: Empty path encountered!");
+            }
+
             return true;
         }
         return false;
     }
 
-    private LocatedFileStatus locateFile(Path filePath, FileSystem targetFS) throws IOException {
-        LocatedFileStatus locatedFileStatus = FileSystemUtils.locateFile(targetFS, filePath);
-        if (locatedFileStatus == null) {
-            infoLog("importFile: file not found: {}!", filePath);
+    private FileStatus locateFile(Path filePath, FileSystem targetFS) throws IOException {
+        FileStatus fileStatus = FileSystemUtils.locateFile(targetFS, filePath);
+        if (fileStatus == null) {
+            LOG.info("BeaconAtlasPlugin: AtlasProcess: importFile: file not found: {}!", filePath);
             return null;
         }
 
-        return locatedFileStatus;
+        return fileStatus;
     }
 
     private void updateImportStats(long numBytesWritten) {
@@ -116,5 +138,4 @@ public class ImportProcess extends AtlasProcess {
                                            InputStream inputStream) throws Exception {
         return getClient(cluster).importData(request, inputStream);
     }
-
 }

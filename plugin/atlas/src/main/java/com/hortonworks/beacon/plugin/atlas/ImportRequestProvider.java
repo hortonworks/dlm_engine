@@ -22,6 +22,8 @@
 package com.hortonworks.beacon.plugin.atlas;
 
 import org.apache.atlas.model.impexp.AtlasImportRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
@@ -29,6 +31,8 @@ import java.util.Map;
  * Helper class to create import request.
  */
 final class ImportRequestProvider {
+    protected static final Logger LOG = LoggerFactory.getLogger(ImportRequestProvider.class);
+
     private ImportRequestProvider() {
 
     }
@@ -46,6 +50,11 @@ final class ImportRequestProvider {
         AtlasImportRequest request = new AtlasImportRequest();
         addTransforms(request.getOptions(), sourceClusterName, targetClusterName);
         addMetaInfoUpdate(request.getOptions(), sourceClusterName);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("AtlasProcess: importRequest: {}", request);
+        }
+
         return request;
     }
 

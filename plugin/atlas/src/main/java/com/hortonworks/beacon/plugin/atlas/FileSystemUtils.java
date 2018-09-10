@@ -21,16 +21,14 @@
  */
 package com.hortonworks.beacon.plugin.atlas;
 
-import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.util.FSUtils;
+import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.RemoteIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,8 +45,8 @@ public final class FileSystemUtils {
 
     }
 
-    public static FileSystem getFs(Cluster cluster) throws BeaconException {
-        return FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration());
+    public static FileSystem getFs(String directory) throws BeaconException {
+        return FileSystemClientFactory.get().createFileSystem(directory, new Configuration());
     }
 
     public static long writeFile(FileSystem fs, Path path, InputStream inputStream) throws IOException {
@@ -80,8 +78,7 @@ public final class FileSystemUtils {
         }
     }
 
-    public static LocatedFileStatus locateFile(FileSystem fs, Path filePath) throws IOException {
-        RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(filePath, false);
-        return (iterator.hasNext()) ? iterator.next() : null;
+    public static FileStatus locateFile(FileSystem fs, Path filePath) throws IOException {
+        return fs.getFileStatus(filePath);
     }
 }

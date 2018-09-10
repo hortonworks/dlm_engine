@@ -83,8 +83,11 @@ public class BeaconAtlasPlugin implements Plugin {
     @Override
     public Path exportData(DataSet dataset) throws BeaconException {
         if (isPluginInactive(dataset.getSourceCluster())) {
-            debugLog("Plugin is inactive/atlas endpoint in cluster is not set. "
-                    + "exportData would not be performed!");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Plugin is inactive/atlas endpoint in cluster is not set. "
+                        + "exportData would not be performed!");
+            }
+
             return null;
         }
 
@@ -95,8 +98,11 @@ public class BeaconAtlasPlugin implements Plugin {
     @Override
     public void importData(DataSet dataset, Path exportedDataPath) throws BeaconException {
         if (isPluginInactive(dataset.getTargetCluster())) {
-            debugLog("Plugin is inactive//atlas endpoint in cluster is not set. "
-                    + "importData would not be performed!");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Plugin is inactive//atlas endpoint in cluster is not set. "
+                        + "importData would not be performed!");
+            }
+
             return;
         }
 
@@ -125,7 +131,7 @@ public class BeaconAtlasPlugin implements Plugin {
     @VisibleForTesting
     void setStatusToActive() {
         pluginStatus = Status.ACTIVE;
-        infoLog("status: {}", pluginStatus);
+        LOG.info("BeaconAtlasPlugin: Status: {}", pluginStatus);
     }
 
     private void setStatusToInactive() {
@@ -143,18 +149,6 @@ public class BeaconAtlasPlugin implements Plugin {
 
     public static String getPluginName() {
         return AtlasPluginInfo.PLUGIN_NAME;
-    }
-
-    private static void infoLog(String message, Object... params) {
-        LOG.info(message, params);
-    }
-
-    private static void debugLog(String message, Object... params) {
-        if (!LOG.isDebugEnabled()) {
-            return;
-        }
-
-        LOG.debug(message, params);
     }
 
     @Override

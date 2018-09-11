@@ -22,6 +22,7 @@
 package com.hortonworks.beacon.plugin.atlas;
 
 import org.apache.atlas.model.impexp.AtlasImportRequest;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,11 +63,21 @@ final class ImportRequestProvider {
                                       String sourceClusterName,
                                       String targetClusterName) {
 
+        String sanitizedSourceClusterName = sanitizeForClassificationName(sourceClusterName);
         options.put(AtlasImportRequest.TRANSFORMS_KEY,
-                String.format(IMPORT_TRANSFORM_FORMAT, sourceClusterName, targetClusterName, sourceClusterName));
+                String.format(IMPORT_TRANSFORM_FORMAT,
+                        sourceClusterName, targetClusterName, sanitizedSourceClusterName));
     }
 
     private static void addMetaInfoUpdate(Map<String, String> options, String sourceClusterName) {
         options.put(AtlasImportRequest.OPTION_KEY_REPLICATED_FROM, sourceClusterName);
+    }
+
+    private static String sanitizeForClassificationName(String s) {
+        if (StringUtils.isEmpty(s)) {
+            return s;
+        }
+
+        return s.replace('-', '_').replace(' ', '_');
     }
 }

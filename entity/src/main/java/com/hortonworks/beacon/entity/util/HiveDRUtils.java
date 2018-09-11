@@ -65,7 +65,6 @@ public final class HiveDRUtils {
     private static final Logger LOG = LoggerFactory.getLogger(HiveDRUtils.class);
 
     public static final String JDBC_PREFIX = "jdbc:";
-    public static final String BOOTSTRAP = "bootstrap";
     private static final String PATTERN_ZOOKEEPER_DISCOVERY = "^(.*?)serviceDiscoveryMode=zooKeeper[;]?(.*)$";
     private static final String PATTERN_ZOOKEEPER_NAMESPACE = "^(.*?)zooKeeperNamespace=[0-9a-zA-z]+[;]?(.*)$";
 

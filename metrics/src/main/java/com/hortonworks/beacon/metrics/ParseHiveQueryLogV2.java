@@ -61,9 +61,14 @@ public final class ParseHiveQueryLogV2 {
         return hiveProgress.getCompleted();
     }
 
-    private void setHiveProgress(long total, long completed) {
+    HiveReplType getHiveReplType() {
+        return hiveProgress.getHiveReplType();
+    }
+
+    private void setHiveProgress(long total, long completed, HiveReplType hiveReplType) {
         hiveProgress.setTotal(total);
         hiveProgress.setCompleted(completed);
+        hiveProgress.setHiveReplType(hiveReplType);
     }
 
     private static String splitReplLogMessage(String logLine) {
@@ -76,6 +81,7 @@ public final class ParseHiveQueryLogV2 {
 
     void parseQueryLog(List<String> str, HiveActionType actionType) {
         long total = 0, completed = 0;
+        HiveReplType replType = null;
         List<String> queryLogList = getQueryLogsToProcess(str);
 
         for (String queryLog : queryLogList) {
@@ -89,7 +95,6 @@ public final class ParseHiveQueryLogV2 {
                 String replEventType = matcher.group(1);
                 HiveReplEventType hiveReplEventType = HiveReplEventType.getHiveReplEventType(replEventType);
                 String metricInfo = matcher.group(2);
-                HiveReplType replType;
                 if (actionType == HiveActionType.EXPORT) {
                     HiveDumpMetrics dumpMetrics = GSON.fromJson(metricInfo, HiveDumpMetrics.class);
                     switch (hiveReplEventType) {
@@ -137,7 +142,7 @@ public final class ParseHiveQueryLogV2 {
                 }
             }
         }
-        setHiveProgress(total, completed);
+        setHiveProgress(total, completed, replType);
     }
 
     private List<String> getQueryLogsToProcess(List<String> str) {

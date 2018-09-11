@@ -50,6 +50,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+import static com.hortonworks.beacon.constants.BeaconConstants.DATASET_BOOTSTRAP;
+
 /**
  * Export Hive Replication implementation.
  */
@@ -72,6 +74,7 @@ public class HiveExport extends InstanceReplication {
     @Override
     public void init(JobContext jobContext) throws BeaconException {
         try {
+            jobContext.getJobContextMap().remove(BeaconConstants.END_TIME);
             jobContext.getJobContextMap().put(BeaconConstants.START_TIME, String.valueOf(System.currentTimeMillis()));
             initializeProperties();
             sourceConnectionString = HiveDRUtils.getConnectionString(properties, HiveActionType.EXPORT);
@@ -91,7 +94,8 @@ public class HiveExport extends InstanceReplication {
             String dumpDirectory;
             long replEventId = getReplEventId();
             if (replEventId <= 0) {
-                jobContext.getJobContextMap().put(HiveDRUtils.BOOTSTRAP, "true");
+                jobContext.getJobContextMap().put(DATASET_BOOTSTRAP, "true");
+                jobContext.getJobContextMap().put(BeaconConstants.DATABASE_BOOTSTRAP, "true");
                 dumpDirectory = jobContext.getJobContextMap().get(HiveExport.DUMP_DIRECTORY);
                 if (StringUtils.isNotEmpty(dumpDirectory)) {
                     boolean dumpDirectoryExists = isDumpDirectoryExists(dumpDirectory);
@@ -108,7 +112,7 @@ public class HiveExport extends InstanceReplication {
                 }
             } else {
                 LOG.info("Incremental dump started");
-                jobContext.getJobContextMap().put(HiveDRUtils.BOOTSTRAP, "false");
+                jobContext.getJobContextMap().put(BeaconConstants.DATABASE_BOOTSTRAP, "false");
                 jobContext.getJobContextMap().remove(HiveExport.DUMP_DIRECTORY);
                 dumpDirectory = performExport(jobContext);
             }

@@ -239,8 +239,9 @@ public abstract class InstanceReplication implements BeaconJob {
             final HiveReplicationMetrics hiveReplicationMetrics = new HiveReplicationMetrics();
             List<String> queryLog = hiveStatement.getQueryLog();
             boolean bootstrap = false;
-            if (jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP) != null) {
-                bootstrap = Boolean.parseBoolean(jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP));
+            if (Boolean.valueOf(jobContext.getJobContextMap().get(BeaconConstants.DATASET_BOOTSTRAP))) {
+                bootstrap = Boolean.parseBoolean(jobContext.getJobContextMap().get(
+                        BeaconConstants.DATASET_BOOTSTRAP));
             }
             boolean complete = jobContext.getJobContextMap().containsKey(BeaconConstants.END_TIME);
             if (queryLog.size() != 0 || complete) {

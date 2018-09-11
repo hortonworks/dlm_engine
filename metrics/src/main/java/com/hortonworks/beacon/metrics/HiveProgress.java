@@ -22,20 +22,23 @@
 
 package com.hortonworks.beacon.metrics;
 
+import com.hortonworks.beacon.HiveReplType;
+
 /**
  * Hive progress metrics.
  */
 public class HiveProgress {
     private long total;
     private long completed;
+    private HiveReplType hiveReplType;
 
     public HiveProgress() {
     }
 
-
-    public HiveProgress(long total, long completed) {
+    public HiveProgress(long total, long completed, HiveReplType hiveReplType) {
         this.total = total;
         this.completed = completed;
+        this.hiveReplType = hiveReplType;
     }
 
     public long getTotal() {
@@ -52,5 +55,13 @@ public class HiveProgress {
 
     public void setCompleted(long completed) {
         this.completed = completed;
+    }
+
+    public HiveReplType getHiveReplType() {
+        return hiveReplType;
+    }
+
+    public void setHiveReplType(HiveReplType hiveReplType) {
+        this.hiveReplType = hiveReplType;
     }
 }

@@ -50,6 +50,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+import static com.hortonworks.beacon.constants.BeaconConstants.DATABASE_BOOTSTRAP;
+import static com.hortonworks.beacon.constants.BeaconConstants.DATASET_BOOTSTRAP;
 import static com.hortonworks.beacon.constants.BeaconConstants.HIVE_QUERY_ID;
 
 /**
@@ -82,6 +84,11 @@ public class HiveImport extends InstanceReplication {
 
     @Override
     public void perform(JobContext jobContext) throws BeaconException, InterruptedException {
+        boolean clearDatasetBootstrap = false;
+        if (Boolean.valueOf(jobContext.getJobContextMap().get(DATASET_BOOTSTRAP))
+                && getReplicatedEventId() > 0) {
+            clearDatasetBootstrap = true;
+        }
         final String methodName = this.getClass().getSimpleName() + '.'
                 + Thread.currentThread().getStackTrace()[1].getMethodName();
         RequestContext requestContext = RequestContext.get();
@@ -100,7 +107,13 @@ public class HiveImport extends InstanceReplication {
         } finally {
             methodTimer.stop();
         }
-        setBootstrapStatus(jobContext);
+        if (Boolean.valueOf(jobContext.getJobContextMap().get(DATABASE_BOOTSTRAP))
+                && getReplicatedEventId() > 0) {
+            jobContext.getJobContextMap().put(DATABASE_BOOTSTRAP, "false");
+            if (clearDatasetBootstrap) {
+                jobContext.getJobContextMap().remove(DATASET_BOOTSTRAP);
+            }
+        }
     }
 
     private void performImport(String dumpDirectory, JobContext jobContext)
@@ -125,9 +138,9 @@ public class HiveImport extends InstanceReplication {
             targetStatement = hiveServerClient.createStatement();
             getHiveReplicationProgress(timer, jobContext, HiveActionType.IMPORT,
                     ReplicationUtils.getReplicationMetricsInterval(), targetStatement);
-            if (Boolean.valueOf(jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP))
+            if (Boolean.valueOf(jobContext.getJobContextMap().get(DATABASE_BOOTSTRAP))
                     && replCommand.getReplicatedEventId(targetStatement, properties) > 0) {
-                jobContext.getJobContextMap().put(HiveDRUtils.BOOTSTRAP, "false");
+                jobContext.getJobContextMap().put(DATABASE_BOOTSTRAP, "false");
                 LOG.info("Bootstrap replication has already completed, skipping hive import.");
                 succeeded = true;
                 return;
@@ -208,7 +221,7 @@ public class HiveImport extends InstanceReplication {
 
     private void storeHiveQueryId(final JobContext jobContext, final String queryId) {
         jobContext.setQueryId(queryId);
-        boolean bootstrap = Boolean.valueOf(jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP));
+        boolean bootstrap = Boolean.valueOf(jobContext.getJobContextMap().get(DATABASE_BOOTSTRAP));
         try {
             String details = getTrackingInfoAsJsonString(queryId, new Progress(),
                     ReplicationMetrics.JobType.MAIN, (bootstrap ? ProgressUnit.TABLE : ProgressUnit.EVENTS));
@@ -234,7 +247,7 @@ public class HiveImport extends InstanceReplication {
         }
     }
 
-    private void setBootstrapStatus(JobContext jobContext) throws BeaconException {
+    private long getReplicatedEventId() throws BeaconException {
         ReplCommand replCommand = new ReplCommand();
         HiveServerClient hiveServerClient = null;
         Statement statement = null;
@@ -242,10 +255,7 @@ public class HiveImport extends InstanceReplication {
             String targetConnection = HiveDRUtils.getTargetConnectionString(properties);
             hiveServerClient = HiveClientFactory.getHiveServerClient(targetConnection);
             statement = hiveServerClient.createStatement();
-            if (Boolean.valueOf(jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP))
-                    && replCommand.getReplicatedEventId(statement, properties) > 0) {
-                jobContext.getJobContextMap().put(HiveDRUtils.BOOTSTRAP, "false");
-            }
+            return replCommand.getReplicatedEventId(statement, properties);
         } finally {
             close(statement);
             HiveClientFactory.close(hiveServerClient);

@@ -24,7 +24,7 @@ package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.entity.util.HiveDRUtils;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
@@ -131,7 +131,8 @@ public class QuartzJobListener extends JobListenerSupport {
     }
 
     private void setDumpDirectory(JobDataMap qJobDataMap, JobContext jobContext) {
-        if (qJobDataMap.containsKey(HiveDRUtils.BOOTSTRAP) && qJobDataMap.getBoolean(HiveDRUtils.BOOTSTRAP)) {
+        if (qJobDataMap.containsKey(BeaconConstants.DATABASE_BOOTSTRAP)
+                && qJobDataMap.getBoolean(BeaconConstants.DATABASE_BOOTSTRAP)) {
             jobContext.getJobContextMap().put(HiveExport.DUMP_DIRECTORY,
                     qJobDataMap.getString(HiveExport.DUMP_DIRECTORY));
         }

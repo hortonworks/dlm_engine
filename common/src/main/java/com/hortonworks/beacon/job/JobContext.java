@@ -76,6 +76,16 @@ public class JobContext implements Serializable {
         jobContextMap = new HashMap<>();
     }
 
+    public JobContext(JobContext other) {
+        this.jobInstanceId = other.jobInstanceId;
+        this.offset = other.offset;
+        this.shouldInterrupt = new AtomicBoolean(other.shouldInterrupt.get());
+        this.jobContextMap = new HashMap<>(other.jobContextMap);
+        this.recovery = other.recovery;
+        this.performJobAfterRecovery = other.performJobAfterRecovery;
+        this.suspend = other.suspend;
+    }
+
     public String getJobInstanceId() {
         return jobInstanceId;
     }

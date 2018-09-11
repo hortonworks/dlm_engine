@@ -31,6 +31,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
+import static com.hortonworks.beacon.constants.BeaconConstants.DATABASE_BOOTSTRAP;
+import static com.hortonworks.beacon.constants.BeaconConstants.DATASET_BOOTSTRAP;
+
 /**
  * Obtain and store Hive Replication counters.
  */
@@ -40,8 +43,20 @@ public class HiveReplicationMetrics {
 
     private Progress jobProgress = new Progress();
 
+    private static final float BOOTSTRAP_WEIGHTAGE = 0.9f;
+    private static final float INCREMENTAL_WEIGHTAGE = (1 - BOOTSTRAP_WEIGHTAGE);
+
     public void obtainJobMetrics(JobContext  jobContext, List<String> queryLog, HiveActionType actionType)
             throws BeaconException {
+        boolean isDatasetBootstrap = Boolean.valueOf(jobContext.getJobContextMap().get(DATASET_BOOTSTRAP));
+        boolean isDatabaseBootstrap = Boolean.valueOf(jobContext.getJobContextMap().get(DATABASE_BOOTSTRAP));
+        boolean restoreTableLevelMetrics = false;
+        JobContext databaseBootstrapJobContext = null;
+        if (isDatasetBootstrap && !isDatabaseBootstrap) {
+            databaseBootstrapJobContext = new JobContext(jobContext);
+            restoreTableLevelMetrics = true;
+        }
+
         boolean isJobComplete = jobContext.getJobContextMap().containsKey(BeaconConstants.END_TIME);
         if (isJobComplete) {
             long startTime = Long.parseLong(jobContext.getJobContextMap().get(BeaconConstants.START_TIME));
@@ -59,7 +74,7 @@ public class HiveReplicationMetrics {
             if (HiveActionType.EXPORT == actionType) {
                 parseExportMetrics(jobContext, pq);
                 loadExportMetrics(jobContext);
-                loadProgressPercentage(jobContext, HiveActionType.EXPORT);
+                loadProgressPercentage(jobContext, HiveActionType.EXPORT, pq);
             } else {
                 updateImportMetrics(jobContext, pq);
             }
@@ -69,7 +84,11 @@ public class HiveReplicationMetrics {
                     jobContext.getJobContextMap().get(ReplicationJobMetrics.EXPORT_COMPLETED.getName()));
             loadExportMetrics(jobContext);
             loadImportMetrics(jobContext);
-            loadProgressPercentage(jobContext, HiveActionType.IMPORT);
+            loadProgressPercentage(jobContext, HiveActionType.IMPORT, null);
+            jobProgress.setJobProgress(100);
+        }
+        if (restoreTableLevelMetrics) {
+            restoreJobContext(jobContext, databaseBootstrapJobContext);
         }
     }
 
@@ -89,7 +108,7 @@ public class HiveReplicationMetrics {
         jobContext.getJobContextMap().put(ReplicationJobMetrics.IMPORT_COMPLETED.getName(), String.valueOf(
                 importCompleted));
         loadImportMetrics(jobContext);
-        loadProgressPercentage(jobContext, HiveActionType.IMPORT);
+        loadProgressPercentage(jobContext, HiveActionType.IMPORT, pq);
     }
 
     private void handleNoExportMetrics(JobContext jobContext, long total) {
@@ -116,7 +135,7 @@ public class HiveReplicationMetrics {
                 exportCompleted));
     }
 
-    private void loadProgressPercentage(JobContext jobContext, HiveActionType actionType) {
+    private void loadProgressPercentage(JobContext jobContext, HiveActionType actionType, ParseHiveQueryLogV2 pq) {
         long total, completed;
         float progress = 0;
         float exportProgress = 10;
@@ -136,6 +155,9 @@ public class HiveReplicationMetrics {
             LOG.debug("Import progress: total: {}, completed: {}, progress: {}", total, completed, importProgress);
             progress += importProgress;
         }
+        boolean isDatabaseBootstrap = Boolean.valueOf(jobContext.getJobContextMap().get(DATABASE_BOOTSTRAP));
+        boolean isDatasetBootstrap = Boolean.valueOf(jobContext.getJobContextMap().get(DATASET_BOOTSTRAP));
+        progress = getProgressWithAppliedWeightage(isDatasetBootstrap, isDatabaseBootstrap, pq != null, progress);
         progress = Math.min(100, Math.round(progress * 100.0f)/100.0f);
         LOG.debug("Action Type: {}, Progress: {}", actionType.getType(), progress);
         jobProgress.setJobProgress(progress);
@@ -155,12 +177,20 @@ public class HiveReplicationMetrics {
 
     private void loadImportMetrics(JobContext jobContext) {
         long importCompleted = 0L;
-        if (jobProgress.getImportTotal() == 0 && jobContext.getJobContextMap().containsKey(ReplicationJobMetrics
-                .IMPORT_TOTAL.getName())) {
+        if (jobContext.getJobContextMap().containsKey(ReplicationJobMetrics.IMPORT_TOTAL.getName())) {
             long importTotal = Long.parseLong(jobContext.getJobContextMap().get(ReplicationJobMetrics.IMPORT_TOTAL
                     .getName()));
             jobProgress.setImportTotal(importTotal);
             jobProgress.setTotal(importTotal);
+        } else {
+            if (jobContext.getJobContextMap().containsKey(ReplicationJobMetrics.EXPORT_TOTAL.getName())) {
+                long exportTotal = Long.parseLong(jobContext.getJobContextMap().get(ReplicationJobMetrics.EXPORT_TOTAL
+                        .getName()));
+                jobContext.getJobContextMap().put(ReplicationJobMetrics.IMPORT_TOTAL.getName(),
+                        String.valueOf(exportTotal));
+                jobProgress.setImportTotal(exportTotal);
+                jobProgress.setTotal(exportTotal);
+            }
         }
         if (jobContext.getJobContextMap().containsKey(ReplicationJobMetrics.IMPORT_COMPLETED.getName())) {
             importCompleted = Long.parseLong(jobContext.getJobContextMap().get(ReplicationJobMetrics.IMPORT_COMPLETED
@@ -175,4 +205,68 @@ public class HiveReplicationMetrics {
     public Progress getJobProgress() {
         return jobProgress;
     }
+
+    /**
+     * This method computes the progress percentage based on the weightage of the run.
+     * @param isDatasetBootstrap If the run is dataset bootstrap run.
+     * @param isDatabaseBootstrap If it is database bootstrap phase of the run.
+     * @param metricsAvailable If metrics was successfully derived from query logs.
+     * @param progress The progess computed from query logs.
+     * @return The final progress after considering the weightage of the run.
+     */
+    private float getProgressWithAppliedWeightage(boolean isDatasetBootstrap, boolean isDatabaseBootstrap,
+                                                  boolean metricsAvailable, float progress) {
+        if (metricsAvailable) {
+            if (isDatasetBootstrap && isDatabaseBootstrap) {
+                progress = BOOTSTRAP_WEIGHTAGE * progress;
+            } else if (isDatasetBootstrap) {
+                progress = (BOOTSTRAP_WEIGHTAGE * 100) + (INCREMENTAL_WEIGHTAGE * progress);
+            } else {
+                LOG.debug("Post dataset incremental replication. Progress: {}", progress);
+            }
+        } else {
+            if (isDatabaseBootstrap) {
+                progress = BOOTSTRAP_WEIGHTAGE * 100;
+            } else {
+                progress = 100;
+            }
+        }
+        return progress;
+    }
+
+    /**
+     * This method restores the metrics computed in incremental phase to bootstrap phase except the progress
+     * percentage.
+     * @param jobContext jobContext during incremental phase, events metrics.
+     * @param databaseBootstrapJobContext jobContext during bootstrap phase, table metrics.
+     */
+    private void restoreJobContext(JobContext jobContext, JobContext databaseBootstrapJobContext) {
+        String key = ReplicationJobMetrics.EXPORT_TOTAL.getName();
+        String value = getFromJobContext(databaseBootstrapJobContext, key);
+        jobProgress.setExportTotal(Long.parseLong(value));
+        jobContext.getJobContextMap().put(key, value);
+
+        key = ReplicationJobMetrics.EXPORT_COMPLETED.getName();
+        value = getFromJobContext(databaseBootstrapJobContext, key);
+        jobProgress.setExportCompleted(Long.parseLong(value));
+        jobContext.getJobContextMap().put(key, value);
+
+        key = ReplicationJobMetrics.IMPORT_TOTAL.getName();
+        value = getFromJobContext(databaseBootstrapJobContext, key);
+        jobProgress.setImportTotal(Long.parseLong(value));
+        jobContext.getJobContextMap().put(key, value);
+
+        key = ReplicationJobMetrics.IMPORT_COMPLETED.getName();
+        value = getFromJobContext(databaseBootstrapJobContext, key);
+        jobProgress.setImportCompleted(Long.parseLong(value));
+        jobContext.getJobContextMap().put(key, value);
+
+        jobProgress.setTotal(jobProgress.getImportTotal());
+        jobProgress.setCompleted(jobProgress.getImportCompleted());
+    }
+
+    private String getFromJobContext(JobContext jobContext, String key) {
+        return jobContext.getJobContextMap().get(key);
+    }
+
 }

@@ -30,7 +30,6 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
-import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -68,6 +67,7 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hortonworks.beacon.constants.BeaconConstants.ERROR_CODE;
+import static com.hortonworks.beacon.constants.BeaconConstants.DATABASE_BOOTSTRAP;
 
 /**
  * Beacon job for Quartz.
@@ -165,7 +165,7 @@ public class QuartzJob implements InterruptableJob {
 
             Properties jobProperties = jobDetail.getProperties();
             int retryAttempts, retryDelay;
-            if (Boolean.parseBoolean(jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP))) {
+            if (Boolean.parseBoolean(jobContext.getJobContextMap().get(DATABASE_BOOTSTRAP))) {
                 retryAttempts = BeaconConfig.getInstance().getEngine().getHiveBootstrapJobRetryAttempts();
             } else {
                 retryAttempts = Integer.parseInt(jobProperties.getProperty(FSDRProperties.RETRY_ATTEMPTS.getName()));
@@ -201,13 +201,13 @@ public class QuartzJob implements InterruptableJob {
 
     private void setDumpDirectory(JobDataMap qJobDataMap) {
         if (ReplicationHelper.getReplicationType(jobDetail.getType()) == ReplicationType.HIVE) {
-            boolean isBootstrap = Boolean.valueOf(jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP));
+            boolean isBootstrap = Boolean.valueOf(jobContext.getJobContextMap().get(DATABASE_BOOTSTRAP));
             if (isBootstrap) {
-                qJobDataMap.put(HiveDRUtils.BOOTSTRAP, true);
+                qJobDataMap.put(DATABASE_BOOTSTRAP, true);
                 qJobDataMap.put(HiveExport.DUMP_DIRECTORY, jobContext.getJobContextMap()
                         .get(HiveExport.DUMP_DIRECTORY));
-            } else if (qJobDataMap.containsKey(HiveDRUtils.BOOTSTRAP)){
-                qJobDataMap.remove(HiveDRUtils.BOOTSTRAP);
+            } else if (qJobDataMap.containsKey(DATABASE_BOOTSTRAP)){
+                qJobDataMap.remove(DATABASE_BOOTSTRAP);
                 qJobDataMap.remove(HiveExport.DUMP_DIRECTORY);
             }
         }

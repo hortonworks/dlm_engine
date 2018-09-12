@@ -92,25 +92,13 @@ public class HS2Client implements HiveMetadataClient, HiveServerClient {
             this.connectionString = HiveDRUtils.getHS2ConnectionUrl(cluster.getHsEndpoint());
         } else {
             this.connectionString = HiveDRUtils.getKnoxProxiedURL(cluster);
-            LOG.debug("Generated knox propxied hs2 endpoint: {}", connectionString);
+            LOG.debug("Generated knox proxied hs2 endpoint: {}", connectionString);
         }
     }
 
     public HS2Client(String connectionString, Cluster cluster) throws BeaconException {
         this.cluster = cluster;
-        // target is not data lake.   We will use pull - so update source cluster with knox proxy address
-        // if enabled
-        Engine engine = BeaconConfig.getInstance().getEngine();
-
-        initializeDriveClass();
-        BeaconCluster beaconCluster = new BeaconCluster(cluster);
-        this.knoxGatewayURL = beaconCluster.getKnoxGatewayURL();
-        if (cluster.isLocal() || !engine.isKnoxProxyEnabled()) {
-            this.connectionString = HiveDRUtils.getHS2ConnectionUrl(cluster.getHsEndpoint());
-        } else {
-            this.connectionString = HiveDRUtils.getKnoxProxiedURL(cluster);
-            LOG.debug("Generated knox propxied hs2 endpoint: {}", connectionString);
-        }
+        this.connectionString = connectionString;
     }
 
     public HS2Client(String connectionString) {

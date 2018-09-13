@@ -139,7 +139,7 @@ public class AtlasRESTClient extends RetryingClient implements RESTClient {
         LOG.debug(s, params);
     }
 
-    public static RESTClientBuilder buildCached() {
-        return new RESTClientBuilder.CachedBuilder();
+    public static RESTClientBuilder build() {
+        return new RESTClientBuilder();
     }
 }

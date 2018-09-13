@@ -39,8 +39,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Cookie;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * MockClientBuilder for AtlasRESTClient.
@@ -266,36 +264,6 @@ public class RESTClientBuilder {
                 LOG.error("Unable to read: Principal: {}: Host: {}", beaconPrincipal, hostName, e);
                 throw new BeaconException(e);
             }
-        }
-    }
-
-    /**
-     * Maintains url - AtlasRESTClient mapping. Prevents repeated creation of AtlasClient for a given URL.
-     */
-    public static class CachedBuilder extends RESTClientBuilder {
-        private Map<String, RESTClient> atlasClients = new HashMap<>();
-
-        public RESTClient create() throws BeaconException {
-            RESTClient client = null;
-            try {
-                if (!atlasClients.containsKey(incomingUrl)) {
-                    client = getRESTClient(incomingUrl);
-                    if (client == null) {
-                        throw new BeaconException("AtlasClient: Could not be created!");
-                    }
-                    atlasClients.put(incomingUrl, client);
-                }
-
-                return atlasClients.get(incomingUrl);
-            } catch (AtlasRestClientException e) {
-                LOG.error("CachedBuilder.create: failed! URL: {}", incomingUrl, e);
-                throw e;
-            }
-        }
-
-        private RESTClient getRESTClient(String url) throws BeaconException {
-            baseUrl(url);
-            return super.create();
         }
     }
 }

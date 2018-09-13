@@ -50,7 +50,7 @@ public class BeaconAtlasPlugin implements Plugin {
     private AtlasProcess importProcess;
 
     public BeaconAtlasPlugin() {
-        this(AtlasRESTClient.buildCached());
+        this(AtlasRESTClient.build());
     }
 
     @VisibleForTesting

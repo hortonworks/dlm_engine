@@ -39,6 +39,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Properties;
 
 import static org.mockito.Matchers.anyBoolean;
@@ -54,6 +56,7 @@ import static org.testng.Assert.assertNull;
  */
 public class BeaconAtlasPluginTest extends RequestProviderBase {
     private static final String LOCAL_HOST_URL = "http://localhost:";
+    private static final String LOCAL_HOST_FS_URL = "http://localhost:8020";
 
     private DistributedFileSystem dfs;
 
@@ -66,7 +69,7 @@ public class BeaconAtlasPluginTest extends RequestProviderBase {
         setupResourcesDir();
     }
 
-    private void setupSingle() throws IOException {
+    private void setupSingle() throws IOException, URISyntaxException {
         dfs = mock(DistributedFileSystem.class);
         FileSystemClientFactory.setFileSystem(dfs);
         when(dfs.create((Path) anyObject())).thenReturn(mock(FSDataOutputStream.class));
@@ -81,6 +84,7 @@ public class BeaconAtlasPluginTest extends RequestProviderBase {
                 return new LocatedFileStatus();
             }
         });
+        when(dfs.getUri()).thenReturn(new URI(LOCAL_HOST_FS_URL));
 
         InputStream inputStream = getSeekableByteArrayInputStream(getZipFilePath());
         when(dfs.open((Path) anyObject())).thenReturn(new FSDataInputStream(inputStream));
@@ -129,7 +133,7 @@ public class BeaconAtlasPluginTest extends RequestProviderBase {
     }
 
     @Test
-    public void emptyFileExported() throws IOException, BeaconException {
+    public void emptyFileExported() throws IOException, BeaconException, URISyntaxException {
         setupSingle();
         clientBuilder.setFilePath(getZipFilePathForEmpty());
 

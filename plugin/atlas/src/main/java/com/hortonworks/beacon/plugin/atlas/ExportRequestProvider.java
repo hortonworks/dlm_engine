@@ -58,7 +58,8 @@ final class ExportRequestProvider {
 
     public static AtlasExportRequest create(AtlasProcess process,
                                             DataSet dataSet,
-                                            String entityGuid) throws BeaconException {
+                                            String entityGuid,
+                                            String fsUri) throws BeaconException {
 
         DataSet.DataSetType dataSetType = dataSet.getType();
         String sourceDataSet = dataSet.getSourceDataSet();
@@ -68,7 +69,7 @@ final class ExportRequestProvider {
         Cluster targetCluster = dataSet.getTargetCluster();
         String targetClusterName = getClusterName(process, targetCluster);
 
-        List<AtlasObjectId> itemsToExport = getItemsToExport(dataSetType, sourceClusterName, sourceDataSet);
+        List<AtlasObjectId> itemsToExport = getItemsToExport(dataSetType, sourceClusterName, sourceDataSet, fsUri);
 
         long fromTimestamp = getFromTimestamp(process, targetCluster, sourceClusterName, entityGuid);
         Map<String, Object> options = getOptions(dataSetType, targetClusterName, fromTimestamp);
@@ -126,7 +127,7 @@ final class ExportRequestProvider {
         }
 
         options.put(AtlasExportRequest.OPTION_FETCH_TYPE, AtlasExportRequest.FETCH_TYPE_INCREMENTAL);
-        options.put(AtlasExportRequest.FETCH_TYPE_INCREMENTAL_FROM_TIME, fromTimestamp);
+        options.put(AtlasExportRequest.FETCH_TYPE_INCREMENTAL_CHANGE_MARKER, fromTimestamp);
         options.put(AtlasExportRequest.OPTION_SKIP_LINEAGE, true);
 
         if (datasetType == HDFS) {
@@ -138,8 +139,8 @@ final class ExportRequestProvider {
 
     private static List<AtlasObjectId> getItemsToExport(DataSet.DataSetType dataSetType,
                                                         final String clusterName,
-                                                        final String dataSet) throws BeaconException {
-        final AtlasObjectId objectId = getItemToExport(dataSetType, clusterName, dataSet);
+                                                        final String dataSet, String fsUri) throws BeaconException {
+        final AtlasObjectId objectId = getItemToExport(dataSetType, clusterName, dataSet, fsUri);
 
         return new ArrayList<AtlasObjectId>() {{
                 add(objectId);
@@ -147,8 +148,8 @@ final class ExportRequestProvider {
     }
 
     public static AtlasObjectId getItemToExport(DataSet.DataSetType dataSetType,
-                                                 String clusterName,
-                                                 String dataSet) throws BeaconException {
+                                                String clusterName,
+                                                String dataSet, String fsUri) throws BeaconException {
 
         final String typeName = getAtlasType(dataSetType);
         final AtlasObjectId objectId;
@@ -156,7 +157,7 @@ final class ExportRequestProvider {
         switch (dataSetType) {
             case HDFS:
                 objectId = new AtlasObjectId(typeName, ATTRIBUTE_PATH_NAME,
-                                            getPathWithTrailingPathSeparator(dataSet));
+                                            getPathWithTrailingPathSeparator(fsUri, dataSet));
                 break;
 
             case HIVE:
@@ -171,12 +172,13 @@ final class ExportRequestProvider {
         return objectId;
     }
 
-    static String getPathWithTrailingPathSeparator(String path) {
-        if (!StringUtils.endsWith(path, PATH_FILE_SEPARATOR)) {
-            return path.concat(PATH_FILE_SEPARATOR);
+    static String getPathWithTrailingPathSeparator(String fsUri, String path) {
+        String fsUriPath = fsUri.concat(path);
+        if (!StringUtils.endsWith(fsUriPath, PATH_FILE_SEPARATOR)) {
+            return fsUriPath.concat(PATH_FILE_SEPARATOR);
         }
 
-        return path;
+        return fsUriPath;
     }
 
     public static String getQualifiedName(String dataSetName, String clusterName) {

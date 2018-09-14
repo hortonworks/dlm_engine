@@ -57,21 +57,22 @@ public class ExportProcess extends AtlasProcess {
         LOG.info("BeaconAtlasPlugin: AtlasProcess: ==> ExportProcess.run: Starting: {} ...", stagingDir);
         Path exportPath = null;
         try {
+            FileSystem fs = FileSystemUtils.getFs(stagingDir.toString());
+            String fsUri = fs.getUri().toString();
+
             Cluster sourceCluster = dataset.getSourceCluster();
             AtlasExportRequest exportRequest;
-            String entityGuid = checkHiveEntityExists(sourceCluster, dataset);
+            String entityGuid = checkHiveEntityExists(sourceCluster, dataset, fsUri);
             if (dataset.getType() == DataSet.DataSetType.HIVE && StringUtils.isEmpty(entityGuid)) {
                 return null;
             }
 
-            exportRequest = ExportRequestProvider.create(this, dataset, entityGuid);
+            exportRequest = ExportRequestProvider.create(this, dataset, entityGuid, fsUri);
 
             String exportFileName = getExportFileName(sourceCluster, getCurrentTimestamp());
 
-            FileSystem targetFs = FileSystemUtils.getFs(stagingDir.toString());
-
             InputStream inputStream = exportData(sourceCluster, exportRequest);
-            exportPath = writeDataToFile(targetFs, stagingDir, exportFileName, inputStream);
+            exportPath = writeDataToFile(fs, stagingDir, exportFileName, inputStream);
 
             return exportPath;
         } catch (AtlasRestClientException ex) {
@@ -85,7 +86,7 @@ public class ExportProcess extends AtlasProcess {
         }
     }
 
-    private String checkHiveEntityExists(Cluster cluster, DataSet dataset) {
+    private String checkHiveEntityExists(Cluster cluster, DataSet dataset, String fsUri) {
         if (dataset.getType() != DataSet.DataSetType.HIVE) {
             return StringUtils.EMPTY;
         }
@@ -96,7 +97,7 @@ public class ExportProcess extends AtlasProcess {
             objectId = ExportRequestProvider.getItemToExport(
                     dataset.getType(),
                     clusterName,
-                    dataset.getSourceDataSet());
+                    dataset.getSourceDataSet(), fsUri);
         } catch (BeaconException e) {
             LOG.error("BeaconAtlasPlugin: Could not create objectId for: {} - {} - {}", dataset, clusterName);
             return StringUtils.EMPTY;

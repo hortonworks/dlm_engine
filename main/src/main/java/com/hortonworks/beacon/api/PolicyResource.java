@@ -571,36 +571,46 @@ public class PolicyResource extends AbstractResourceManager {
             if (isSourceClusterLocal) {
                 String sourceDataset = policy.getSourceDataset();
                 DataSet srcDataSet = FSDataSet.create(sourceDataset, policy.getSourceCluster(), policy);
-                deleteExistingAndDisallowSnapshots(policy.getName(), policy.getSourceCluster(), srcDataSet,
+                deleteExistingSnapshots(policy.getName(), policy.getSourceCluster(), srcDataSet,
                         snapshotNamePrefix);
+                disallowSnapshots(policy.getName(), policy.getSourceCluster(), srcDataSet);
             } else {
                 String targetDataset = policy.getTargetDataset();
                 DataSet tgtDataSet = FSDataSet.create(targetDataset, policy.getTargetCluster(), policy);
-                deleteExistingAndDisallowSnapshots(policy.getName(), policy.getTargetCluster(), tgtDataSet,
+                deleteExistingSnapshots(policy.getName(), policy.getTargetCluster(), tgtDataSet,
                         snapshotNamePrefix);
+                disallowSnapshots(policy.getName(), policy.getTargetCluster(), tgtDataSet);
             }
         } catch (IOException ex) {
             throw new BeaconException(ex);
         }
     }
 
-    private void deleteExistingAndDisallowSnapshots(String policyName, String clusterName, DataSet dataSet,
-                                                    String snapshotNamePrefix)
-            throws BeaconException, IOException {
+    private void deleteExistingSnapshots(String policyName, String clusterName, DataSet dataSet,
+                                         String snapshotNamePrefix) throws IOException {
         if (dataSet.isSnapshottable()) {
             LOG.info("Deleting existing snapshot(s) for dataset [{}]", dataSet);
             dataSet.deleteAllSnapshots(snapshotNamePrefix);
         } else {
             LOG.warn("Target snapshots dir for dataset [{}] does not exist", dataSet);
         }
-        // if no other policy has same source dataset, it should disallow snapshot
-        boolean datasetInRepl = isDataSetInReplication(dataSet.toString(), policyName);
-        if (!datasetInRepl) {
-            Cluster cluster = clusterDao.getActiveCluster(clusterName);
-            FSSnapshotUtils.disallowSnapshot(cluster, dataSet);
-            LOG.info("Disallowed snapshots for dataset[{}]", dataSet);
-        } else {
-            LOG.info("Active policies are using the datasource [{}], so can not disallow snapshots", dataSet);
+    }
+
+    private void disallowSnapshots(String policyName, String clusterName, DataSet dataSet)
+            throws BeaconException, IOException {
+        try {
+            boolean datasetInRepl = isDataSetInReplication(dataSet.toString(), policyName);
+            if (!datasetInRepl) {
+                Cluster cluster = clusterDao.getActiveCluster(clusterName);
+                FSSnapshotUtils.disallowSnapshot(cluster, dataSet);
+                LOG.info("Disallowed snapshots for dataset[{}]", dataSet.toString());
+            } else {
+                LOG.info("Active policies are using the datasource [{}], so can not disallow snapshots", dataSet);
+            }
+        } catch (org.apache.hadoop.hdfs.protocol.SnapshotException ex) {
+            //Just log the exception and ignore
+            LOG.warn("Couldn't disallow the snapshots on dataset {}, exception message - {}", dataSet.toString(),
+                    ex.getMessage());
         }
     }
 

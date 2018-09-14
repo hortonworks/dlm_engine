@@ -42,6 +42,7 @@ import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.EventSeverity;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
 import com.hortonworks.beacon.test.BeaconIntegrationTest;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.StringFormat;
@@ -1265,6 +1266,68 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         }
         Assert.assertTrue(exThown);
         deletePolicy(policyName);
+    }
+
+    @Test(dependsOnMethods = "testPairCluster")
+    public void testSnapshotDisallowFailOnPolicyDisable() throws Exception {
+        final String policyName1 = getRandomString("snapshot-cleanup1");
+        final String policyName2 = getRandomString("snapshot-cleanup2");
+        String srcPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        String tgtPath1 = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        String tgtPath2 = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(srcPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(tgtPath1, policyName1));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(tgtPath2, policyName1));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(tgtPath1));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(tgtPath2));
+        Properties props = new Properties();
+        props.setProperty(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName(), "true");
+        submitAndSchedule(policyName1, 15, srcPath, tgtPath1, props);
+
+        waitOnCondition(15000, "first instance complete", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instance = getFirstInstance(targetClient, policyName1);
+                return instance != null && instance.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        FileStatus[] fileStatus = srcDfsCluster.getFileSystem().listStatus(new Path(srcPath, ".snapshot"));
+        Assert.assertTrue(fileStatus.length > 0);
+        fileStatus = tgtDfsCluster.getFileSystem().listStatus(new Path(tgtPath1, ".snapshot"));
+        Assert.assertTrue(fileStatus.length > 0);
+
+        submitAndSchedule(policyName2, 15, srcPath, tgtPath2, props);
+
+        waitOnCondition(15000, "first instance complete", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instance = getFirstInstance(targetClient, policyName2);
+                return instance != null && instance.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+
+        fileStatus = tgtDfsCluster.getFileSystem().listStatus(new Path(tgtPath2, ".snapshot"));
+        Assert.assertTrue(fileStatus.length > 0);
+
+        PropertiesIgnoreCase updateProps = new PropertiesIgnoreCase();
+        updateProps.setProperty(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName(), "false");
+        updatePolicy(policyName1, getTargetBeaconServer(), updateProps, Response.Status.OK);
+        Thread.sleep(15000);
+        String snapshotsNamePrefix = FSSnapshotUtils.getSnapshotNamePrefix(policyName1);
+        fileStatus = srcDfsCluster.getFileSystem().listStatus(new Path(srcPath, ".snapshot"));
+        for (FileStatus fileStatusEntry: fileStatus) {
+            Assert.assertTrue(!fileStatusEntry.getPath().toString().startsWith(snapshotsNamePrefix));
+        }
+        boolean exThrown = false;
+        try {
+            fileStatus = tgtDfsCluster.getFileSystem().listStatus(new Path(tgtPath1, ".snapshot"));
+        } catch (org.apache.hadoop.ipc.RemoteException ex) {
+            exThrown = true;
+        }
+        assertTrue(exThrown);
+
+        deletePolicy(policyName1);
+        deletePolicy(policyName2);
     }
 
     @Test(dependsOnMethods = "testPairCluster")

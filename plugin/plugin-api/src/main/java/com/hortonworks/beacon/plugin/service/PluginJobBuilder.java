@@ -73,19 +73,25 @@ public class PluginJobBuilder extends JobBuilder {
 
         Set<String> orderedPlugins = getPluginOrder(PluginManagerService.getRegisteredPlugins());
         for (String pluginName: orderedPlugins) {
-            for (PluginManagerService.DefaultPluginActions action: PluginManagerService.DefaultPluginActions.values()) {
-                String clusterName = getClusterForAction(policy, action);
-                if (StringUtils.isNotEmpty(clusterName) && pluginsEnabled.contains(pluginName)
-                        && PluginManagerService.getPlugin(pluginName).isEnabled(clusterName)) {
+            if (pluginsEnabled.contains(pluginName)) {
+                List<PluginAction> lineage = PluginManagerService.getPlugin(pluginName).getLineage(policy);
+                List<ReplicationJobDetails> tmpJobList = new ArrayList<>();
+                for (PluginAction action: lineage) {
                     ReplicationJobDetails jobDetails = buildReplicationJobDetails(policy, pluginName, action.getName());
-                    jobList.add(jobDetails);
+                    tmpJobList.add(jobDetails);
+                }
+                if (tmpJobList.size() == 0) {
+                    LOG.info("Excluding plugin {} run, either service isn't installed/preserve meta isn't enabled",
+                            pluginName);
+                } else {
+                    jobList.addAll(tmpJobList);
                 }
             }
         }
         return jobList;
     }
 
-    private String getClusterForAction(ReplicationPolicy policy, PluginManagerService.DefaultPluginActions action) {
+    public static String getClusterForAction(ReplicationPolicy policy, PluginAction action) {
         String cluster = StringUtils.EMPTY;
         switch (action) {
             case EXPORT:

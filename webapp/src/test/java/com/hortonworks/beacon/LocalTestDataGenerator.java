@@ -187,6 +187,8 @@ public class LocalTestDataGenerator extends TestDataGenerator {
         cluster.setHsEndpoint("jdbc:hive2://local-" + clusterType);
         cluster.setBeaconEndpoint("http://beacon-" + cluster);
         cluster.setTags(Arrays.asList("test", "local", "IT"));
+        cluster.setRangerEndpoint("http://localhost:6080");
+        cluster.setAtlasEndpoint("http://localhost:21000");
         Properties properties = new Properties();
         properties.put("testKey", "testVal");
         properties.put("hive.metastore.warehouse.dir", "/apps/hive/warehouse");

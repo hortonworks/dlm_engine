@@ -109,7 +109,7 @@ public class BeaconIntegrationTest {
     static {
         String commonOptions = "-Dlog4j.configuration=beacon-log4j.properties -Dbeacon.version="
                 + System.getProperty(BeaconConstants.BEACON_VERSION_CONST)
-                + " -Dbeacon.log.appender=FILE";
+                + " -Dbeacon.log.appender=console";
         sourceJVMOptions.add(commonOptions + " -Dbeacon.log.filename=beacon-application.log." + SOURCE_CLUSTER);
         String sourceBeaconOpts = "source.beacon.server.opts";
         if (System.getProperty(sourceBeaconOpts) != null) {
@@ -278,6 +278,8 @@ public class BeaconIntegrationTest {
         cluster.setBeaconEndpoint(server);
         cluster.setLocal(isLocal);
         cluster.setTags(Arrays.asList("consumer", "owner"));
+        cluster.setAtlasEndpoint("http://localhost:21000");
+        cluster.setRangerEndpoint("http://localhost:6080");
         if (customProperties != null) {
             cluster.getCustomProperties().putAll(customProperties);
         }

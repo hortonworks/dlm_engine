@@ -49,20 +49,6 @@ public final class PluginManagerService implements BeaconService {
     private static ServiceLoader<Plugin> pluginServiceLoader;
     private static Map<String, Plugin> registeredPluginsMap = new HashMap<>();
 
-    enum DefaultPluginActions {
-        EXPORT("EXPORT"),
-        IMPORT("IMPORT");
-
-        private final String name;
-
-        DefaultPluginActions(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
 
 
     @Override
@@ -157,9 +143,9 @@ public final class PluginManagerService implements BeaconService {
 
     }
 
-    static DefaultPluginActions getActionType(final String actionType) throws BeaconException {
+    static PluginAction getActionType(final String actionType) throws BeaconException {
         try {
-            return DefaultPluginActions.valueOf(actionType.toUpperCase());
+            return PluginAction.valueOf(actionType.toUpperCase());
         } catch (IllegalArgumentException ex) {
             LOG.error("Action of type: {} is not supported", actionType);
             throw new BeaconException("Action of type: {} is not supported", actionType);

@@ -22,6 +22,8 @@
 
 package com.hortonworks.beacon.plugin.ranger;
 
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -29,6 +31,7 @@ import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.plugin.Plugin;
 import com.hortonworks.beacon.plugin.PluginInfo;
 import com.hortonworks.beacon.plugin.PluginStats;
+import com.hortonworks.beacon.plugin.service.PluginAction;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
@@ -174,8 +177,10 @@ public class BeaconRangerPluginImpl implements Plugin{
         }
     }
 
-    @Override
     public boolean isEnabled(String cluster) throws BeaconException {
+        if (StringUtils.isEmpty(cluster)) {
+            return false;
+        }
         BeaconCluster beaconCluster = new BeaconCluster(ClusterHelper.getActiveCluster(cluster));
         return StringUtils.isNotEmpty(beaconCluster.getRangerEndpoint());
     }
@@ -283,5 +288,26 @@ public class BeaconRangerPluginImpl implements Plugin{
             }
         };
         return info;
+    }
+
+    @Override
+    public List<PluginAction> getLineage(ReplicationPolicy policy) throws BeaconException {
+        List<PluginAction> jobList = new ArrayList<>();
+
+        if (isEnabled(policy.getSourceCluster())) {
+            jobList.add(PluginAction.EXPORT);
+        }
+
+        if (isEnabled(policy.getTargetCluster())) {
+            jobList.add(PluginAction.IMPORT);
+        }
+
+        //If its only export and don't need to preserve meta, don't run export as well
+        if (jobList.size() == 1 && jobList.contains(PluginAction.EXPORT) && !BeaconConfig.getInstance().getEngine()
+                .isPreserveMeta()) {
+            return new ArrayList<>();
+        }
+
+        return jobList;
     }
 }

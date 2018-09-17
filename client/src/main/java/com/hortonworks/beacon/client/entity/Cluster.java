@@ -332,6 +332,7 @@ public class Cluster extends Entity {
         properties.putIfNotNull(ClusterFields.FSENDPOINT.getName(), fsEndpoint);
         properties.putIfNotNull(ClusterFields.HSENDPOINT.getName(), hsEndpoint);
         properties.put(ClusterFields.BEACONENDPOINT.getName(), beaconEndpoint);
+        properties.putIfNotNull(ClusterFields.RANGERENDPOINT.getName(), rangerEndpoint);
         properties.putIfNotNull(ClusterFields.ATLASENDPOINT.getName(), atlasEndpoint);
         properties.put(ClusterFields.LOCAL.getName(), local);
         properties.putIfNotNull(ClusterFields.TAGS.getName(), tags);

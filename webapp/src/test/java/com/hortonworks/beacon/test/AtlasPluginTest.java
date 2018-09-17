@@ -22,6 +22,7 @@
 package com.hortonworks.beacon.test;
 
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
@@ -29,6 +30,8 @@ import com.hortonworks.beacon.plugin.Plugin;
 import com.hortonworks.beacon.plugin.PluginInfo;
 import com.hortonworks.beacon.plugin.PluginStats;
 import com.hortonworks.beacon.plugin.atlas.AtlasPluginInfo;
+import com.hortonworks.beacon.plugin.atlas.BeaconAtlasPlugin;
+import com.hortonworks.beacon.plugin.service.PluginAction;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -37,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Implementation of Plugin for IT purpose.
@@ -101,8 +105,8 @@ public class AtlasPluginTest implements Plugin {
     }
 
     @Override
-    public boolean isEnabled(String cluster) throws BeaconException {
-        return true;
+    public List<PluginAction> getLineage(ReplicationPolicy policy) throws BeaconException {
+        return new BeaconAtlasPlugin().getLineage(policy);
     }
 
     @Override
@@ -124,4 +128,5 @@ public class AtlasPluginTest implements Plugin {
         PluginInfo info = new AtlasPluginInfo();
         return info;
     }
+
 }

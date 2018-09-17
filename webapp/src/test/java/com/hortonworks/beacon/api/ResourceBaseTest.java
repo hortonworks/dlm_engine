@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.api;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.TestDataGenerator;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
@@ -29,6 +30,9 @@ import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import org.apache.hadoop.fs.FileSystem;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 /**
  * Base class for tests.
@@ -127,5 +131,13 @@ public abstract class ResourceBaseTest {
             return policyInstanceList.getElements()[policyInstanceList.getElements().length - num];
         }
         return null;
+    }
+
+    protected String getJobs(String policyName) {
+        RequestContext.setInitialValue();
+        EntityManager entityManager = RequestContext.get().getEntityManager();
+        String nativeQuery = "SELECT JOBS FROM BEACON_POLICY WHERE NAME = '" + policyName + "'";
+        Query query = entityManager.createNativeQuery(nativeQuery);
+        return (String) query.getSingleResult();
     }
 }

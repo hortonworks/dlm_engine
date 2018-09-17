@@ -23,12 +23,15 @@
 package com.hortonworks.beacon.test;
 
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.plugin.Plugin;
 import com.hortonworks.beacon.plugin.PluginInfo;
 import com.hortonworks.beacon.plugin.PluginStats;
+import com.hortonworks.beacon.plugin.ranger.BeaconRangerPluginImpl;
+import com.hortonworks.beacon.plugin.service.PluginAction;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -104,8 +107,8 @@ public class RangerPluginTest implements Plugin {
     }
 
     @Override
-    public boolean isEnabled(String cluster) throws BeaconException {
-        return true;
+    public List<PluginAction> getLineage(ReplicationPolicy policy) throws BeaconException {
+        return new BeaconRangerPluginImpl().getLineage(policy);
     }
 
     @Override

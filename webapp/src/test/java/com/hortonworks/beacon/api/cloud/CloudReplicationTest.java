@@ -29,6 +29,7 @@ import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.EncryptionAlgorithmType;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.job.JobStatus;
@@ -118,7 +119,57 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
     }
 
     @Test
-    public void testCloudToOnPremReplication() throws Exception {
+    public void pluginLineageForDefaultSetup() throws Exception {
+        CloudCred cloudCred = getCloudCred();
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName = testDataGenerator.getRandomString("PluginHDFSCloudPolicy");
+        String sourceDataSet = SOURCE_DIR + policyName;
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        ReplicationPolicy policy = testDataGenerator.getPolicy(policyName, sourceDataSet,
+                getCloudDataSet(), "FS", 60,
+                sourceCluster.getName(), null, cloudProps);
+        testDataGenerator.createFSMocks(sourceDataSet);
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        waitOnCondition(20000, "Get jobs for policy ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                String jobs = getJobs(policyName);
+                return jobs != null && jobs.equals("FS,END-NODE");
+            }
+        });
+        targetClient.deletePolicy(policyName, false);
+    }
+
+    @Test
+    public void pluginLineageTestWithPreserveMeta() throws Exception {
+        BeaconConfig.getInstance().getEngine().setPreserveMeta(true);
+        CloudCred cloudCred = getCloudCred();
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName = testDataGenerator.getRandomString("JobsHDFSCloudPolicy");
+        String sourceDataSet = SOURCE_DIR + policyName;
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        ReplicationPolicy policy = testDataGenerator.getPolicy(policyName, sourceDataSet,
+                getCloudDataSet(), "FS", 60,
+                sourceCluster.getName(), null, cloudProps);
+        testDataGenerator.createFSMocks(sourceDataSet);
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        waitOnCondition(20000, "Get jobs for policy ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                String jobs = getJobs(policyName);
+                return jobs != null && jobs.equals("RANGEREXPORT,ATLASEXPORT,FS,END-NODE");
+            }
+        });
+        targetClient.deletePolicy(policyName, false);
+        BeaconConfig.getInstance().getEngine().setPreserveMeta(false);
+    }
+
+    @Test
+    public void testHdfsS3EncryptionBasedPolicy() throws Exception {
         CloudCred cloudCred = getCloudCred();
         String cloudCredId = targetClient.submitCloudCred(cloudCred);
         assertNotNull(cloudCredId);
@@ -214,7 +265,32 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
     }
 
     @Test
-    public void testHiveCloudReplication() throws Exception {
+    public void s3HdfsPluginLineageTest() throws Exception {
+        CloudCred cloudCred = getCloudCred();
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName = testDataGenerator.getRandomString("LineageCloudHDFSPolicy");
+        String targetDataSet = SOURCE_DIR + policyName;
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        ReplicationPolicy policy = testDataGenerator.getPolicy(policyName,
+                getCloudDataSet(), targetDataSet, "FS", 60,
+                null, sourceCluster.getName(), cloudProps);
+        testDataGenerator.createFSMocks(getCloudDataSet());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        waitOnCondition(20000, "Get jobs for policy ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                String jobs = getJobs(policyName);
+                return jobs != null && jobs.equals("RANGERIMPORT,FS,END-NODE");
+            }
+        });
+        targetClient.deletePolicy(policyName, false);
+    }
+
+
+    @Test
+    public void testHiveS3ReplicationTest() throws Exception {
         CloudCred cloudCred = getCloudCred();
         String cloudCredId = targetClient.submitCloudCred(cloudCred);
         assertNotNull(cloudCredId);

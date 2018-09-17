@@ -22,8 +22,12 @@
 
 package com.hortonworks.beacon.plugin;
 
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.plugin.service.PluginAction;
 import org.apache.hadoop.fs.Path;
+
+import java.util.List;
 
 /**
  * A simple plugin provider interface for DLM.
@@ -119,11 +123,5 @@ public interface Plugin {
      */
     Status getStatus() throws BeaconException;
 
-    /**
-     * Determines if the plugin would be enabled.
-     * @param cluster
-     * @return true/false based on plugin service setup in cluster.
-     * @throws BeaconException
-     */
-    boolean isEnabled(String cluster) throws BeaconException;
+    List<PluginAction> getLineage(ReplicationPolicy policy) throws BeaconException;
 }

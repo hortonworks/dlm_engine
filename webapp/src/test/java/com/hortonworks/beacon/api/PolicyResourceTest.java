@@ -155,11 +155,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         waitOnCondition(20000, "Get jobs for policy ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
-                RequestContext.setInitialValue();
-                EntityManager entityManager = RequestContext.get().getEntityManager();
-                String nativeQuery = "SELECT JOBS FROM BEACON_POLICY WHERE NAME = '" + policyName + "'";
-                Query query = entityManager.createNativeQuery(nativeQuery);
-                String jobs = (String) query.getSingleResult();
+                String jobs = getJobs(policyName);
                 return jobs != null && jobs.equals("RANGEREXPORT,RANGERIMPORT,ATLASEXPORT,ATLASIMPORT,FS,END-NODE");
             }
         });

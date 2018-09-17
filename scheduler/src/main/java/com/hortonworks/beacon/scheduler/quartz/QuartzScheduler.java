@@ -139,6 +139,10 @@ public final class QuartzScheduler {
                 // It should delete all the jobs (given policy id) added to the scheduler.
                 for (int i = 0; i < numJobs; i++) {
                     JobKey key = new JobKey(name, String.valueOf(i));
+                    if (scheduler.getJobDetail(key) == null) {
+                        continue;
+                    }
+                    scheduler.pauseJob(key);
                     boolean deleteJob = scheduler.deleteJob(key);
                     LOG.info("Deleting job [key: {}, result: {}] from the scheduler.", key, deleteJob);
                     finalResult = finalResult && deleteJob;

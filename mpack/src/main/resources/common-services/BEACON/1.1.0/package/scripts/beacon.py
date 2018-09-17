@@ -225,26 +225,53 @@ def beacon(type, action = None, upgrade_type=None):
               beacon_service_user = ranger_api_functions.update_user_role(ranger_admin_url, params.beacon_user, "ROLE_USER", format("{ranger_admin_user}:{ranger_admin_passwd}"))
 
           if params.ranger_hive_plugin_enabled:
-            response_policy = ranger_api_functions.get_ranger_hive_default_policy(ranger_admin_url, params.service_name, format("{ranger_admin_user}:{ranger_admin_passwd}"))
+            # Get Ranger Hive default policy for resource database, table, column
+            response_policy = ranger_api_functions.get_ranger_service_default_policy(ranger_admin_url, params.service_name, format("{ranger_admin_user}:{ranger_admin_passwd}"), ['database', 'table', 'column'])
             if response_policy:
               user_present = ranger_api_functions.check_user_policy(response_policy, params.beacon_user)
               if not user_present and beacon_user_get is not None and beacon_user_get['name'] == params.beacon_user:
-                # Updating beacon_user in policy
+                # Updating beacon_user in Ranger Hive default policy for resource database, table, column
                 policy_id = response_policy['id']
                 beacon_user_policy_item = {'groups': [], 'conditions': [], 'users': [params.beacon_user], 'accesses': [{'isAllowed': True, 'type': 'all'}, {'isAllowed': True, 'type': 'repladmin'}], 'delegateAdmin': False}
                 policy_data = ranger_api_functions.update_policy_item(response_policy, beacon_user_policy_item)
                 update_policy_response = ranger_api_functions.update_policy(ranger_admin_url, policy_id, policy_data, format("{ranger_admin_user}:{ranger_admin_passwd}"))
 
-            response_policy = ranger_api_functions.get_ranger_hive_service_default_policy(ranger_admin_url, params.service_name, format("{ranger_admin_user}:{ranger_admin_passwd}"))
+            # Get Ranger Hive default policy for resource hiveservice
+            response_policy = ranger_api_functions.get_ranger_service_default_policy(ranger_admin_url, params.service_name, format("{ranger_admin_user}:{ranger_admin_passwd}"), ['hiveservice'])
             if response_policy:
               user_present = ranger_api_functions.check_user_policy(response_policy, params.beacon_user)
               if not user_present and beacon_user_get is not None and beacon_user_get['name'] == params.beacon_user:
-                # Updating beacon_user in policy
+                # Updating beacon_user in Ranger Hive default policy for resource hiveservice
                 policy_id = response_policy['id']
                 beacon_user_policy_item = {'groups': [], 'conditions': [], 'users': [params.beacon_user], 'accesses': [{'isAllowed': True, 'type': 'serviceadmin'}], 'delegateAdmin': False}
                 policy_data = ranger_api_functions.update_policy_item(response_policy, beacon_user_policy_item)
                 update_policy_response = ranger_api_functions.update_policy(ranger_admin_url, policy_id, policy_data, format("{ranger_admin_user}:{ranger_admin_passwd}"))
 
+          if params.ranger_atlas_plugin_enabled:
+            # Creating beacon.atlas.user with role "ROLE_USER"
+            beacon_atlas_user_response = ranger_api_functions.get_user(ranger_admin_url, params.beacon_atlas_user, format("{ranger_admin_user}:{ranger_admin_passwd}"))
+            if beacon_atlas_user_response is not None and beacon_atlas_user_response['name'] == params.beacon_atlas_user:
+              beacon_atlas_user_role = beacon_atlas_user_response['userRoleList'][0]
+              Logger.info(format("Beacon Atlas User with username {beacon_atlas_user} exists with role {beacon_atlas_user_role}"))
+            else:
+              beacon_atlas_user_create_response_code = ranger_api_functions.create_user(ranger_admin_url, params.beacon_atlas_user, params.beacon_atlas_password, "ROLE_USER", format("{ranger_admin_user}:{ranger_admin_passwd}"))
+
+            # Get Ranger Atlas default policy for ENTITY resource
+            atlas_policy_response = ranger_api_functions.get_ranger_service_default_policy(ranger_admin_url, params.ranger_atlas_service_name, format("{ranger_admin_user}:{ranger_admin_passwd}"), ['entity'])
+
+            if params.security_enabled:
+              get_beacon_atlas_user = params.beacon_user
+            else:
+              get_beacon_atlas_user = params.beacon_atlas_user
+
+            if atlas_policy_response:
+              beacon_atlas_user_present = ranger_api_functions.check_user_policy(atlas_policy_response, get_beacon_atlas_user)
+              if not beacon_atlas_user_present:
+                # Updating beacon atlas user in Ranger Atlas default policy for entity resource
+                atlas_policy_id = atlas_policy_response['id']
+                beacon_atlas_user_policy_item = {'groups': [], 'conditions': [], 'users': [get_beacon_atlas_user], 'accesses': [{'type': 'read', 'isAllowed': True}, {'type': 'create', 'isAllowed': True}, {'type': 'update', 'isAllowed': True}, {'type':'delete', 'isAllowed': True}, {'type':'all', 'isAllowed': True}]}
+                atlas_policy_data = ranger_api_functions.update_policy_item(atlas_policy_response, beacon_atlas_user_policy_item)
+                atlas_update_policy_response = ranger_api_functions.update_policy(ranger_admin_url, atlas_policy_id, atlas_policy_data, format("{ranger_admin_user}:{ranger_admin_passwd}"))
       except:
         show_logs(params.beacon_log_dir, params.beacon_user)
         raise

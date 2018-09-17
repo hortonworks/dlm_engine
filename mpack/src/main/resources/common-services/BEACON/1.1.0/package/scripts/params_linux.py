@@ -201,16 +201,20 @@ HdfsResource = functools.partial(
 
 beacon_security_site = dict(config['configurations']['beacon-security-site'])
 beacon_ranger_user = beacon_security_site['beacon.ranger.user']
+beacon_atlas_password = ""
 if credential_store_enabled:
   if 'hadoop.security.credential.provider.path' in beacon_security_site:
     cs_lib_path = beacon_security_site['credentialStoreClassPath']
     alias = 'beacon.ranger.password'
     provider_path = beacon_security_site['hadoop.security.credential.provider.path']
     beacon_ranger_password = get_password_from_credential_store(alias, provider_path, cs_lib_path, java_home, jdk_location)
+    beacon_atlas_password_alias = 'beacon.atlas.password'
+    beacon_atlas_password = get_password_from_credential_store(beacon_atlas_password_alias, provider_path, cs_lib_path, java_home, jdk_location)
   else:
     raise Exception("hadoop.security.credential.provider.path property not found in beacon-security-site config-type")
 else:
-  beacon_ranger_password = beacon_security_site['beacon_store_password']
+  beacon_ranger_password = beacon_security_site['beacon.ranger.password']
+  beacon_atlas_password = default("/configurations/beacon-security-site/beacon.atlas.password", "")
 
 ranger_admin_hosts = default("/clusterHostInfo/ranger_admin_hosts", [])
 has_ranger_admin = not len(ranger_admin_hosts) == 0
@@ -230,3 +234,13 @@ jdk_location = config['hostLevelParams']['jdk_location']
 jdbc_jar_name = default("/hostLevelParams/custom_mysql_jdbc_name", None)
 driver_source = format("{jdk_location}/{jdbc_jar_name}")
 mysql_driver_target = os.path.join(beacon_webapp_dir, "beacon/WEB-INF/lib/mysql-connector-java.jar")
+
+ranger_atlas_plugin_enabled = False
+if not is_empty(config['configurations']['ranger-atlas-plugin-properties']['ranger-atlas-plugin-enabled']):
+  ranger_atlas_plugin_enabled = config['configurations']['ranger-atlas-plugin-properties']['ranger-atlas-plugin-enabled'].lower() == 'yes'
+
+beacon_atlas_user = default("/configurations/beacon-security-site/beacon.atlas.user", "beacon_atlas")
+ranger_atlas_service_name = str(config['clusterName']) + '_atlas'
+ranger_atlas_service_value = config['configurations']['ranger-atlas-security']['ranger.plugin.atlas.service.name']
+if not is_empty(ranger_atlas_service_value) and ranger_atlas_service_value != "{{repo_name}}":
+  ranger_atlas_service_name = ranger_atlas_service_value

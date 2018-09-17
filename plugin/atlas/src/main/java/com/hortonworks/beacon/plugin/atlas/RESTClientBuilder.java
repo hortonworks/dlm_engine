@@ -46,6 +46,7 @@ import java.io.IOException;
 public class RESTClientBuilder {
     private static final Logger LOG = LoggerFactory.getLogger(RESTClientBuilder.class);
 
+    private static final String KNOX_SERVICE_ATLAS_API = "atlas";
     private static final String KNOX_HDP_COOKIE_NAME = "hadoop-jwt";
 
     private static final String BEACON_KERBEROS_AUTH_ENABLED = "beacon.kerberos.authentication.enabled";
@@ -64,10 +65,11 @@ public class RESTClientBuilder {
     private String password;
     private UserGroupInformation userGroupInformation;
     private Cookie hdpCookie;
-    private String knoxBaseUrl;
+    private String knoxGatewayUrlForProxy;
 
     protected String incomingUrl;
     protected String[] baseUrls;
+
 
     enum AuthStrategy {
         USER_NAME_PASSWORD,
@@ -150,20 +152,20 @@ public class RESTClientBuilder {
         return this;
     }
 
-    RESTClientBuilder knoxBaseUrl(String url) {
-        this.knoxBaseUrl = url;
+    RESTClientBuilder knoxGatewayUrl(String url) {
+        this.knoxGatewayUrlForProxy = url;
         return this;
     }
 
-    private String getSSOToken(String knoxBaseURL) throws BeaconException {
+    private String getSSOToken(String knoxGatewayURL) throws BeaconException {
         if (!BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled()) {
             return null;
         }
 
         try {
-            return KnoxTokenUtils.getKnoxSSOToken(knoxBaseURL);
+            return KnoxTokenUtils.getKnoxSSOToken(knoxGatewayURL);
         } catch (Exception e) {
-            LOG.error("Unable to get knox sso token from {} : {} . Cause: {}", knoxBaseURL, e.getMessage(), e);
+            LOG.error("Unable to get knox sso token from {} : {} . Cause: {}", knoxGatewayURL, e.getMessage(), e);
             throw new BeaconException(e);
         }
     }
@@ -178,9 +180,12 @@ public class RESTClientBuilder {
             AtlasClientV2 clientV2;
             switch (authStrategy) {
                 case KNOX:
-                    this.hdpCookie = new Cookie(KNOX_HDP_COOKIE_NAME, getSSOToken(knoxBaseUrl));
-                    LOG.info("BeaconAtlasPlugin: authStrategy: {} : knox hdpCookie: {}", authStrategy, hdpCookie);
-                    clientV2 = new AtlasClientV2(baseUrls, this.hdpCookie);
+                    String[] proxiedUrls = getProxiedUrls(baseUrls);
+                    this.hdpCookie = new Cookie(KNOX_HDP_COOKIE_NAME, getSSOToken(knoxGatewayUrlForProxy));
+                    LOG.info("BeaconAtlasPlugin: authStrategy: {} : knox hdpCookie: {}: proxiedUrls: {}",
+                            authStrategy, hdpCookie, proxiedUrls);
+
+                    clientV2 = new AtlasClientV2(proxiedUrls, this.hdpCookie);
                     return new AtlasRESTClient(clientV2);
 
                 case KERBEROS:
@@ -206,6 +211,15 @@ public class RESTClientBuilder {
             LOG.error("Unable to create RESTClient: {}", authStrategy, ex);
             throw new AtlasRestClientException("AtlasRESTClient: Error fetching configuration", ex);
         }
+    }
+
+    private String[] getProxiedUrls(String[] urls) {
+        String[] proxiedUrls = new String[urls.length];
+        for (int i = 0; i < urls.length; i++) {
+            proxiedUrls[i] = KnoxTokenUtils.getKnoxProxiedURL(knoxGatewayUrlForProxy, KNOX_SERVICE_ATLAS_API);
+        }
+
+        return proxiedUrls;
     }
 
     private String getPassword() throws AtlasException {

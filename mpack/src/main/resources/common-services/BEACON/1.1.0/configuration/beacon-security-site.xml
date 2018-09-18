@@ -134,4 +134,22 @@
       <type>boolean</type>
     </value-attributes>
   </property>
+
+  <property>
+    <name>beacon.atlas.user</name>
+    <value>admin</value>
+    <description>Atlas beacon user</description>
+  </property>
+  <property>
+    <name>beacon.atlas.password</name>
+    <property-type>PASSWORD</property-type>
+    <value>admin</value>
+    <description>Atlas beacon user password</description>
+    <value-attributes>
+      <type>password</type>
+      <overridable>false</overridable>
+      <keystore>true</keystore>
+    </value-attributes>
+  </property>
+
 </configuration>

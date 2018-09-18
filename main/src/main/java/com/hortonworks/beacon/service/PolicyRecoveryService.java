@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.service;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.PolicyResource;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
@@ -70,11 +71,16 @@ public class PolicyRecoveryService implements Callable<Void>, BeaconService {
     }
 
     private void policyRecovery() throws BeaconException {
-        PolicyExecutor executor = new PolicyExecutor(new PolicyBean());
-        List<PolicyBean> policies = executor.getPolicies(PolicyQuery.GET_POLICY_RECOVERY);
-        if (policies != null && policies.size() != 0) {
-            LOG.info("policies [{}] found for recovery with status [SUBMITTED].", policies.size());
-            schedulePolicies(policies);
+        try {
+            RequestContext.setInitialValue();
+            PolicyExecutor executor = new PolicyExecutor(new PolicyBean());
+            List<PolicyBean> policies = executor.getPolicies(PolicyQuery.GET_POLICY_RECOVERY);
+            if (policies != null && policies.size() != 0) {
+                LOG.info("policies [{}] found for recovery with status [SUBMITTED].", policies.size());
+                schedulePolicies(policies);
+            }
+        } finally {
+            RequestContext.get().clear();
         }
     }
 

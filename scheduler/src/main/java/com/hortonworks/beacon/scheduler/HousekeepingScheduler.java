@@ -22,11 +22,12 @@
 
 package com.hortonworks.beacon.scheduler;
 
-import com.hortonworks.beacon.RequestContext;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hortonworks.beacon.config.BeaconConfig;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -40,7 +41,10 @@ public final class HousekeepingScheduler {
     private static final Logger LOG = LoggerFactory.getLogger(HousekeepingScheduler.class);
 
     private static int housekeepingThreads = BeaconConfig.getInstance().getScheduler().getHousekeepingThreads();
-    private static ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(housekeepingThreads);
+    private static ThreadFactory namedThreadFactory =
+            new ThreadFactoryBuilder().setNameFormat("Housekeeping-thread-%d").build();
+    private static ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(housekeepingThreads,
+            namedThreadFactory);
 
     private HousekeepingScheduler() {
     }
@@ -51,12 +55,10 @@ public final class HousekeepingScheduler {
             @Override
             public void run() {
                 try {
-                    RequestContext.setInitialValue();
+                    LOG.info("Starting thread execution for {}", callable.getClass().getName());
                     callable.call();
                 } catch (Exception e) {
                     LOG.error("Exception while execution {}", callable.getClass().getName(), e);
-                } finally {
-                    RequestContext.get().clear();
                 }
             }
         };

@@ -76,6 +76,7 @@ public final class StoreCleanupService implements Callable<Void>, BeaconService 
         cleanupDate = new Date(System.currentTimeMillis() - BeaconConstants.DAY_IN_MS * retiredOlderThan);
         try {
             LOG.info("StoreCleanupService execution started with cleanupDate: [{}].", DateUtil.formatDate(cleanupDate));
+            RequestContext.setInitialValue();
             List<String> allPolicyIdsToBeArchived = getAllPolicyIdsToBeArchived();
             if (allPolicyIdsToBeArchived.size() == 0) {
                 return null;

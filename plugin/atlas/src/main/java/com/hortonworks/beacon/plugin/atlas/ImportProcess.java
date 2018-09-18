@@ -57,8 +57,7 @@ public class ImportProcess extends AtlasProcess {
                 return exportedDataPath;
             }
 
-            LOG.info("BeaconAtlasPlugin: AtlasProcess: ==> ImportProcess.run: Starting {} ...",
-                    exportedDataPath.getName());
+            LOG.info("BeaconAtlasPlugin: AtlasProcess: ==> ImportProcess.run: Starting {} ...", exportedDataPath);
 
             importFile(exportedDataPath, dataset.getSourceCluster(), dataset.getTargetCluster());
 

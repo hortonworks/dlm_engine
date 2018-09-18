@@ -58,16 +58,16 @@ public class ExportProcess extends AtlasProcess {
         Path exportPath = null;
         try {
             FileSystem fs = FileSystemUtils.getFs(stagingDir.toString());
-            String fsUri = fs.getUri().toString();
+            String sourceFsUri = dataset.getSourceCluster().getFsEndpoint();
 
             Cluster sourceCluster = dataset.getSourceCluster();
             AtlasExportRequest exportRequest;
-            String entityGuid = checkHiveEntityExists(sourceCluster, dataset, fsUri);
+            String entityGuid = checkHiveEntityExists(sourceCluster, dataset, sourceFsUri);
             if (dataset.getType() == DataSet.DataSetType.HIVE && StringUtils.isEmpty(entityGuid)) {
                 return null;
             }
 
-            exportRequest = ExportRequestProvider.create(this, dataset, entityGuid, fsUri);
+            exportRequest = ExportRequestProvider.create(this, dataset, entityGuid, sourceFsUri);
 
             String exportFileName = getExportFileName(sourceCluster, getCurrentTimestamp());
 

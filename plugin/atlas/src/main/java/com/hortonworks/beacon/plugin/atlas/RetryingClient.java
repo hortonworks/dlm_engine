@@ -37,11 +37,11 @@ public class RetryingClient {
     private static final String ERROR_MESSAGE_NO_ENTITIES = "no entities to create/update";
     private static final String ERROR_MESSAGE_IN_PROGRESS = "import or export is in progress";
 
-    private static final int MAX_RETY_COUNT = 5;
-    private static final long PAUSE_DURATION_INCREMENT_IN_MINUTES = 5 * 60 * 1000; // 5 min
+    private static final int MAX_RETY_COUNT = 10;
+    private static final long PAUSE_DURATION_INCREMENT_IN_MINUTES = 2 * 60 * 1000;
 
     protected <T> T invokeWithRetry(Callable<T> func, T defaultReturnValue) throws BeaconException {
-        for (int currentRetryCount = 0; currentRetryCount < MAX_RETY_COUNT; currentRetryCount++) {
+        for (int currentRetryCount = 1; currentRetryCount <= MAX_RETY_COUNT; currentRetryCount++) {
             try {
                 debugLog("retrying method: {}", func.getClass().getName(), null);
                 return func.call();
@@ -77,7 +77,9 @@ public class RetryingClient {
 
         if (StringUtils.contains(e.getMessage(), ERROR_MESSAGE_IN_PROGRESS)) {
             try {
-                Thread.sleep(PAUSE_DURATION_INCREMENT_IN_MINUTES * currentRetryCount);
+                long pauseDuration = PAUSE_DURATION_INCREMENT_IN_MINUTES * currentRetryCount;
+                LOG.info("BeaconAtlasPlugin: In-progress operation detected. Will pause for: {} ms", pauseDuration);
+                Thread.sleep(pauseDuration);
             } catch (InterruptedException intEx) {
                 LOG.error("pause wait interrupted!", intEx);
                 throw new BeaconException(intEx);

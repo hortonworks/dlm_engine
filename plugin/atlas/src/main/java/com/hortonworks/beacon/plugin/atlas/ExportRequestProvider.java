@@ -173,7 +173,7 @@ final class ExportRequestProvider {
     }
 
     static String getPathWithTrailingPathSeparator(String fsUri, String path) {
-        String fsUriPath = fsUri.concat(path);
+        String fsUriPath = StringUtils.isEmpty(fsUri) ? path : fsUri.concat(path);
         if (!StringUtils.endsWith(fsUriPath, PATH_FILE_SEPARATOR)) {
             return fsUriPath.concat(PATH_FILE_SEPARATOR);
         }

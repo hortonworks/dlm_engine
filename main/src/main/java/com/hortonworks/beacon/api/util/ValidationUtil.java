@@ -24,7 +24,6 @@
 package com.hortonworks.beacon.api.util;
 
 import com.hortonworks.beacon.Destination;
-import com.hortonworks.beacon.entity.util.EncryptionZoneListing;
 import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.CloudCred;
@@ -45,6 +44,7 @@ import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.CloudCredDao;
 import com.hortonworks.beacon.entity.util.ClusterDao;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.EncryptionZoneListing;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
@@ -173,7 +173,7 @@ public final class ValidationUtil {
 
     public static void validatePolicyOnUpdate(ReplicationPolicy replicationPolicy,
                                           PropertiesIgnoreCase properties) throws BeaconException {
-        ValidationUtil.isFSRequestAllowed(replicationPolicy);
+        isRequestAllowed(replicationPolicy);
         ValidationUtil.validatePolicyPropsUpdateAllowed(properties);
         validatePolicyFields(replicationPolicy, properties);
     }
@@ -261,8 +261,7 @@ public final class ValidationUtil {
             dataset = existingPolicy.getTargetDataset();
             DataSet tgtDataSet = FSDataSet.create(dataset, existingPolicy.getTargetCluster(), existingPolicy);
             boolean isTargetEncrypted = isTDEEnabled(targetCluster, dataset, existingPolicy);
-            boolean targetSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(targetCluster.getName(), FSUtils
-                    .getStagingUri(targetCluster.getFsEndpoint(), dataset));
+            boolean targetSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(targetCluster.getName(), dataset);
             if (!isTargetEncrypted && sourceSnapshottable && !targetSnapshottable) {
                 FSSnapshotUtils.allowSnapshot(targetCluster, tgtDataSet);
             }
@@ -323,7 +322,7 @@ public final class ValidationUtil {
 
         if (localClusterName.equalsIgnoreCase(sourceClusterName)
                 && !PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())) {
-            throw BeaconWebException.newAPIException(
+            throw new BeaconException(
                     "This operation is not allowed on source cluster: {}. Try it on target cluster: {}",
                     sourceClusterName, targetClusterName);
         }
@@ -335,13 +334,13 @@ public final class ValidationUtil {
         String localClusterName = ClusterHelper.getLocalCluster().getName();
 
         if (!isDataLake(policy) && localClusterName.equalsIgnoreCase(sourceClusterName)) {
-            throw BeaconWebException.newAPIException(
+            throw new BeaconException(
                     "This operation is not allowed on source cluster: {}. Try it on target cluster: {}",
                     sourceClusterName, targetClusterName);
         }
 
         if (isDataLake(policy) && localClusterName.equalsIgnoreCase(targetClusterName)) {
-            throw BeaconWebException.newAPIException(
+            throw new BeaconException(
                     "This operation is not allowed on target cluster: {}. Try it on source cluster: {}",
                     targetClusterName, sourceClusterName);
         }
@@ -735,17 +734,18 @@ public final class ValidationUtil {
     }
 
     private static void updateListingCache(ReplicationPolicy policy) throws BeaconException {
-        if (!PolicyHelper.isDatasetHCFS(policy.getSourceDataset())) {
-            Cluster sourceCluster = clusterDao.getActiveCluster(policy.getSourceCluster());
-            SnapshotListing.get().updateListing(sourceCluster.getName(), sourceCluster.getFsEndpoint(), Path.SEPARATOR);
-            EncryptionZoneListing.get().updateListing(sourceCluster.getName(), sourceCluster.getFsEndpoint(),
-                    Path.SEPARATOR);
-        }
-        if (!PolicyHelper.isDatasetHCFS(policy.getTargetDataset())) {
-            Cluster targetCluster = clusterDao.getActiveCluster(policy.getTargetCluster());
-            SnapshotListing.get().updateListing(targetCluster.getName(), targetCluster.getFsEndpoint(), Path.SEPARATOR);
-            EncryptionZoneListing.get().updateListing(targetCluster.getName(), targetCluster.getFsEndpoint(),
-                    Path.SEPARATOR);
+        updateListingCache(policy.getSourceCluster());
+        updateListingCache(policy.getTargetCluster());
+    }
+
+    private static void updateListingCache(String clusterName) throws BeaconException {
+        if (StringUtils.isNotEmpty(clusterName)) {
+            Cluster cluster = clusterDao.getActiveCluster(clusterName);
+            if (StringUtils.isNotEmpty(cluster.getFsEndpoint())) {
+                SnapshotListing.get().updateListing(clusterName, cluster.getFsEndpoint(), Path.SEPARATOR);
+                EncryptionZoneListing.get().updateListing(clusterName, cluster.getFsEndpoint(),
+                        Path.SEPARATOR);
+            }
         }
     }
 }

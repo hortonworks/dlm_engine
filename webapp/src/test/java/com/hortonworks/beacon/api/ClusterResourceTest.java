@@ -27,6 +27,7 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.PeerInfo;
 import com.hortonworks.beacon.client.resource.ClusterList;
+import com.hortonworks.beacon.client.result.FileListResult;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.util.ClusterStatus;
@@ -44,6 +45,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 /**
@@ -70,6 +72,16 @@ public class ClusterResourceTest extends ResourceBaseTest {
         assertTrue(expected);
     }
 
+    @Test
+    public void testMinimalCluster() throws Exception {
+        Cluster cluster = testDataGenerator.getCluster(ClusterType.TARGET, true);
+        cluster.setFsEndpoint(null);
+        targetClient.submitCluster(cluster.getName(), cluster.asProperties());
+        FileListResult files = targetClient.listFiles("/");
+        assertNull(files.fileList);
+        deleteClusters(cluster.getName());
+    }
+
     @Test(dependsOnMethods = "testSubmitClusterInvalidLocal")
     public void testSubmitClusterInvalidRemoteAndPairFail() throws Exception {
         targetCluster = testDataGenerator.getCluster(ClusterType.TARGET, true);
@@ -88,8 +100,7 @@ public class ClusterResourceTest extends ResourceBaseTest {
             }
         }
         assertTrue(expected);
-        targetClient.deleteCluster(sourceCluster.getName());
-        targetClient.deleteCluster(targetCluster.getName());
+        deleteClusters();
         reset(fileSystem);
     }
 
@@ -217,7 +228,12 @@ public class ClusterResourceTest extends ResourceBaseTest {
     }
 
     private void deleteClusters() throws BeaconClientException {
-        targetClient.deleteCluster(sourceCluster.getName());
-        targetClient.deleteCluster(targetCluster.getName());
+        deleteClusters(sourceCluster.getName(), targetCluster.getName());
+    }
+
+    private void deleteClusters(String... clusterNames) throws BeaconClientException {
+        for (String cluster : clusterNames) {
+            targetClient.deleteCluster(cluster);
+        }
     }
 }

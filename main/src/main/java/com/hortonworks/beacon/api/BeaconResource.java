@@ -34,6 +34,7 @@ import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.FileListResult;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -205,7 +206,7 @@ public class BeaconResource extends AbstractResourceManager {
         }
     }
 
-    private FileListResult listFiles(Cluster cluster, String path, String filter) throws BeaconException {
+    private FileListResult listFiles(BeaconCluster cluster, String path, String filter) throws BeaconException {
         try {
             return datasetListing.listFiles(cluster, path, filter);
         } catch (Exception e) {

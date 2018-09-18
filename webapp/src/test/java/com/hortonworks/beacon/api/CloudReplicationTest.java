@@ -64,22 +64,27 @@ public class CloudReplicationTest extends ResourceBaseTest {
         sourceFs = testDataGenerator.getFileSystem(ClusterType.SOURCE);
         targetFs = testDataGenerator.getFileSystem(ClusterType.TARGET);
         sourceCluster = testDataGenerator.getCluster(ClusterType.SOURCE, true);
+
         targetClient.submitCluster(sourceCluster.getName(), sourceCluster.asProperties());
         targetCluster = testDataGenerator.getCluster(ClusterType.TARGET, false);
-        Properties customProps = getPropertiesTargetHiveCloudCluster();
-        targetCluster.setCustomProperties(customProps);
+        targetCluster = prepareTargetForCloudReplication(targetCluster);
         targetClient.submitCluster(targetCluster.getName(), targetCluster.asProperties());
+
         targetClient.pairClusters(targetCluster.getName(), true);
     }
 
-    private Properties getPropertiesTargetHiveCloudCluster() {
-        Properties customProps = new Properties();
+    private Cluster prepareTargetForCloudReplication(Cluster cluster) {
+        //Test with target cluster without HDFS
+        cluster.setFsEndpoint(null);
+
+        //Target cluster with warehouse on cloud storage
+        Properties customProps = cluster.getCustomProperties();
         customProps.setProperty("hive.metastore.warehouse.dir",
-                testDataGenerator.getRandomString("s3://dummy/warehouse"));
+                testDataGenerator.getRandomString("s3a://dummy/warehouse"));
         customProps.setProperty("hive.metastore.uris", "jdbc:hive2://local-" + ClusterType.TARGET);
         customProps.setProperty("hive.warehouse.subdir.inherit.perms", "false");
-        customProps.setProperty("hive.repl.replica.functions.root.dir", "s3://dummy/warehouse-root");
-        return customProps;
+        customProps.setProperty("hive.repl.replica.functions.root.dir", "s3a://dummy/warehouse-root");
+        return cluster;
     }
 
     @Test

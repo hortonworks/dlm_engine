@@ -167,7 +167,7 @@ public class ClusterResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     @Timed(absolute = true, name="api.beacon.cluster.definition")
     public Cluster definition(@PathParam("cluster-name") String clusterName) {
-        return getClusterDefinition(clusterName);
+        return new Cluster(getClusterDefinition(clusterName));
     }
 
     @DELETE
@@ -271,7 +271,7 @@ public class ClusterResource extends AbstractResourceManager {
         return new StatusResult(clusterName, Entity.EntityStatus.SUBMITTED.name());
     }
 
-    private Cluster getClusterDefinition(String entityName) {
+    private BeaconCluster getClusterDefinition(String entityName) {
         try {
             return clusterDao.getActiveCluster(entityName);
         } catch (NoSuchElementException e) {

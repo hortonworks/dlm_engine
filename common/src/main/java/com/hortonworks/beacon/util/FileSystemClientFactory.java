@@ -64,7 +64,7 @@ public final class FileSystemClientFactory {
      *          if the filesystem could not be created.
      */
     public FileSystem createFileSystem(final Configuration conf) throws BeaconException {
-        Validate.notNull(conf, "configuration cannot be null or empty");
+        Validate.notNull(conf, "configuration cannot be null");
 
         if (fileSystem != null) {   //used for testing
             return fileSystem;

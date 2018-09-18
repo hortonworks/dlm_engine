@@ -27,6 +27,7 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.PeerInfo;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.ClusterBean;
@@ -84,7 +85,7 @@ public final class ClusterDao {
         return bean;
     }
 
-    private Cluster getCluster(ClusterBean bean) {
+    private BeaconCluster getCluster(ClusterBean bean) {
         Cluster cluster = new Cluster();
         cluster.setName(bean.getName());
         cluster.setVersion(bean.getVersion());
@@ -131,10 +132,10 @@ public final class ClusterDao {
         }
         cluster.setPeers(peers);
         cluster.setPeersInfo(peersInfo);
-        return cluster;
+        return new BeaconCluster(cluster);
     }
 
-    public Cluster getActiveCluster(String clusterName) throws BeaconStoreException {
+    public BeaconCluster getActiveCluster(String clusterName) throws BeaconStoreException {
         ClusterBean bean = new ClusterBean(clusterName);
         ClusterExecutor executor = new ClusterExecutor(bean);
         ClusterBean clusterBean = executor.getActiveCluster();
@@ -279,7 +280,7 @@ public final class ClusterDao {
         executor.pairCluster();
     }
 
-    Cluster getLocalCluster() throws BeaconException {
+    BeaconCluster getLocalCluster() throws BeaconException {
         ClusterBean bean = new ClusterBean();
         bean.setLocal(true);
         ClusterExecutor executor = new ClusterExecutor(bean);

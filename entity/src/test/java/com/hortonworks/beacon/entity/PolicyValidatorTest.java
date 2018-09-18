@@ -67,7 +67,7 @@ public class PolicyValidatorTest{
     public void methodSetup() throws BeaconException, IOException, URISyntaxException {
         PowerMockito.mockStatic(ClusterHelper.class);
         PowerMockito.mockStatic(FSUtils.class);
-        Cluster cluster = new Cluster();
+        BeaconCluster cluster = new BeaconCluster(new Cluster());
         cluster.setName(PolicyBuilderTestUtil.LOCAL_CLUSTER);
         PowerMockito.when(ClusterHelper.getLocalCluster()).thenReturn(cluster);
         PowerMockito.when(ClusterHelper.getActiveCluster(cluster.getName())).thenReturn(cluster);

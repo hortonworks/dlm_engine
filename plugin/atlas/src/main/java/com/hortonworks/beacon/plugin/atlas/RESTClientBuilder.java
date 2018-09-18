@@ -30,6 +30,7 @@ import org.apache.atlas.ApplicationProperties;
 import org.apache.atlas.AtlasClientV2;
 import org.apache.atlas.AtlasException;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationConverter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
@@ -39,6 +40,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Cookie;
 import java.io.IOException;
+import java.util.Properties;
+
+import static org.apache.atlas.security.SecurityProperties.CERT_STORES_CREDENTIAL_PROVIDER_PATH;
+import static org.apache.atlas.security.SecurityProperties.KEYSTORE_FILE_KEY;
+import static org.apache.atlas.security.SecurityProperties.KEYSTORE_PASSWORD_KEY;
+import static org.apache.atlas.security.SecurityProperties.TLS_ENABLED;
 
 /**
  * MockClientBuilder for AtlasRESTClient.
@@ -47,6 +54,12 @@ public class RESTClientBuilder {
     private static final Logger LOG = LoggerFactory.getLogger(RESTClientBuilder.class);
 
     private static final String KNOX_SERVICE_ATLAS_API = "atlas";
+    private static final String ATLAS_PROPERTY_READ_TIMEOUT_IN_MS = "atlas.client.readTimeoutMSecs";
+    private static final String ATLAS_PROPERTY_CONNECT_TIMEOUT_IN_MS = "atlas.client.connectTimeoutMSecs";
+    private static final String ATLAS_PROPERTY_REST_ADDRESS = "atlas.rest.address";
+    private static final String ATLAS_PROPERTY_AUTH_KERBEROS = "atlas.authentication.method.kerberos";
+    private static final String ATLAS_PROPERTY_TIME_OUT_DEFAULT = "60000";
+
     private static final String KNOX_HDP_COOKIE_NAME = "hadoop-jwt";
 
     private static final String BEACON_KERBEROS_AUTH_ENABLED = "beacon.kerberos.authentication.enabled";
@@ -60,6 +73,7 @@ public class RESTClientBuilder {
     private static final String ATLAS_CLIENT_USER_PASSWORD_KEY = "beacon.atlas.password";
 
     private static final String URL_SEPERATOR = ",";
+    private static final PropertiesUtil AUTHCONFIG = PropertiesUtil.getInstance();
 
     private AuthStrategy authStrategy;
     private String userId;
@@ -70,7 +84,6 @@ public class RESTClientBuilder {
 
     protected String incomingUrl;
     protected String[] baseUrls;
-
 
     enum AuthStrategy {
         USER_NAME_PASSWORD,
@@ -178,6 +191,7 @@ public class RESTClientBuilder {
             }
 
             setAuthStrategy();
+            initializeAtlasApplicationProperties();
             AtlasClientV2 clientV2;
             switch (authStrategy) {
                 case KNOX:
@@ -223,6 +237,46 @@ public class RESTClientBuilder {
         return proxiedUrls;
     }
 
+    private void initializeAtlasApplicationProperties() throws AtlasException, BeaconException {
+        ApplicationProperties.set(getClientProperties());
+    }
+
+    public Configuration getClientProperties() throws BeaconException {
+
+        Configuration config = null;
+        try {
+
+            Properties props = new Properties();
+            props.setProperty(ATLAS_PROPERTY_READ_TIMEOUT_IN_MS, ATLAS_PROPERTY_TIME_OUT_DEFAULT);
+            props.setProperty(ATLAS_PROPERTY_CONNECT_TIMEOUT_IN_MS, ATLAS_PROPERTY_TIME_OUT_DEFAULT);
+            props.setProperty(KEYSTORE_FILE_KEY,  BeaconConfig.getInstance().getEngine().getTrustStore());
+            props.setProperty(KEYSTORE_PASSWORD_KEY, BeaconConfig.getInstance().getEngine().getKeyPassword());
+
+            if (AUTHCONFIG.getProperty(CERT_STORES_CREDENTIAL_PROVIDER_PATH) != null) {
+                props.setProperty(CERT_STORES_CREDENTIAL_PROVIDER_PATH,
+                        AUTHCONFIG.getProperty(CERT_STORES_CREDENTIAL_PROVIDER_PATH));
+            }
+
+            props.setProperty(ATLAS_PROPERTY_REST_ADDRESS, incomingUrl);
+            props.setProperty(ATLAS_PROPERTY_AUTH_KERBEROS,
+                    (this.authStrategy == AuthStrategy.KERBEROS)
+                            ? "true"
+                            : "false");
+
+            if (AUTHCONFIG.getProperty(TLS_ENABLED) != null) {
+                props.setProperty(TLS_ENABLED, AUTHCONFIG.getProperty(TLS_ENABLED));
+            }
+
+            config = ConfigurationConverter.getConfiguration(props);
+
+        } catch (Exception e) {
+            LOG.error("BeaconAtlasPlugin: Exception while loading configuration.", e);
+            throw new BeaconException("BeaconAtlasPlugin: Exception while loading configuration.", e);
+        }
+
+        return config;
+    }
+
     private String getPassword() throws AtlasException {
         return getDefaultConfiguration().getString(ATLAS_CLIENT_USER_NAME_KEY, ATLAS_CLIENT_DEFAULT_USER);
     }
@@ -230,7 +284,6 @@ public class RESTClientBuilder {
     private String getUserName() throws AtlasException {
         return getDefaultConfiguration().getString(ATLAS_CLIENT_USER_PASSWORD_KEY, ATLAS_CLIENT_DEFAULT_PASSWORD);
     }
-
 
     private Configuration getDefaultConfiguration() throws AtlasException {
         try {

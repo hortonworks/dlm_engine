@@ -46,10 +46,8 @@ import com.hortonworks.beacon.metrics.Progress;
 import com.hortonworks.beacon.metrics.ProgressUnit;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
-import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.HiveActionType;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.mapreduce.Job;
@@ -123,11 +121,14 @@ public abstract class InstanceReplication implements BeaconJob {
 
     protected void initializeFileSystem() throws BeaconException {
         String sourceClusterName = properties.getProperty(FSDRProperties.SOURCE_CLUSTER_NAME.getName());
+        sourceFs = getFileSystem(sourceClusterName);
+
         String targetClusterName = properties.getProperty(FSDRProperties.TARGET_CLUSTER_NAME.getName());
-        Configuration sourceConf = ClusterHelper.getHAConfigurationOrDefault(sourceClusterName);
-        Configuration targetConf = ClusterHelper.getHAConfigurationOrDefault(targetClusterName);
-        sourceFs = FSUtils.getFileSystem(properties.getProperty(FSDRProperties.SOURCE_NN.getName()), sourceConf);
-        targetFs = FSUtils.getFileSystem(properties.getProperty(FSDRProperties.TARGET_NN.getName()), targetConf);
+        targetFs = getFileSystem(targetClusterName);
+    }
+
+    private FileSystem getFileSystem(String clusterName) throws BeaconException {
+        return new BeaconCluster(clusterName).getFileSystem();
     }
 
     protected void initializeCustomProperties() {
@@ -286,7 +287,9 @@ public abstract class InstanceReplication implements BeaconJob {
         if (ClusterHelper.isHiveEnabled(targetCluster.getHsEndpoint())) {
             properties.setProperty(HiveDRProperties.TARGET_HS2_URI.getName(), targetCluster.getHsEndpoint());
         }
-        properties.setProperty(HiveDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
+        if (StringUtils.isNotEmpty(targetCluster.getFsEndpoint())) {
+            properties.setProperty(HiveDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
+        }
         // Adding the data lake flag into properties. Otherwise add default as false;
         String dataLake = targetCluster.getCustomProperties().getProperty(ClusterFields.CLOUDDATALAKE.getName());
         if (Boolean.valueOf(dataLake)) {

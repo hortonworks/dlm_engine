@@ -22,7 +22,6 @@
 
 package com.hortonworks.beacon.api;
 
-import com.google.common.base.Preconditions;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
@@ -31,12 +30,12 @@ import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.FileListResult;
 import com.hortonworks.beacon.client.result.FileListResult.FileList;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.util.EncryptionZoneListing;
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
+import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.fs.SnapshotListing;
-import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -60,18 +59,19 @@ final class DatasetListing {
 
     private static final Logger LOG = LoggerFactory.getLogger(DatasetListing.class);
 
-    FileListResult listFiles(Cluster cluster, String path, String filter) throws BeaconException {
+    FileListResult listFiles(BeaconCluster cluster, String path, String filter) throws BeaconException {
         if (filter == null) {
             filter = StringUtils.EMPTY;
         }
-        Preconditions.checkArgument(StringUtils.isNotEmpty(cluster.getFsEndpoint()), "Namenode Endpoint");
-        String dataset = FSUtils.getStagingUri(cluster.getFsEndpoint(), path);
-        FileListResult fileListResult;
+        FileListResult fileListResult = new FileListResult(APIResult.Status.SUCCEEDED, "Empty");
 
         try {
-            FileSystem fs = FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration());
+            FileSystem fs = cluster.getFileSystem();
+            if (fs == null) {
+                return fileListResult;
+            }
 
-            RemoteIterator<FileStatus> iterator = fs.listStatusIterator(new Path(dataset));
+            RemoteIterator<FileStatus> iterator = fs.listStatusIterator(new Path(path));
             List<FileStatus> fileStatusList = new ArrayList<>();
             long totalResults = 0;
             long maxFilePerPage = BeaconConfig.getInstance().getEngine().getMaxFileListPerPage();
@@ -86,9 +86,7 @@ final class DatasetListing {
                 totalResults++;
             }
 
-            if (fileStatusList.size() == 0) {
-                fileListResult = new FileListResult(APIResult.Status.SUCCEEDED, "Empty");
-            } else {
+            if (fileStatusList.size() > 0) {
                 fileListResult = new FileListResult(APIResult.Status.SUCCEEDED, "Success");
             }
 
@@ -96,7 +94,7 @@ final class DatasetListing {
             SnapshotListing snapshotListing = SnapshotListing.get();
 
             String baseEncryptedPath = encryptionZoneListing.getBaseEncryptedPath(cluster.getName(),
-                    cluster.getFsEndpoint(), dataset);
+                    cluster.getFsEndpoint(), path);
             boolean parentEncrypted = encryptionZoneListing.isEncrypted(baseEncryptedPath);
             String parentEncryptionKey = encryptionZoneListing.getEncryptionKeyName(cluster.getName(),
                     baseEncryptedPath);

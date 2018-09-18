@@ -183,7 +183,7 @@ public final class ClusterHelper {
         return props == null ? null : (String)props.get(KnoxTokenUtils.KNOX_GATEWAY_URL);
     }
 
-    public static Cluster getLocalCluster() throws BeaconException {
+    public static BeaconCluster getLocalCluster() throws BeaconException {
         return clusterDao.getLocalCluster();
     }
 

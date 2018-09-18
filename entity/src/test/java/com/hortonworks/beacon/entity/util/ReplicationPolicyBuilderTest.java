@@ -26,6 +26,7 @@ import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.PolicyBuilderTestUtil;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.FSUtils;
@@ -67,7 +68,7 @@ public class ReplicationPolicyBuilderTest{
     public void methodSetup() throws BeaconException, IOException, URISyntaxException {
         PowerMockito.mockStatic(ClusterHelper.class);
         PowerMockito.mockStatic(FSUtils.class);
-        Cluster cluster = getCluster();
+        BeaconCluster cluster = getCluster();
         PowerMockito.when(ClusterHelper.getLocalCluster()).thenReturn(cluster);
         PowerMockito.when(ClusterHelper.getActiveCluster(Mockito.anyString())).thenReturn(cluster);
         PowerMockito.when(ClusterHelper.isHDFSEnabled(cluster)).thenReturn(true);
@@ -150,8 +151,8 @@ public class ReplicationPolicyBuilderTest{
         FSUtils.setDefaultConf(conf);
     }
 
-    public Cluster getCluster() {
-        Cluster cluster = new Cluster();
+    public BeaconCluster getCluster() {
+        BeaconCluster cluster = new BeaconCluster(new Cluster());
         cluster.setName(PolicyBuilderTestUtil.LOCAL_CLUSTER);
         return cluster;
     }

@@ -145,9 +145,12 @@ public final class HiveDRUtils {
         if (UserGroupInformation.isSecurityEnabled()) {
             builder.append("'").append(BeaconConstants.MAPREDUCE_JOB_HDFS_SERVERS).append("'").
                     append(BeaconConstants.EQUAL_SEPARATOR).
-                    append("'").append(properties.getProperty(HiveDRProperties.SOURCE_NN.getName())).
-                    append(",").append(properties.getProperty(HiveDRProperties.TARGET_NN.getName())).append("'").
-                    append(BeaconConstants.COMMA_SEPARATOR);
+                    append("'").append(properties.getProperty(HiveDRProperties.SOURCE_NN.getName()));
+            String targetNN = properties.getProperty(HiveDRProperties.TARGET_NN.getName());
+            if (StringUtils.isNotEmpty(targetNN)) {
+                builder.append(",").append(properties.getProperty(HiveDRProperties.TARGET_NN.getName()));
+            }
+            builder.append("'").append(BeaconConstants.COMMA_SEPARATOR);
 
             appendConfig(builder, BeaconConstants.MAPREDUCE_JOB_SEND_TOKEN_CONF, PolicyHelper.getRMTokenConf());
         }

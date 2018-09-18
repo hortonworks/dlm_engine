@@ -24,10 +24,11 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.result.FileListResult;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.util.EncryptionZoneListing;
 import com.hortonworks.beacon.replication.fs.SnapshotListing;
 import com.hortonworks.beacon.util.FSUtils;
-import org.apache.hadoop.conf.Configuration;
+import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -44,7 +45,6 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.util.NoSuchElementException;
 
-import static org.mockito.Matchers.notNull;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 /**
@@ -53,7 +53,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
 @PrepareForTest({EncryptionZoneListing.class, SnapshotListing.class, FSUtils.class, FileSystem.class})
 public class DatasetListingTest extends PowerMockTestCase {
 
-    private Cluster cluster;
+    private BeaconCluster cluster;
 
     @Mock
     private EncryptionZoneListing encryptionZoneListing;
@@ -71,7 +71,7 @@ public class DatasetListingTest extends PowerMockTestCase {
         PowerMockito.mockStatic(FSUtils.class);
         fs = Mockito.mock(FileSystem.class);
 
-        cluster = new Cluster();
+        cluster = new BeaconCluster(new Cluster());
         cluster.setName("src");
         cluster.setFsEndpoint("hdfs://localhost:8020");
 
@@ -89,7 +89,7 @@ public class DatasetListingTest extends PowerMockTestCase {
         String keyName = "default";
         String baseEncryptedPath = path;
         when(FSUtils.getStagingUri(cluster.getFsEndpoint(), path)).thenReturn(path);
-        when(FSUtils.getFileSystem((String) notNull(), (Configuration) notNull())).thenReturn(fs);
+        FileSystemClientFactory.setFileSystem(fs);
         when(fs.listStatusIterator(new Path(path)))
                 .thenReturn(getRemoteFileStatusIterator(fileStatuses, new Path(path)));
 

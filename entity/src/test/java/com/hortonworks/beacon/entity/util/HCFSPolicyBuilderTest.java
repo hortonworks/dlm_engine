@@ -25,6 +25,7 @@ package com.hortonworks.beacon.entity.util;
 import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.PolicyBuilderTestUtil;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -67,7 +68,7 @@ public class HCFSPolicyBuilderTest {
     public void methodSetup() throws BeaconException, IOException, URISyntaxException {
         MockitoAnnotations.initMocks(this);
         PowerMockito.mockStatic(ClusterHelper.class);
-        Cluster cluster = new Cluster();
+        BeaconCluster cluster = new BeaconCluster(new Cluster());
         cluster.setName(PolicyBuilderTestUtil.LOCAL_CLUSTER);
         PowerMockito.when(ClusterHelper.getLocalCluster()).thenReturn(cluster);
         PowerMockito.when(ClusterHelper.getActiveCluster(cluster.getName())).thenReturn(cluster);

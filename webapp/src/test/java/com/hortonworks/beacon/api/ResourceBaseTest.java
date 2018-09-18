@@ -41,6 +41,14 @@ public abstract class ResourceBaseTest {
     private static final String SOURCE_CLUSTER_NAME = "cluster-src";
     private static final String TARGET_CLUSTER_NAME = "cluster-tgt";
 
+    protected TestDataGenerator testDataGenerator;
+
+    protected BeaconClient sourceClient;
+    protected BeaconClient targetClient;
+
+    protected FileSystem sourceFs;
+    protected FileSystem targetFs;
+
     /**
      * Enum for source/target.
      */
@@ -69,13 +77,6 @@ public abstract class ResourceBaseTest {
         public abstract String getClusterName(boolean isLocal);
 
     }
-
-    protected TestDataGenerator testDataGenerator;
-
-    protected BeaconClient sourceClient;
-    protected BeaconClient targetClient;
-    protected FileSystem sourceFs;
-    protected FileSystem targetFs;
 
     @BeforeClass
     public void setup() throws Exception {

@@ -89,9 +89,10 @@ public class RangerPluginTest implements Plugin {
          * Returning in case of hdfs to cloud replication as tgtCluster will
          * not be defined during policy creation.
          */
-        if (targetCluster == null || exportedDataPath == null) {
+        if (targetCluster == null || exportedDataPath == null || targetCluster.getFsEndpoint() == null) {
             return;
         }
+
         FileSystem targetFS = FSUtils.getFileSystem(targetCluster.getFsEndpoint(), new Configuration());
         try {
             /* TODO - DO we have to delete sample.txt and this file after test run */

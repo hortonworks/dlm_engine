@@ -56,8 +56,9 @@ public class RESTClientBuilder {
 
     private static final String ATLAS_CLIENT_DEFAULT_USER = "admin";
     private static final String ATLAS_CLIENT_DEFAULT_PASSWORD = "admin";
-    private static final String ATLAS_CLIENT_USER_NAME_KEY = "atlas.client.user.name";
-    private static final String ATLAS_CLIENT_USER_PASSWORD_KEY = "atlas.client.user.password";
+    private static final String ATLAS_CLIENT_USER_NAME_KEY = "beacon.atlas.user";
+    private static final String ATLAS_CLIENT_USER_PASSWORD_KEY = "beacon.atlas.password";
+
     private static final String URL_SEPERATOR = ",";
 
     private AuthStrategy authStrategy;

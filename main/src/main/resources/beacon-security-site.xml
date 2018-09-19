@@ -117,4 +117,14 @@
 		<name>beacon.ranger.plugin.create.denypolicy</name>
 		<value>false</value>
 	</property>
+
+	<property>
+		<name>beacon.atlas.plugin.retry.count</name>
+		<value>10</value>
+	</property>
+
+	<property>
+		<name>beacon.atlas.plugin.retry.interval</name>
+		<value>30000</value>
+	</property>
 </configuration>

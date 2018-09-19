@@ -307,6 +307,7 @@ public class QuartzJobListener extends JobListenerSupport {
             RecoveryService.addToRecovery(jobContext.getJobInstanceId());
         } finally {
             RequestContext.get().rollbackTransaction();
+            RequestContext.get().closeEntityManager();
         }
     }
 

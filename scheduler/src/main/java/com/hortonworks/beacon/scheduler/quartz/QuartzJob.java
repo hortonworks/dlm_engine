@@ -93,14 +93,14 @@ public class QuartzJob implements InterruptableJob {
         Timer timer = requestContext.startTimer(methodName);
 
         try {
+            JobDataMap qJobDataMap = context.getJobDetail().getJobDataMap();
+            jobContext = (JobContext) qJobDataMap.get(QuartzDataMapEnum.JOB_CONTEXT.getValue());
             boolean isFailure = QuartzJobListener.getFlag(QuartzDataMapEnum.IS_FAILURE.getValue(),
                     context.getJobDetail().getJobDataMap());
             if (isFailure) {
                 throw new BeaconJobFailureException(
                         "Job failed while building the context. Not executing the replication.");
             }
-            JobDataMap qJobDataMap = context.getJobDetail().getJobDataMap();
-            jobContext = (JobContext) qJobDataMap.get(QuartzDataMapEnum.JOB_CONTEXT.getValue());
 
             // check parallel execution and return immediately if yes.
             boolean isParallel = qJobDataMap.getBoolean(QuartzDataMapEnum.IS_PARALLEL.getValue());
@@ -313,7 +313,11 @@ public class QuartzJob implements InterruptableJob {
     @Override
     public void interrupt() throws UnableToInterruptJobException {
         interruptFlag.set(true);                //For QuartzJob to check if its interrupted
-        jobContext.shouldInterrupt().set(true); //For BeaconJob to check if its interrupted
+        if (jobContext != null) {
+            jobContext.shouldInterrupt().set(true); //For BeaconJob to check if its interrupted
+        } else {
+            LOG.warn("Job context not set!");
+        }
 
         if (replicationJob != null) {
             try {
@@ -321,6 +325,8 @@ public class QuartzJob implements InterruptableJob {
             } catch (BeaconException e) {
                 LOG.warn("Failed to interrupt ");
             }
+        } else {
+            LOG.warn("Replication Job is not set!");
         }
     }
 }

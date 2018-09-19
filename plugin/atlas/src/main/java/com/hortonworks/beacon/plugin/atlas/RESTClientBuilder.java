@@ -249,8 +249,14 @@ public class RESTClientBuilder {
             Properties props = new Properties();
             props.setProperty(ATLAS_PROPERTY_READ_TIMEOUT_IN_MS, ATLAS_PROPERTY_TIME_OUT_DEFAULT);
             props.setProperty(ATLAS_PROPERTY_CONNECT_TIMEOUT_IN_MS, ATLAS_PROPERTY_TIME_OUT_DEFAULT);
-            props.setProperty(KEYSTORE_FILE_KEY,  BeaconConfig.getInstance().getEngine().getTrustStore());
-            props.setProperty(KEYSTORE_PASSWORD_KEY, BeaconConfig.getInstance().getEngine().getKeyPassword());
+
+            if (BeaconConfig.getInstance().getEngine().getTrustStore() != null) {
+                props.setProperty(KEYSTORE_FILE_KEY, BeaconConfig.getInstance().getEngine().getTrustStore());
+            }
+
+            if (BeaconConfig.getInstance().getEngine().getKeyPassword() != null) {
+                props.setProperty(KEYSTORE_PASSWORD_KEY, BeaconConfig.getInstance().getEngine().getKeyPassword());
+            }
 
             if (AUTHCONFIG.getProperty(CERT_STORES_CREDENTIAL_PROVIDER_PATH) != null) {
                 props.setProperty(CERT_STORES_CREDENTIAL_PROVIDER_PATH,

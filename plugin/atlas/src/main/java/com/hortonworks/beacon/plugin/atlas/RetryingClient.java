@@ -21,6 +21,7 @@
  */
 package com.hortonworks.beacon.plugin.atlas;
 
+import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.atlas.AtlasServiceException;
 import org.apache.commons.lang.StringUtils;
@@ -34,16 +35,33 @@ import java.util.concurrent.Callable;
  */
 public class RetryingClient {
     private static final Logger LOG = LoggerFactory.getLogger(RetryingClient.class);
+    private static final int PAUSE_DURATION_INCREMENT_IN_MINUTES_DEFAULT = (30 * 1000);
+    private static final int RETRY_COUNT_DEFAULT = 10;
+
     private static final String ERROR_MESSAGE_NO_ENTITIES = "no entities to create/update";
     private static final String ERROR_MESSAGE_IN_PROGRESS = "import or export is in progress";
 
-    private static final int MAX_RETY_COUNT = 10;
-    private static final long PAUSE_DURATION_INCREMENT_IN_MINUTES = 2 * 60 * 1000;
+    private static final String PROPERTY_MAX_RETRY_COUNT = "beacon.atlas.plugin.retry.count";
+    private static final String PROPERTY_PAUSE_DURATION = "beacon.atlas.plugin.retry.interval";
+
+    private static final int MAX_RETY_COUNT = PropertiesUtil.getInstance().getIntProperty(
+            PROPERTY_MAX_RETRY_COUNT, RETRY_COUNT_DEFAULT);
+
+    private static final int PAUSE_DURATION_INCREMENT_IN_MS = PropertiesUtil.getInstance().getIntProperty(
+            PROPERTY_PAUSE_DURATION, PAUSE_DURATION_INCREMENT_IN_MINUTES_DEFAULT);
+
+    static {
+        LOG.info("BeaconAtlasPlugin: {} = {}", PROPERTY_MAX_RETRY_COUNT, MAX_RETY_COUNT);
+        LOG.info("BeaconAtlasPlugin: {} = {}", PROPERTY_PAUSE_DURATION, PAUSE_DURATION_INCREMENT_IN_MS);
+    }
 
     protected <T> T invokeWithRetry(Callable<T> func, T defaultReturnValue) throws BeaconException {
         for (int currentRetryCount = 1; currentRetryCount <= MAX_RETY_COUNT; currentRetryCount++) {
             try {
-                debugLog("retrying method: {}", func.getClass().getName(), null);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("BeaconAtlasPlugin: retrying method: {}", func.getClass().getName(), null);
+                }
+
                 return func.call();
             } catch (Exception e) {
                 if (processImportExportLockException(e, currentRetryCount)) {
@@ -54,7 +72,7 @@ public class RetryingClient {
                     return null;
                 }
 
-                LOG.error("{}", func.getClass().getName(), e);
+                LOG.error("BeaconAtlasPlugin: " + func.getClass().getName(), e);
                 throw new BeaconException(e);
             }
         }
@@ -77,11 +95,11 @@ public class RetryingClient {
 
         if (StringUtils.contains(e.getMessage(), ERROR_MESSAGE_IN_PROGRESS)) {
             try {
-                long pauseDuration = PAUSE_DURATION_INCREMENT_IN_MINUTES * currentRetryCount;
+                int pauseDuration = PAUSE_DURATION_INCREMENT_IN_MS * currentRetryCount;
                 LOG.info("BeaconAtlasPlugin: In-progress operation detected. Will pause for: {} ms", pauseDuration);
                 Thread.sleep(pauseDuration);
             } catch (InterruptedException intEx) {
-                LOG.error("pause wait interrupted!", intEx);
+                LOG.error("BeaconAtlasPlugin: pause wait interrupted!", intEx);
                 throw new BeaconException(intEx);
             }
 
@@ -89,13 +107,5 @@ public class RetryingClient {
         }
 
         return false;
-    }
-
-    private void debugLog(String s, String name, Object[] parameters) {
-        if (!LOG.isDebugEnabled()) {
-            return;
-        }
-
-        LOG.debug(s, name, parameters);
     }
 }

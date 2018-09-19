@@ -180,6 +180,19 @@ public final class PropertiesUtil {
         return rtrnVal;
     }
 
+    public  int getIntProperty(String key, int defaultValue) {
+        if (key == null || !propertiesMap.containsKey(key)) {
+            return defaultValue;
+        }
+
+        String rtrnVal = propertiesMap.get(key);
+        if (rtrnVal == null) {
+            return  defaultValue;
+        }
+
+        return Integer.parseInt(rtrnVal);
+    }
+
     public  String getProperty(String key) {
         if (key == null) {
             return null;

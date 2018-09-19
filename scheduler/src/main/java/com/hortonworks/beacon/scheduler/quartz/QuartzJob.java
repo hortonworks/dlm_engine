@@ -186,6 +186,7 @@ public class QuartzJob implements InterruptableJob {
             }
             timer.stop();
             logTimers();
+            RequestContext.get().closeEntityManager();
         }
     }
 

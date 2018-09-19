@@ -165,14 +165,14 @@ public class PolicyResourceTest extends ResourceBaseTest {
         });
 
         ReplicationPolicy updatedPolicy = new ReplicationPolicy();
-        updatedPolicy.setFrequencyInSec(240);
+        updatedPolicy.setFrequencyInSec(60);
         PropertiesIgnoreCase properties = updatedPolicy.asProperties();
         properties.put("plugins", "RANGER");
         targetClient.updatePolicy(policyName, properties);
         PolicyList newDef = targetClient.getPolicy(policyName);
-        assertEquals(240, (long) newDef.getElements()[0].frequencyInSec);
+        assertEquals(60, (long) newDef.getElements()[0].frequencyInSec);
 
-        waitOnCondition(20000, "Get jobs for policy ", new Condition() {
+        waitOnCondition(60000, "Get jobs for policy ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
                 RequestContext.setInitialValue();

@@ -34,7 +34,6 @@ import com.hortonworks.beacon.scheduler.SchedulerCache;
 import com.hortonworks.beacon.scheduler.StoreHelper;
 import com.hortonworks.beacon.scheduler.workflow.BeaconWorkflow;
 import com.hortonworks.beacon.service.Services;
-import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -65,45 +64,45 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
 
     @Override
     public void triggerFired(Trigger trigger, JobExecutionContext context) {
-        RequestContext.setInitialValue();
-        JobKey jobKey = trigger.getJobKey();
-        String policyId = trigger.getJobKey().getName();
-        BeaconLogUtils.prefixId(policyId);
-        PolicyBean policyBean;
-        LOG.info("Trigger [key: {}] is fired for Job [key: {}]", trigger.getKey(), jobKey);
         try {
-            policyBean = StoreHelper.getPolicyById(policyId);
-        } catch (NoSuchElementException e) {
-            LOG.error("Policy [{}] not found. Removing policy trigger.", jobKey.getName(), e);
-            trigger.getJobDataMap().put(QuartzDataMapEnum.POLICY_NOT_FOUND.getValue(), true);
-            removeJob(trigger.getJobKey());
-            return;
-        } catch (BeaconStoreException e) {
-            LOG.error("Exception while getting the policy.", e);
-            return;
-        }
+            RequestContext.setInitialValue();
+            JobKey jobKey = trigger.getJobKey();
+            String policyId = trigger.getJobKey().getName();
+            BeaconLogUtils.prefixId(policyId);
+            PolicyBean policyBean;
+            LOG.info("Trigger [key: {}] is fired for Job [key: {}]", trigger.getKey(), jobKey);
+            try {
+                policyBean = StoreHelper.getPolicyById(policyId);
+            } catch (NoSuchElementException e) {
+                LOG.error("Policy [{}] not found. Removing policy trigger.", jobKey.getName(), e);
+                trigger.getJobDataMap().put(QuartzDataMapEnum.POLICY_NOT_FOUND.getValue(), true);
+                removeJob(trigger.getJobKey());
+                return;
+            }
 
-        SchedulerCache cache = SchedulerCache.get();
-        synchronized (cache) {
-            // Check the parallel for the START node only.
-            if (BeaconQuartzScheduler.START_NODE_GROUP.equals(jobKey.getGroup())) {
-                boolean exist = cache.exists(jobKey.getName());
-                if (exist) {
-                    LOG.info("Setting the parallel flag for job: [{}]", jobKey);
-                    context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.IS_PARALLEL.getValue(), true);
-                } else {
-                    cache.insert(jobKey.getName(), new InstanceSchedulerDetail());
-                }
-                try {
-                    PolicyDao policyDao = new PolicyDao();
-                    List<ReplicationJobDetails> workflowList = BeaconWorkflow.get().createChainedWorkflow(policyDao
-                            .getReplicationPolicy(policyBean));
-                    BeaconQuartzScheduler.get().linkWorkflow(workflowList, trigger.getJobKey().getName());
-                    setJobCount(context, workflowList.size() + 1);
-                } catch (BeaconException e) {
-                    LOG.error("Exception while creating the job workflow.", e);
+            SchedulerCache cache = SchedulerCache.get();
+            synchronized (cache) {
+                // Check the parallel for the START node only.
+                if (BeaconQuartzScheduler.START_NODE_GROUP.equals(jobKey.getGroup())) {
+                    boolean exist = cache.exists(jobKey.getName());
+                    if (exist) {
+                        LOG.info("Setting the parallel flag for job: [{}]", jobKey);
+                        context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.IS_PARALLEL.getValue(), true);
+                    } else {
+                        PolicyDao policyDao = new PolicyDao();
+                        List<ReplicationJobDetails> workflowList = BeaconWorkflow.get().createChainedWorkflow(policyDao
+                                .getReplicationPolicy(policyBean));
+                        BeaconQuartzScheduler.get().linkWorkflow(workflowList, trigger.getJobKey().getName());
+                        setJobCount(context, workflowList.size() + 1);
+                        cache.insert(jobKey.getName(), new InstanceSchedulerDetail());
+                    }
                 }
             }
+        } catch (Exception e) {
+            LOG.error("Exception in trigger fired", e);
+            trigger.getJobDataMap().put(QuartzDataMapEnum.TRIGGER_FIRE_FAILED.getValue(), true);
+        } finally {
+            RequestContext.get().closeEntityManager();
         }
     }
 
@@ -140,7 +139,8 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
             long serverStartTime = jobDataMap.getLong(QuartzDataMapEnum.RETRY_MARKER.getValue());
             vetoTrigger = serverStartTime != BeaconConstants.SERVER_START_TIME;
         }
-        vetoTrigger = vetoTrigger || jobDataMap.containsKey(QuartzDataMapEnum.POLICY_NOT_FOUND.getValue());
+        vetoTrigger = vetoTrigger || jobDataMap.containsKey(QuartzDataMapEnum.POLICY_NOT_FOUND.getValue())
+                                  || jobDataMap.containsKey(QuartzDataMapEnum.TRIGGER_FIRE_FAILED.getValue());
         LOG.debug("Veto trigger [{}] for job: [{}]", vetoTrigger, trigger.getJobKey());
         return vetoTrigger;
     }

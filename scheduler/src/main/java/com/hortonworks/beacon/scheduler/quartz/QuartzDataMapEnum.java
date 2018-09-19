@@ -41,7 +41,8 @@ public enum QuartzDataMapEnum {
     IS_RECOVERY("is_recovery"),
     RECOVER_INSTANCE("recover_instance"),
     RETRY_MARKER("retry_marker"),
-    POLICY_NOT_FOUND("policy_not_found");
+    POLICY_NOT_FOUND("policy_not_found"),
+    TRIGGER_FIRE_FAILED("trigger_fire_failed");
 
     private final String value;
 

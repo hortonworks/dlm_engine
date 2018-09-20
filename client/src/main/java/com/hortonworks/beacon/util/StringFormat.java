@@ -39,10 +39,11 @@ public final class StringFormat {
     public static String format(String message, Object... objects) {
         if (objects != null) {
             for (Object object : objects) {
+                String objectString = object == null ? "[null]" : object.toString();
                 try{
-                    message = message.replaceFirst("\\{\\}", Matcher.quoteReplacement(object.toString()));
+                    message = message.replaceFirst("\\{\\}", Matcher.quoteReplacement(objectString));
                 } catch(Exception e){
-                    LOG.error("Exception occurred in Pattern {}", object.toString(), e);
+                    LOG.error("Exception occurred in Pattern {}", objectString, e);
                     throw e;
                 }
             }

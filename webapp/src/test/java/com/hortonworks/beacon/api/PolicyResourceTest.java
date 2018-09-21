@@ -141,7 +141,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetClient.deletePolicy(policyName, false);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testUpdatePolicy() throws Exception {
         final String policyName = testDataGenerator.getRandomString("FsPolicyUpdate");
         String replicationPath = SOURCE_DIR + policyName;

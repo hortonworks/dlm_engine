@@ -175,6 +175,9 @@ public class ClusterResourceTest extends ResourceBaseTest {
         Assert.assertNotNull(clusterListWithAllDetails.getClusters()[0].getPeers());
         Assert.assertTrue(clusterListWithAllDetails.getClusters()[0].getPeers().size() == 0);
         Assert.assertNotNull(clusterListWithAllDetails.getClusters()[0].getPeersInfo());
+
+        Cluster cluster = clusterListWithAllDetails.getClusters()[0];
+        assertEquals(cluster.getClass().getName(), Cluster.class.getName());
     }
 
     @Test(dependsOnMethods = {"testListClustersBeforePairing", "testPairCluster"})

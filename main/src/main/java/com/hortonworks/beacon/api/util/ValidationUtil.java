@@ -111,7 +111,7 @@ public final class ValidationUtil {
                 && ClusterHelper.isHighlyAvailableHDFS(remoteCustomProps);
         if (isLocalHAEnbaled ^ isRemoteHAEnabled) {
             LOG.warn("NameNode HA is not enabled in either {} or {} cluster", localCluster.getName(),
-                remoteCluster.getName());
+                    remoteCluster.getName());
         } else if (isLocalHAEnbaled) {
             validateNameserviceConfig(localCustomProps, remoteCustomProps);
         }
@@ -119,24 +119,24 @@ public final class ValidationUtil {
         BeaconCluster beaconRemoteCluster = new BeaconCluster(remoteCluster);
         if (ClusterHelper.isHiveEnabled(beaconLocalCluster)
                 && !(Boolean.valueOf(remoteCluster.getCustomProperties().getProperty(
-                    Cluster.ClusterFields.CLOUDDATALAKE.getName())))
+                Cluster.ClusterFields.CLOUDDATALAKE.getName())))
                 && (ClusterHelper.isHighlyAvailableHive(localCluster.getHsEndpoint())
                 != ClusterHelper.isHighlyAvailableHive(remoteCluster.getHsEndpoint()))) {
             LOG.warn("Hive HA is not enabled in either {} or {} cluster", localCluster.getName(),
-                remoteCluster.getName());
+                    remoteCluster.getName());
         }
         if (ClusterHelper.isRangerEnabled(localCluster.getRangerEndpoint())
                 != ClusterHelper.isRangerEnabled(remoteCluster.getRangerEndpoint())) {
             LOG.warn("Ranger is not enabled in either {} or {} cluster", localCluster.getName(),
-                remoteCluster.getName());
+                    remoteCluster.getName());
         }
         if (ClusterHelper.isHiveEnabled(beaconLocalCluster) != ClusterHelper.isHiveEnabled(beaconRemoteCluster)) {
             LOG.warn("Hive is not enabled in either {} or {} cluster", localCluster.getName(),
-                remoteCluster.getName());
+                    remoteCluster.getName());
         }
         if (ClusterHelper.isKerberized(localCluster) != ClusterHelper.isKerberized(remoteCluster)) {
             LOG.error("Kerberos is not enabled in either {} or {} cluster", localCluster.getName(),
-                remoteCluster.getName());
+                    remoteCluster.getName());
             throw new ValidationException("Kerberos is not enabled in either {} or {} cluster", localCluster.getName(),
                     remoteCluster.getName());
         }
@@ -172,7 +172,7 @@ public final class ValidationUtil {
     }
 
     public static void validatePolicyOnUpdate(ReplicationPolicy replicationPolicy,
-                                          PropertiesIgnoreCase properties) throws BeaconException {
+                                              PropertiesIgnoreCase properties) throws BeaconException {
         isRequestAllowed(replicationPolicy);
         ValidationUtil.validatePolicyPropsUpdateAllowed(properties);
         validatePolicyFields(replicationPolicy, properties);
@@ -243,30 +243,35 @@ public final class ValidationUtil {
         }
         boolean enableSnapshotBasedRepl = Boolean.parseBoolean(
                 properties.getPropertyIgnoreCase(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName()));
-        Cluster sourceCluster = clusterDao.getActiveCluster(existingPolicy.getSourceCluster());
-        boolean tdeEnabled = isTDEEnabled(sourceCluster, existingPolicy.getSourceDataset(), existingPolicy);
-        if (tdeEnabled && enableSnapshotBasedRepl) {
-            throw new ValidationException("Can not mark the source dataset snapshottable as it is TDE enabled");
-        }
-        String dataset = existingPolicy.getSourceDataset();
-        DataSet srcDataSet = FSDataSet.create(dataset, existingPolicy.getSourceCluster(), existingPolicy);
-        try {
-            if (enableSnapshotBasedRepl) {
-                FSSnapshotUtils.allowSnapshot(sourceCluster, srcDataSet);
+        if (enableSnapshotBasedRepl) {
+            DataSet dataSet = null;
+            try {
+                dataSet = FSDataSet.create(existingPolicy.getSourceDataset(), existingPolicy.getSourceCluster(),
+                        existingPolicy);
+                if (!PolicyHelper.isDatasetHCFS(existingPolicy.getSourceDataset())) {
+                    String clusterName = existingPolicy.getSourceCluster();
+                    Cluster cluster = clusterDao.getActiveCluster(clusterName);
+                    boolean tdeEnabled = isTDEEnabled(cluster, existingPolicy.getSourceDataset(), existingPolicy);
+                    if (tdeEnabled) {
+                        throw new ValidationException(
+                                "Can not mark the source dataset snapshottable as it is TDE enabled");
+                    }
+                    FSSnapshotUtils.allowSnapshot(cluster, dataSet);
+                }
+                if (!PolicyHelper.isDatasetHCFS(existingPolicy.getTargetDataset())) {
+                    Cluster targetCluster = clusterDao.getActiveCluster(existingPolicy.getTargetCluster());
+                    String targetDataset = existingPolicy.getTargetDataset();
+                    dataSet = FSDataSet.create(targetDataset, existingPolicy.getTargetCluster(), existingPolicy);
+                    boolean isTargetEncrypted = isTDEEnabled(targetCluster, targetDataset, existingPolicy);
+                    boolean targetSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(targetCluster.getName(),
+                            targetDataset);
+                    if (!isTargetEncrypted && !targetSnapshottable) {
+                        FSSnapshotUtils.allowSnapshot(targetCluster, dataSet);
+                    }
+                }
+            } catch (IOException ex) {
+                throw new BeaconException("Unable to mark dataset as snapshottable:", ex.getMessage());
             }
-            boolean sourceSnapshottable = srcDataSet.isSnapshottable();
-            LOG.info("Is source directory: {} snapshottable: {}", dataset, sourceSnapshottable);
-
-            Cluster targetCluster = clusterDao.getActiveCluster(existingPolicy.getTargetCluster());
-            dataset = existingPolicy.getTargetDataset();
-            DataSet tgtDataSet = FSDataSet.create(dataset, existingPolicy.getTargetCluster(), existingPolicy);
-            boolean isTargetEncrypted = isTDEEnabled(targetCluster, dataset, existingPolicy);
-            boolean targetSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(targetCluster.getName(), dataset);
-            if (!isTargetEncrypted && sourceSnapshottable && !targetSnapshottable) {
-                FSSnapshotUtils.allowSnapshot(targetCluster, tgtDataSet);
-            }
-        } catch (IOException ex) {
-            throw new ValidationException("Unable to mark the dataset [{}] as snapshottable.", dataset, ex);
         }
     }
 

@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.api.cloud;
 
+import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.api.ResourceBaseTest;
 import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.entity.CloudCred;
@@ -229,6 +230,39 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
             assertTrue(ex.getMessage().contains("Target dataset already in replication"));
         }
         targetClient.deletePolicy(policyName1, false);
+    }
+
+    @Test
+    public void testHiveCloudPolicyUpdate() throws Exception {
+        CloudCred cloudCred = getCloudCred();
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName = testDataGenerator.getRandomString("HiveCloudPolicy1");
+        String sourceDataSet = SOURCE_DIR + policyName;
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        ReplicationPolicy policy = testDataGenerator.getPolicy(policyName, sourceDataSet,
+                testDataGenerator.getRandomString("HiveTestDb"), "HIVE", 15,
+                sourceCluster.getName(), targetCluster.getName(), cloudProps);
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        waitOnCondition(10000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        PropertiesIgnoreCase props = new PropertiesIgnoreCase();
+        props.put(ReplicationPolicy.ReplicationPolicyFields.FREQUENCYINSEC.getName(), "20");
+        targetClient.updatePolicy(policyName, props);
+        waitOnCondition(10000, "Second Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getNthInstance(targetClient, policyName, 2);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetClient.deletePolicy(policyName, false);
     }
 
     @Test

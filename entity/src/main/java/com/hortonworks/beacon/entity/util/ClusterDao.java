@@ -234,7 +234,7 @@ public final class ClusterDao {
         Cluster[] elements = new Cluster[clusterBeans.size()];
         int elementIndex = 0;
         for (ClusterBean clusterBean : clusterBeans) {
-            elements[elementIndex++] = getClusterElement(clusterBean, fields);
+            elements[elementIndex++] = new Cluster(getClusterElement(clusterBean, fields));
         }
         return elements;
     }

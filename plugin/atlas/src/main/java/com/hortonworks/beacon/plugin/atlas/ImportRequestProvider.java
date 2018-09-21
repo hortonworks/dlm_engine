@@ -21,12 +21,22 @@
  */
 package com.hortonworks.beacon.plugin.atlas;
 
+import com.hortonworks.beacon.plugin.DataSet;
 import org.apache.atlas.model.impexp.AtlasImportRequest;
+import org.apache.atlas.model.impexp.AttributeTransform;
+import org.apache.atlas.type.AtlasType;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import static com.hortonworks.beacon.plugin.atlas.ExportRequestProvider.ATLAS_TYPE_HDFS_PATH;
+import static com.hortonworks.beacon.plugin.atlas.ExportRequestProvider.ATLAS_TYPE_HIVE_DB;
 
 /**
  * Helper class to create import request.
@@ -34,22 +44,33 @@ import java.util.Map;
 final class ImportRequestProvider {
     protected static final Logger LOG = LoggerFactory.getLogger(ImportRequestProvider.class);
 
+    private static final String ATTRIBUTE_NAME_CLUSTER_NAME = ".clusterName";
+    private static final String ATTRIBUTE_NAME_NAME = ".name";
+    private static final String ATTRIBUTE_NAME_REPLICATED_TO = "replicatedTo";
+    private static final String ATTRIBUTE_NAME_REPLICATED_FROM = "replicatedFrom";
+
+    private static final String HDFS_PATH_CLUSTER_NAME = ATLAS_TYPE_HDFS_PATH + ATTRIBUTE_NAME_CLUSTER_NAME;
+    private static final String HIVE_DB_CLUSTER_NAME = ATLAS_TYPE_HIVE_DB + ATTRIBUTE_NAME_CLUSTER_NAME;
+
+    private static final String HDFS_PATH_NAME = ATLAS_TYPE_HDFS_PATH + ATTRIBUTE_NAME_NAME;
+    private static final String HIVE_DB_NAME = ATLAS_TYPE_HIVE_DB + ATTRIBUTE_NAME_NAME;
+    private static final String TRANSFORM_ENTITY_SCOPE = "__entity";
+
     private ImportRequestProvider() {
 
     }
 
     private static final String REPLICATED_TAG_NAME = "%s_replicated";
 
-    static final String IMPORT_TRANSFORM_FORMAT =
-            "{ \"Asset\": { \"qualifiedName\":[ \"replace:@%s:@%s\"], "
-                    + "\"*\":[ \"clearAttrValue:replicatedTo,replicatedFrom\", "
-                    + "\"addClassification:"
-                    + REPLICATED_TAG_NAME
-                    + "\" ] } }";
-
-    public static AtlasImportRequest create(String sourceClusterName, String targetClusterName) {
+    public static AtlasImportRequest create(DataSet.DataSetType dataSetType,
+                                            String sourceDataSet, String targetDataSet,
+                                            String sourceClusterName, String targetClusterName,
+                                            String sourcefsEndpoint, String targetFsEndpoint) {
         AtlasImportRequest request = new AtlasImportRequest();
-        addTransforms(request.getOptions(), sourceClusterName, targetClusterName);
+        addTransforms(dataSetType, request.getOptions(),
+                sourceClusterName, targetClusterName,
+                sourceDataSet, targetDataSet,
+                sourcefsEndpoint, targetFsEndpoint);
         addMetaInfoUpdate(request.getOptions(), sourceClusterName);
 
         if (LOG.isDebugEnabled()) {
@@ -59,18 +80,61 @@ final class ImportRequestProvider {
         return request;
     }
 
-    private static void addTransforms(Map<String, String> options,
-                                      String sourceClusterName,
-                                      String targetClusterName) {
+    private static void addTransforms(DataSet.DataSetType dataSetType, Map<String, String> options,
+                                      String sourceClusterName, String targetClusterName,
+                                      String sourceDataSet, String targetDataSet,
+                                      String sourcefsEndpoint, String targetFsEndpoint) {
+        List<AttributeTransform> transforms = new ArrayList<>();
 
         String sanitizedSourceClusterName = sanitizeForClassificationName(sourceClusterName);
-        options.put(AtlasImportRequest.TRANSFORMS_KEY,
-                String.format(IMPORT_TRANSFORM_FORMAT,
-                        sourceClusterName, targetClusterName, sanitizedSourceClusterName));
+        addClassificationTransform(transforms,
+                String.format(REPLICATED_TAG_NAME, sanitizedSourceClusterName));
+
+        addClearReplicationAttributesTransform(transforms);
+        addClusterRenameTransform(transforms, dataSetType, sourceClusterName, targetClusterName);
+
+        if (dataSetType == DataSet.DataSetType.HIVE && !sourceDataSet.equals(targetDataSet)) {
+            addDataSetRenameTransform(transforms, dataSetType, sourceDataSet, targetDataSet);
+        }
+
+        if (dataSetType == DataSet.DataSetType.HDFS) {
+            String srcFsUri = ExportRequestProvider.getPathWithTrailingPathSeparator(sourcefsEndpoint, sourceDataSet);
+            String tgtFsUri = ExportRequestProvider.getPathWithTrailingPathSeparator(targetFsEndpoint, targetDataSet);
+
+            if (!srcFsUri.equals(tgtFsUri)) {
+                addDataSetRenameTransform(transforms, dataSetType, srcFsUri, tgtFsUri);
+            }
+        }
+
+        options.put(AtlasImportRequest.TRANSFORMERS_KEY, AtlasType.toJson(transforms));
+    }
+
+    private static void addDataSetRenameTransform(List<AttributeTransform> transforms,
+                                                  DataSet.DataSetType dataSetType,
+                                                  String sourceDataSet, String targetDataSet) {
+        String propertyName = dataSetType == DataSet.DataSetType.HDFS ? HDFS_PATH_NAME : HIVE_DB_NAME;
+
+        transforms.add(create(
+                propertyName, "EQUALS: " + sourceDataSet,
+                propertyName, "SET: " + targetDataSet));
+    }
+
+    private static void addClusterRenameTransform(List<AttributeTransform> transforms, DataSet.DataSetType dataSetType,
+                                                  String sourceClusterName, String targetClusterName) {
+
+        String propertyName = dataSetType == DataSet.DataSetType.HDFS ? HDFS_PATH_CLUSTER_NAME : HIVE_DB_CLUSTER_NAME;
+
+        transforms.add(create(propertyName, "EQUALS: " + sourceClusterName,
+                                propertyName, "SET: " + targetClusterName));
     }
 
     private static void addMetaInfoUpdate(Map<String, String> options, String sourceClusterName) {
         options.put(AtlasImportRequest.OPTION_KEY_REPLICATED_FROM, sourceClusterName);
+    }
+
+    private static void addClassificationTransform(List<AttributeTransform> transforms, String classificationName) {
+        transforms.add(create("__entity", "topLevel: ",
+                "__entity", "ADD_CLASSIFICATION: " + classificationName));
     }
 
     private static String sanitizeForClassificationName(String s) {
@@ -79,5 +143,19 @@ final class ImportRequestProvider {
         }
 
         return s.replace('-', '_').replace(' ', '_');
+    }
+
+    private static void addClearReplicationAttributesTransform(List<AttributeTransform> transforms) {
+        Map<String, String> actions = new HashMap<>();
+        actions.put(TRANSFORM_ENTITY_SCOPE + "." + ATTRIBUTE_NAME_REPLICATED_TO, "CLEAR:");
+        actions.put(TRANSFORM_ENTITY_SCOPE + "." + ATTRIBUTE_NAME_REPLICATED_FROM, "CLEAR:");
+
+        transforms.add(new AttributeTransform(null, actions));
+    }
+
+    private static AttributeTransform create(String conditionLhs, String conditionRhs,
+                                             String actionLhs, String actionRhs) {
+        return new AttributeTransform(Collections.singletonMap(conditionLhs, conditionRhs),
+                Collections.singletonMap(actionLhs, actionRhs));
     }
 }

@@ -35,6 +35,8 @@ public class RequestProviderBase {
     protected static final String ATLAS_RESOURCES_DIR = "/src/test/resources/atlas";
     protected static final String SOURCE_CLUSTER_NAME = "clSrc";
     protected static final String TARGET_CLUSTER_NAME = "clTgt";
+    protected static final String SOURCE_FS_URI = "hdfs://serverSrc:8020";
+    protected static final String TARGET_FS_URI = "hdfs://serverTgt:8020";
 
     protected AtlasProcess getMockProcess() {
         return new AtlasProcess(new AtlasMockRESTClient.Builder()) {
@@ -46,7 +48,8 @@ public class RequestProviderBase {
     }
 
     protected DataSet getDataSet(final DataSet.DataSetType dataSetType,
-                                 final String dataSetName,
+                                 final String sourceDatasetName,
+                                 final String targetDatasetName,
                                  final boolean targetIsNull) {
         return new DataSet() {
             @Override
@@ -56,12 +59,12 @@ public class RequestProviderBase {
 
             @Override
             public String getSourceDataSet() {
-                return dataSetName;
+                return sourceDatasetName;
             }
 
             @Override
             public String getTargetDataSet() {
-                return null;
+                return targetDatasetName;
             }
 
             @Override

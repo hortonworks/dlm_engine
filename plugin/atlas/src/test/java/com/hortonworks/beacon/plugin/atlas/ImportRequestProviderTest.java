@@ -21,30 +21,126 @@
  */
 package com.hortonworks.beacon.plugin.atlas;
 
+import com.hortonworks.beacon.plugin.DataSet;
+import org.apache.atlas.entitytransform.BaseEntityHandler;
 import org.apache.atlas.model.impexp.AtlasImportRequest;
+import org.apache.commons.lang3.StringUtils;
 import org.testng.annotations.Test;
+
+import java.util.List;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Test for ImportRequestProvider.
  */
 public class ImportRequestProviderTest extends RequestProviderBase {
+
+    private static final String CLASSIFICATION =
+            "{\"conditions\":{\"__entity\":\"topLevel: \"},"
+                    + "\"action\":{\"__entity\":\"ADD_CLASSIFICATION: clSrc_replicated\"}}";
+
+    private static final String REPLICATED_ATTR_CLEAR =
+            "{\"action\":{\"__entity.replicatedTo\":\"CLEAR:\",\"__entity.replicatedFrom\":\"CLEAR:\"}}";
+
+    private static final String HIVE_DB_CLUSTER_NAME_RENAME =
+            "{\"conditions\":{\"hive_db.clusterName\":\"EQUALS: clSrc\"},"
+                    + "\"action\":{\"hive_db.clusterName\":\"SET: clTgt\"}}";
+
+    private static final String HIVE_DB_NAME_RENAME =
+            "{\"conditions\":{\"hive_db.name\":\"EQUALS: stocks\"},"
+                    + "\"action\":{\"hive_db.name\":\"SET: stocks_dw\"}}";
+
+    private static final String HDFS_CLUSTER_NAME_RENAME =
+            "{\"conditions\":{\"hdfs_path.clusterName\":\"EQUALS: clSrc\"},"
+                    + "\"action\":{\"hdfs_path.clusterName\":\"SET: clTgt\"}}";
+
+    private static final String HDFS_NAME_RENAME =
+            "{\"conditions\":{\"hdfs_path.name\":\"EQUALS: /tmp/hr/\"},"
+                    + "\"action\":{\"hdfs_path.name\":\"SET: /tmp/hr_dw/\"}}";
+
+    private static final String HDFS_NAME_RENAME_URI =
+            "{\"conditions\":{\"hdfs_path.name\":\"EQUALS: hdfs://serverSrc:8020/tmp/hr/\"},"
+                    + "\"action\":{\"hdfs_path.name\":\"SET: hdfs://serverTgt:8020/tmp/hr_dw/\"}}";
+
+    private static final String HIVE_SOURCE_STOCKS = "stocks";
+    private static final String HIVE_SOURCE_STOCKS_DW = "stocks_dw";
+
+    private static final String HDFS_SOURCE_HR = "/tmp/hr";
+    private static final String HDFS_SOURCE_HR_DW = "/tmp/hr_dw";
+
     @Test
-    public void anyRequest() {
-        String expectedTransforms = String.format(ImportRequestProvider.IMPORT_TRANSFORM_FORMAT,
-                SOURCE_CLUSTER_NAME,
-                TARGET_CLUSTER_NAME,
-                SOURCE_CLUSTER_NAME);
+    public void hiveDBClusterRename() {
+        String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR, HIVE_DB_CLUSTER_NAME_RENAME };
 
-        AtlasImportRequest request = ImportRequestProvider.create(
-                SOURCE_CLUSTER_NAME,
-                TARGET_CLUSTER_NAME);
+        assertTransform(4,
+                DataSet.DataSetType.HIVE, parts, HIVE_SOURCE_STOCKS, HIVE_SOURCE_STOCKS);
+    }
 
-        assertNotNull(request);
-        assertEquals(request.getOptions().size(), 2);
-        assertEquals(request.getOptions().get(AtlasImportRequest.OPTION_KEY_REPLICATED_FROM), SOURCE_CLUSTER_NAME);
-        assertEquals(request.getOptions().get(AtlasImportRequest.TRANSFORMS_KEY), expectedTransforms);
+    @Test
+    public void hiveDBWithRename() {
+        String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR, HIVE_DB_CLUSTER_NAME_RENAME, HIVE_DB_NAME_RENAME };
+
+        assertTransform(4,
+                DataSet.DataSetType.HIVE, parts, HIVE_SOURCE_STOCKS, HIVE_SOURCE_STOCKS_DW);
+    }
+
+    @Test
+    public void hdfsClusterRename() {
+        String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR, HDFS_CLUSTER_NAME_RENAME};
+
+        assertTransform(1, DataSet.DataSetType.HDFS, parts, HDFS_SOURCE_HR, HDFS_SOURCE_HR);
+    }
+
+    @Test
+    public void hdfsRename() {
+        String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR, HDFS_CLUSTER_NAME_RENAME, HDFS_NAME_RENAME };
+
+        assertTransform(1,
+                DataSet.DataSetType.HDFS, parts, HDFS_SOURCE_HR, HDFS_SOURCE_HR_DW);
+    }
+
+    @Test
+    public void hdfsRenameWithUri() {
+        String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR, HDFS_CLUSTER_NAME_RENAME, HDFS_NAME_RENAME_URI };
+
+        assertTransform(1,
+                DataSet.DataSetType.HDFS, parts,
+                SOURCE_FS_URI + HDFS_SOURCE_HR,
+                TARGET_FS_URI + HDFS_SOURCE_HR_DW);
+    }
+
+    private void assertTransform(int expectedTransformCount, DataSet.DataSetType dataSetType, String[] jsonParts,
+                                 String sourceDataSetName, String targetDataSetName) {
+        String expectedTransformJSON = composeJson(jsonParts);
+
+        DataSet dataSet = getDataSet(dataSetType, sourceDataSetName, targetDataSetName, false);
+        AtlasImportRequest request = ImportRequestProvider.create(dataSet.getType(),
+                dataSet.getSourceDataSet(),
+                dataSet.getTargetDataSet(),
+                SOURCE_CLUSTER_NAME, TARGET_CLUSTER_NAME, "", "");
+
+        String actualTransformsJSON = request.getOptions().get(AtlasImportRequest.TRANSFORMERS_KEY);
+        assertNotNull(actualTransformsJSON);
+
+        List<BaseEntityHandler> baseEntityHandlerList = BaseEntityHandler.fromJson(
+                actualTransformsJSON, null);
+
+        assertNotNull(baseEntityHandlerList);
+        assertEquals(baseEntityHandlerList.size(), expectedTransformCount);
+        assertEquals(actualTransformsJSON, expectedTransformJSON);
+        assertJsonParts(jsonParts, actualTransformsJSON);
+    }
+
+    private void assertJsonParts(String[] jsonParts, String actualTransformsJSON) {
+        for (String s : jsonParts) {
+            assertTrue(actualTransformsJSON.contains(s));
+        }
+    }
+
+    private String composeJson(String... jsonParts) {
+        return "[" + StringUtils.join(jsonParts, ',') + "]";
     }
 }

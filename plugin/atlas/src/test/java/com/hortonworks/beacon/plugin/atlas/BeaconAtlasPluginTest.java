@@ -27,9 +27,8 @@ import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -43,7 +42,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Properties;
 
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -73,17 +71,7 @@ public class BeaconAtlasPluginTest extends RequestProviderBase {
         dfs = mock(DistributedFileSystem.class);
         FileSystemClientFactory.setFileSystem(dfs);
         when(dfs.create((Path) anyObject())).thenReturn(mock(FSDataOutputStream.class));
-        when(dfs.listFiles((Path) anyObject(), anyBoolean())).thenReturn(new RemoteIterator<LocatedFileStatus>() {
-            @Override
-            public boolean hasNext() throws IOException {
-                return true;
-            }
-
-            @Override
-            public LocatedFileStatus next() throws IOException {
-                return new LocatedFileStatus();
-            }
-        });
+        when(dfs.getFileStatus((Path) anyObject())).thenReturn(new FileStatus());
         when(dfs.getUri()).thenReturn(new URI(LOCAL_HOST_FS_URL));
 
         InputStream inputStream = getSeekableByteArrayInputStream(getZipFilePath());
@@ -132,7 +120,7 @@ public class BeaconAtlasPluginTest extends RequestProviderBase {
         beaconAtlasPlugin.importData(dataSet, actualExportedPath);
     }
 
-    @Test
+    @Test(expectedExceptions = BeaconException.class)
     public void emptyFileExported() throws IOException, BeaconException, URISyntaxException {
         setupSingle();
         clientBuilder.setFilePath(getZipFilePathForEmpty());
@@ -150,7 +138,7 @@ public class BeaconAtlasPluginTest extends RequestProviderBase {
             private static final String TARGET_CLUSTER_NAME = "cl2";
             private static final String DATASET_NAME = "stocks";
 
-            private static final String STATING_PATH = "staging";
+            private static final String STATING_PATH = "/staging";
             private static final String TARGET_PORT = "31000";
             private static final String SOURCE_PORT = "21000";
 

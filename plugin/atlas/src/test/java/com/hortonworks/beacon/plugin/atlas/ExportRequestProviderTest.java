@@ -43,7 +43,7 @@ public class ExportRequestProviderTest extends RequestProviderBase {
     @Test
     public void hiveRequest() throws BeaconException {
         AtlasExportRequest request = ExportRequestProvider.create(getMockProcess(),
-                getDataSet(DataSet.DataSetType.HIVE, SOURCE_DB_NAME, false),
+                getDataSet(DataSet.DataSetType.HIVE, SOURCE_DB_NAME, SOURCE_DB_NAME, false),
                 AtlasMockRESTClient.DEFAULT_GUID, HDFS_URI);
 
         String expectedQualifiedName = String.format(
@@ -55,7 +55,7 @@ public class ExportRequestProviderTest extends RequestProviderBase {
     @Test
     public void hiveRequestWithNullTargetCluster() throws BeaconException {
         AtlasExportRequest request = ExportRequestProvider.create(getMockProcess(),
-                getDataSet(DataSet.DataSetType.HIVE, SOURCE_DB_NAME, true),
+                getDataSet(DataSet.DataSetType.HIVE, SOURCE_DB_NAME, SOURCE_DB_NAME, true),
                 AtlasMockRESTClient.DEFAULT_GUID, HDFS_URI);
 
         String expectedQualifiedName = String.format(
@@ -89,7 +89,7 @@ public class ExportRequestProviderTest extends RequestProviderBase {
     @Test
     public void hdfsRequest() throws BeaconException {
         AtlasExportRequest request = ExportRequestProvider.create(getMockProcess(),
-                getDataSet(DataSet.DataSetType.HDFS, WAREHOUSE_ACCOUNTS_PATH, false),
+                getDataSet(DataSet.DataSetType.HDFS, WAREHOUSE_ACCOUNTS_PATH, SOURCE_DB_NAME, false),
                 AtlasMockRESTClient.DEFAULT_GUID, HDFS_URI);
 
         assertNotNull(request);

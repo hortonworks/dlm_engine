@@ -143,6 +143,77 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
     }
 
     @Test
+    public void testOnPremToCloudPolicyUpdate() throws Exception{
+        CloudCred cloudCred = getCloudCred();
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName = testDataGenerator.getRandomString("HDFSCloudPolicy");
+        String sourceDataSet = SOURCE_DIR + policyName;
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        ReplicationPolicy policy = testDataGenerator.getPolicy(policyName, sourceDataSet,
+                getCloudDataSet(), "FS", 15,
+                sourceCluster.getName(), null, cloudProps);
+        testDataGenerator.createFSMocks(sourceDataSet);
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        waitOnCondition(50000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        PropertiesIgnoreCase props = new PropertiesIgnoreCase();
+        props.put(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName(), "true");
+        props.put(ReplicationPolicy.ReplicationPolicyFields.FREQUENCYINSEC.getName(), "20");
+        targetClient.updatePolicy(policyName, props);
+        waitOnCondition(50000, "Second Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getNthInstance(targetClient, policyName, 2);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetClient.deletePolicy(policyName, false);
+    }
+
+    @Test
+    public void testCloudToOnPremPolicyUpdate() throws Exception {
+        CloudCred cloudCred = getCloudCred();
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName = testDataGenerator.getRandomString("CloudHDFSPolicy");
+        String targetDataSet = SOURCE_DIR + policyName;
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        String sourceDataSet = getCloudDataSet();
+        ReplicationPolicy policy = testDataGenerator.getPolicy(policyName,
+                sourceDataSet, targetDataSet, "FS", 15,
+                null, sourceCluster.getName(), cloudProps);
+        testDataGenerator.createFSMocks(sourceDataSet);
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        waitOnCondition(50000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        PropertiesIgnoreCase props = new PropertiesIgnoreCase();
+        props.put(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName(), "true");
+        props.put(ReplicationPolicy.ReplicationPolicyFields.FREQUENCYINSEC.getName(), "20");
+        targetClient.updatePolicy(policyName, props);
+        waitOnCondition(50000, "Second Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getNthInstance(targetClient, policyName, 2);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetClient.deletePolicy(policyName, false);
+    }
+
+    @Test
     public void testHiveCloudReplication() throws Exception {
         CloudCred cloudCred = getCloudCred();
         String cloudCredId = targetClient.submitCloudCred(cloudCred);

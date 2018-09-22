@@ -65,8 +65,11 @@ public class ImportProcess extends AtlasProcess {
             return exportedDataPath;
         } catch (AtlasRestClientException e) {
             throw e;
+        } catch (BeaconException ex) {
+            LOG.error("BeaconAtlasPlugin: ImportProcess: connection errors", ex);
+            throw ex;
         } catch (Exception e) {
-            LOG.error("BeaconAtlasPlugin: importData", e);
+            LOG.error("BeaconAtlasPlugin: ImportProcess: ", e);
             throw new BeaconException(e);
         } finally {
             LOG.info("BeaconAtlasPlugin: AtlasProcess: <== ImportProcess.run: {}: Done!",

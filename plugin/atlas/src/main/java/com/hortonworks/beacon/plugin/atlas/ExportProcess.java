@@ -49,7 +49,7 @@ public class ExportProcess extends AtlasProcess {
         super(builder);
     }
 
-    public Path run(DataSet dataset, Path stagingDir, AtlasPluginStats pluginStats) throws AtlasRestClientException {
+    public Path run(DataSet dataset, Path stagingDir, AtlasPluginStats pluginStats) throws BeaconException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("BeaconAtlasPlugin: AtlasProcess: dataset: {}, stagingDir: {}", dataset, stagingDir);
         }
@@ -76,6 +76,9 @@ public class ExportProcess extends AtlasProcess {
 
             return exportPath;
         } catch (AtlasRestClientException ex) {
+            throw ex;
+        } catch (BeaconException ex) {
+            LOG.error("BeaconAtlasPlugin: ExportProcess: connection errors", ex);
             throw ex;
         } catch (Exception ex) {
             LOG.info("BeaconAtlasPlugin: AtlasProcess: ExportProcess: failed! - {}", ex.getMessage());

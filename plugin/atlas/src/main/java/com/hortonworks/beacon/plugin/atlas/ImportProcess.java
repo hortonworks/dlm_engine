@@ -26,7 +26,6 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
 import org.apache.atlas.model.impexp.AtlasImportRequest;
 import org.apache.atlas.model.impexp.AtlasImportResult;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -92,14 +91,7 @@ public class ImportProcess extends AtlasProcess {
         try {
             LOG.info("BeaconAtlasPlugin: AtlasProcess: importFile: importing {} ...", filePath);
             inputStream = FileSystemUtils.getInputStream(targetFS, filePath);
-            AtlasImportRequest importRequest = ImportRequestProvider.create(
-                    dataSet.getType(),
-                    dataSet.getSourceDataSet(),
-                    dataSet.getTargetDataSet(),
-                    getAtlasServerName(dataSet.getSourceCluster()),
-                    getAtlasServerName(dataSet.getTargetCluster()),
-                    getFsEndpoint(dataSet.getSourceCluster()),
-                    getFsEndpoint(dataSet.getTargetCluster()));
+            AtlasImportRequest importRequest = ImportRequestProvider.create(dataSet);
 
             AtlasImportResult result = importData(dataSet.getTargetCluster(), importRequest, inputStream);
             if (result == null) {
@@ -120,10 +112,6 @@ public class ImportProcess extends AtlasProcess {
                 inputStream.close();
             }
         }
-    }
-
-    private String getFsEndpoint(Cluster cluster) {
-        return (cluster != null) ? (cluster.getFsEndpoint()) : StringUtils.EMPTY;
     }
 
     private boolean checkEmptyPath(Path filePath) {

@@ -78,14 +78,18 @@ public abstract class AtlasProcess {
         return builder.knoxGatewayUrl(knoxGatewayURL).baseUrl(atlasEndpoint).create();
     }
 
-    protected String getAtlasServerName(Cluster cluster) {
+    protected static String getAtlasServerName(Cluster cluster) {
         String clusterName = cluster.getName();
         String atlasCluserName = clusterName;
-        if (org.apache.commons.lang.StringUtils.contains(clusterName, CLUSTER_NAME_SEPARATOR)) {
-            atlasCluserName = org.apache.commons.lang.StringUtils.split(clusterName, CLUSTER_NAME_SEPARATOR)[1];
+        if (StringUtils.contains(clusterName, CLUSTER_NAME_SEPARATOR)) {
+            atlasCluserName = StringUtils.split(clusterName, CLUSTER_NAME_SEPARATOR)[1];
         }
 
         return atlasCluserName;
+    }
+
+    protected static String getFsEndpoint(Cluster cluster) {
+        return (cluster != null) ? (cluster.getFsEndpoint()) : StringUtils.EMPTY;
     }
 
     public String getEntityGuid(Cluster cluster,

@@ -62,16 +62,30 @@ final class ImportRequestProvider {
 
     private static final String REPLICATED_TAG_NAME = "%s_replicated";
 
+    public static AtlasImportRequest create(DataSet dataSet) {
+        return create(dataSet.getType(),
+                dataSet.getSourceDataSet(),
+                dataSet.getTargetDataSet(),
+                AtlasProcess.getAtlasServerName(dataSet.getSourceCluster()),
+                AtlasProcess.getAtlasServerName(dataSet.getTargetCluster()),
+                AtlasProcess.getFsEndpoint(dataSet.getSourceCluster()),
+                AtlasProcess.getFsEndpoint(dataSet.getTargetCluster()),
+                (dataSet.getSourceCluster() != null) ? dataSet.getSourceCluster().getName() : StringUtils.EMPTY);
+    }
+
     public static AtlasImportRequest create(DataSet.DataSetType dataSetType,
                                             String sourceDataSet, String targetDataSet,
                                             String sourceClusterName, String targetClusterName,
-                                            String sourcefsEndpoint, String targetFsEndpoint) {
+                                            String sourcefsEndpoint, String targetFsEndpoint,
+                                            String sourceClusterFullyQualifiedName) {
         AtlasImportRequest request = new AtlasImportRequest();
+
         addTransforms(dataSetType, request.getOptions(),
                 sourceClusterName, targetClusterName,
                 sourceDataSet, targetDataSet,
                 sourcefsEndpoint, targetFsEndpoint);
-        addMetaInfoUpdate(request.getOptions(), sourceClusterName);
+
+        addReplicatedFrom(request.getOptions(), sourceClusterFullyQualifiedName);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("AtlasProcess: importRequest: {}", request);
@@ -128,7 +142,7 @@ final class ImportRequestProvider {
                                 propertyName, "SET: " + targetClusterName));
     }
 
-    private static void addMetaInfoUpdate(Map<String, String> options, String sourceClusterName) {
+    private static void addReplicatedFrom(Map<String, String> options, String sourceClusterName) {
         options.put(AtlasImportRequest.OPTION_KEY_REPLICATED_FROM, sourceClusterName);
     }
 

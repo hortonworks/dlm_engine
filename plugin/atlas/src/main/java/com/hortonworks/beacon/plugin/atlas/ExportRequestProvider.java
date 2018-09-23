@@ -67,12 +67,15 @@ final class ExportRequestProvider {
         String sourceClusterName = getClusterName(process, dataSet.getSourceCluster());
 
         Cluster targetCluster = dataSet.getTargetCluster();
-        String targetClusterName = getClusterName(process, targetCluster);
 
         List<AtlasObjectId> itemsToExport = getItemsToExport(dataSetType, sourceClusterName, sourceDataSet, fsUri);
 
         long fromTimestamp = getFromTimestamp(process, targetCluster, sourceClusterName, entityGuid);
-        Map<String, Object> options = getOptions(dataSetType, targetClusterName, fromTimestamp);
+        Map<String, Object> options = getOptions(dataSetType, fromTimestamp);
+
+        addReplicatedTo(options, (dataSet.getTargetCluster() != null)
+                ? dataSet.getTargetCluster().getName()
+                : StringUtils.EMPTY);
 
         return createRequest(itemsToExport, options);
     }
@@ -118,13 +121,8 @@ final class ExportRequestProvider {
     }
 
     private static Map<String, Object> getOptions(DataSet.DataSetType datasetType,
-                                                  String targetClusterName,
                                                   long fromTimestamp) {
         Map<String, Object> options = new HashMap<>();
-
-        if (StringUtils.isNotEmpty(targetClusterName)) {
-            options.put(AtlasExportRequest.OPTION_KEY_REPLICATED_TO, targetClusterName);
-        }
 
         options.put(AtlasExportRequest.OPTION_FETCH_TYPE, AtlasExportRequest.FETCH_TYPE_INCREMENTAL);
         options.put(AtlasExportRequest.FETCH_TYPE_INCREMENTAL_CHANGE_MARKER, fromTimestamp);
@@ -135,6 +133,12 @@ final class ExportRequestProvider {
         }
 
         return options;
+    }
+
+    private static void addReplicatedTo(Map<String, Object> options, String targetClusterName) {
+        if (StringUtils.isNotEmpty(targetClusterName)) {
+            options.put(AtlasExportRequest.OPTION_KEY_REPLICATED_TO, targetClusterName);
+        }
     }
 
     private static List<AtlasObjectId> getItemsToExport(DataSet.DataSetType dataSetType,

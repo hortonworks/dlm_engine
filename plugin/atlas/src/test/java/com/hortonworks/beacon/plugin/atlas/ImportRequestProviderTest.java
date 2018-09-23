@@ -120,7 +120,7 @@ public class ImportRequestProviderTest extends RequestProviderBase {
         AtlasImportRequest request = ImportRequestProvider.create(dataSet.getType(),
                 dataSet.getSourceDataSet(),
                 dataSet.getTargetDataSet(),
-                SOURCE_CLUSTER_NAME, TARGET_CLUSTER_NAME, "", "");
+                SOURCE_CLUSTER_NAME, TARGET_CLUSTER_NAME, "", "", "");
 
         String actualTransformsJSON = request.getOptions().get(AtlasImportRequest.TRANSFORMERS_KEY);
         assertNotNull(actualTransformsJSON);

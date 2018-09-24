@@ -227,6 +227,12 @@
                 <groupId>com.hortonworks.beacon</groupId>
                 <artifactId>beacon-atlas</artifactId>
                 <version>${project.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.hortonworks.beacon</groupId>

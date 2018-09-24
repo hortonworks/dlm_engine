@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.entity.entityNeo;
 
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.hadoop.conf.Configuration;
@@ -34,11 +35,11 @@ import java.io.IOException;
  */
 public abstract class DataSet {
 
-    public abstract boolean exists() throws IOException;
+    public abstract boolean exists() throws IOException, BeaconException;
 
     public abstract void create() throws IOException;
 
-    public abstract boolean isEmpty() throws IOException;
+    public abstract boolean isEmpty() throws IOException, BeaconException;
 
     public abstract void isWriteAllowed() throws ValidationException;
 
@@ -53,4 +54,18 @@ public abstract class DataSet {
     public abstract void disallowSnapshot() throws IOException;
 
     public abstract boolean isEncrypted() throws BeaconException;
+
+    public abstract void close();
+
+    public static DataSet create(String dataSet, String clusterName, ReplicationPolicy policy) throws BeaconException {
+        String policyType = policy.getType().toLowerCase();
+        switch (policyType) {
+            case "hive" :
+                return new HiveDataSet(dataSet, clusterName, policy);
+            case "fs" :
+                return FSDataSet.create(dataSet, clusterName, policy);
+            default:
+                throw new IllegalStateException("Unhandeled policyType " + policyType);
+        }
+    }
 }

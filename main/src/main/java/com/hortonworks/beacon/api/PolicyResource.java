@@ -41,7 +41,6 @@ import com.hortonworks.beacon.client.resource.StatusResult;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.entity.entityNeo.DataSet;
-import com.hortonworks.beacon.entity.entityNeo.FSDataSet;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
@@ -570,16 +569,30 @@ public class PolicyResource extends AbstractResourceManager {
             }
             if (isSourceClusterLocal) {
                 String sourceDataset = policy.getSourceDataset();
-                DataSet srcDataSet = FSDataSet.create(sourceDataset, policy.getSourceCluster(), policy);
-                deleteExistingSnapshots(policy.getName(), policy.getSourceCluster(), srcDataSet,
-                        snapshotNamePrefix);
-                disallowSnapshots(policy.getName(), policy.getSourceCluster(), srcDataSet);
+                DataSet srcDataSet = null;
+                try {
+                    srcDataSet = DataSet.create(sourceDataset, policy.getSourceCluster(), policy);
+                    deleteExistingSnapshots(policy.getName(), policy.getSourceCluster(), srcDataSet,
+                            snapshotNamePrefix);
+                    disallowSnapshots(policy.getName(), policy.getSourceCluster(), srcDataSet);
+                } finally {
+                    if (srcDataSet != null) {
+                        srcDataSet.close();
+                    }
+                }
             } else {
                 String targetDataset = policy.getTargetDataset();
-                DataSet tgtDataSet = FSDataSet.create(targetDataset, policy.getTargetCluster(), policy);
-                deleteExistingSnapshots(policy.getName(), policy.getTargetCluster(), tgtDataSet,
-                        snapshotNamePrefix);
-                disallowSnapshots(policy.getName(), policy.getTargetCluster(), tgtDataSet);
+                DataSet tgtDataSet = null;
+                try {
+                    tgtDataSet = DataSet.create(targetDataset, policy.getTargetCluster(), policy);
+                    deleteExistingSnapshots(policy.getName(), policy.getTargetCluster(), tgtDataSet,
+                            snapshotNamePrefix);
+                    disallowSnapshots(policy.getName(), policy.getTargetCluster(), tgtDataSet);
+                } finally {
+                    if (targetDataset != null) {
+                        tgtDataSet.close();
+                    }
+                }
             }
         } catch (IOException ex) {
             throw new BeaconException(ex);

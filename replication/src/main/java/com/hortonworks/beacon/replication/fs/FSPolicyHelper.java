@@ -76,11 +76,24 @@ public final class FSPolicyHelper {
         map.put(FSDRProperties.JOB_FREQUENCY.getName(), String.valueOf(policy.getFrequencyInSec()));
         map.put(FSDRProperties.START_TIME.getName(), DateUtil.formatDate(policy.getStartTime()));
         map.put(FSDRProperties.END_TIME.getName(), DateUtil.formatDate(policy.getEndTime()));
-        FSDataSet sourceDataSet = FSDataSet.create(policy.getSourceDataset(), policy.getSourceCluster(), policy);
-        FSDataSet targetDataSet = FSDataSet.create(policy.getTargetDataset(), policy.getTargetCluster(), policy);
-        map.put(FSDRProperties.SOURCE_DATASET.getName(), sourceDataSet.getResolvedPath());
-        map.put(FSDRProperties.TARGET_DATASET.getName(), targetDataSet.getResolvedPath());
-
+        FSDataSet sourceDataSet = null;
+        FSDataSet targetDataSet = null;
+        try {
+            sourceDataSet = FSDataSet.create(policy.getSourceDataset(), policy.getSourceCluster(), policy);
+            map.put(FSDRProperties.SOURCE_DATASET.getName(), sourceDataSet.getResolvedPath());
+        } finally {
+            if (sourceDataSet != null) {
+                sourceDataSet.close();
+            }
+        }
+        try {
+            targetDataSet = FSDataSet.create(policy.getTargetDataset(), policy.getTargetCluster(), policy);
+            map.put(FSDRProperties.TARGET_DATASET.getName(), targetDataSet.getResolvedPath());
+        } finally {
+            if (targetDataSet != null) {
+                targetDataSet.close();
+            }
+        }
         Properties customProp = policy.getCustomProperties();
         map.put(FSDRProperties.DISTCP_MAX_MAPS.getName(),
                 customProp.getProperty(FSDRProperties.DISTCP_MAX_MAPS.getName()));

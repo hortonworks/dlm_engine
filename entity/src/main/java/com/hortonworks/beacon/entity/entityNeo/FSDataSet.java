@@ -109,6 +109,11 @@ public abstract class FSDataSet extends DataSet {
     }
 
     @Override
+    public void close() {
+        // DO nothing as we are caching the HDFS filesystem objects.
+    }
+
+    @Override
     public void isWriteAllowed() throws ValidationException {
         String tmpFileName = ".Beacon_" + System.currentTimeMillis() + ".tmp";
         try {

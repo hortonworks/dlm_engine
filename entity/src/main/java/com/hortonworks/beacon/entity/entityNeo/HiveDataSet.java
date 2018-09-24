@@ -22,39 +22,66 @@
 
 package com.hortonworks.beacon.entity.entityNeo;
 
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.entity.BeaconCloudCred;
-import com.hortonworks.beacon.entity.EncryptionAlgorithmType;
+import com.hortonworks.beacon.entity.BeaconCluster;
+import com.hortonworks.beacon.entity.exceptions.ValidationException;
+import com.hortonworks.beacon.entity.util.ClusterDao;
+import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
+import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-
-import static com.hortonworks.beacon.util.FSUtils.merge;
+import java.util.List;
 
 /**
- * Dataset that represents file on Hadoop Compatible Filesystem (HCFS) like S3, WASB etc.
+ * Hive implementation of dataset.
  */
-public abstract class HCFSDataset extends FSDataSet {
+public class HiveDataSet extends DataSet {
 
     private static final Logger LOG = LoggerFactory.getLogger(FSDataSet.class);
 
-    public HCFSDataset(String path, ReplicationPolicy policy) throws BeaconException {
-        super(path, policy);
+    private FSDataSet warehouseFsDataSet;
+    private String dbName;
+    private HiveMetadataClient metadataClient;
+
+    public HiveDataSet(String dbName, String clusterName, ReplicationPolicy policy)
+            throws BeaconException {
+        this.dbName = dbName;
+        ClusterDao clusterDao = new ClusterDao();
+        Cluster cluster = clusterDao.getActiveCluster(clusterName);
+        metadataClient = HiveClientFactory.getMetadataClient(cluster);
+        BeaconCluster beaconCluster = new BeaconCluster(cluster);
+        warehouseFsDataSet = FSDataSet.create(beaconCluster.getHiveWarehouseLocation(), clusterName, policy);
     }
 
-    protected Configuration getHadoopConf(String path, ReplicationPolicy policy) throws BeaconException {
-        BeaconCloudCred cloudCred = new BeaconCloudCred(policy.getCloudCred());
+    @Override
+    public boolean exists() throws IOException, BeaconException {
+        return metadataClient.doesDBExist(dbName);
+    }
 
-        Configuration conf = cloudCred.getHadoopConf(false);
-        //Disable filesystem caching for cloud connectors
-        conf.set("fs." + cloudCred.getProvider().getHcfsScheme() + ".impl.disable.cache", "true");
-        Configuration encryptionConf = EncryptionAlgorithmType.getHadoopConf(policy, path);
+    @Override
+    public void create() throws IOException {
+        //do nothing as replication will automatically create target db
+    }
 
-        merge(conf, encryptionConf);
-        return conf;
+    @Override
+    public boolean isEmpty() throws IOException, BeaconException {
+        List<String> tables = metadataClient.getTables(dbName);
+        return tables == null || tables.isEmpty();
+    }
+
+    @Override
+    public void isWriteAllowed() throws ValidationException {
+        warehouseFsDataSet.isWriteAllowed();
+    }
+
+    @Override
+    public Configuration getHadoopConf() {
+        return warehouseFsDataSet.getHadoopConf();
     }
 
     @Override
@@ -64,27 +91,31 @@ public abstract class HCFSDataset extends FSDataSet {
 
     @Override
     public void deleteAllSnapshots(String snapshotNamePrefix) throws IOException {
-        throw new IllegalStateException("deleteAllSnapshots doesn't apply for HCFS");
+        //Do nothing
     }
 
     @Override
     public void allowSnapshot() throws IOException {
-        throw new IllegalStateException("allowSnapshot doesn't apply for HCFS");
+        //Do nothing
     }
 
     @Override
     public void disallowSnapshot() throws IOException {
-        throw new IllegalStateException("disallowSnapshot doesn't apply for HCFS");
+        //Do nothing
+    }
+
+    @Override
+    public boolean isEncrypted() throws BeaconException {
+        return warehouseFsDataSet.isEncrypted();
     }
 
     @Override
     public void close() {
-        if (fileSystem != null) {
-            try {
-                fileSystem.close();
-            } catch (IOException e) {
-                LOG.debug("IOException while closing fileSystem", e);
-            }
+        try {
+            metadataClient.close();
+        } catch (Exception ex) {
+            LOG.debug("Exception occurred while closing HiveMetaData client ", ex);
         }
+        warehouseFsDataSet.close();
     }
 }

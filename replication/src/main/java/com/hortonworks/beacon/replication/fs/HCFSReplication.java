@@ -28,7 +28,7 @@ import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
-import com.hortonworks.beacon.entity.entityNeo.FSDataSet;
+import com.hortonworks.beacon.entity.entityNeo.DataSet;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
@@ -272,7 +272,16 @@ public class HCFSReplication extends FSReplication {
         String policyName = properties.getProperty(ReplicationPolicy.ReplicationPolicyFields.NAME.getName());
         ReplicationPolicy policy = new PolicyDao().getActivePolicy(policyName);
         String cloudPath = getCloudPath(policy);
-        Configuration fsConf = FSDataSet.create(cloudPath, null, policy).getHadoopConf();
+        Configuration fsConf;
+        DataSet dataSet = null;
+        try {
+            dataSet = DataSet.create(cloudPath, null, policy);
+            fsConf = dataSet.getHadoopConf();
+        } finally {
+            if (dataSet != null) {
+                dataSet.close();
+            }
+        }
         return merge(conf, fsConf);
     }
 

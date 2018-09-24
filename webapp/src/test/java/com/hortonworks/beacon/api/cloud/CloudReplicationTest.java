@@ -566,4 +566,33 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
          */
         targetClient.deleteCloudCred(cloudCredId);
     }
+
+
+    @Test
+    public void testHiveCloudReplicationPolicyUpdateTest() throws Exception {
+        CloudCred cloudCred = getCloudCred();
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName = testDataGenerator.getRandomString("HiveS3Policy");
+        String sourceDataSet = SOURCE_DIR + policyName;
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        ReplicationPolicy policy = testDataGenerator.getPolicy(policyName, sourceDataSet,
+                testDataGenerator.getRandomString("HiveTestDb"), "HIVE", 60,
+                sourceCluster.getName(), targetCluster.getName(), cloudProps);
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        waitOnCondition(10000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        ReplicationPolicy updatedPolicy = new ReplicationPolicy();
+        updatedPolicy.setFrequencyInSec(240);
+        targetClient.updatePolicy(policyName, updatedPolicy.asProperties());
+
+        targetClient.deletePolicy(policyName, false);
+    }
+
 }

@@ -109,8 +109,6 @@ public class BeaconCloudCred extends CloudCred {
     public Configuration getHadoopConf(boolean loadDefaults) {
         List<Config> requiredConfigs = getAuthType().getRequiredConfigs();
         Configuration conf = new Configuration(loadDefaults);
-        //Disable filesystem caching for cloud connectors
-        conf.set("fs." + getProvider().getHcfsScheme() + ".impl.disable.cache", "true");
         boolean isCredentialRequired = false;   //Are there any stored passwords
         for (Config config : requiredConfigs) {
             if (config.getHadoopConfigName() != null) {

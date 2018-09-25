@@ -75,6 +75,7 @@ public abstract class AtlasProcess {
 
         BeaconCluster beaconCluster = new BeaconCluster(cluster);
         String knoxGatewayURL = beaconCluster.getKnoxGatewayURL();
+        LOG.info("BeaconAtlasPlugin: cluster: {}, knoxGatewayURL: {}", cluster.getName(), knoxGatewayURL);
         return builder.knoxGatewayUrl(knoxGatewayURL).baseUrl(atlasEndpoint).create();
     }
 

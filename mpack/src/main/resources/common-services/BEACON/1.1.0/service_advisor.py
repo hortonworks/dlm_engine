@@ -130,7 +130,10 @@ class BEACON110ServiceAdvisor(service_advisor.ServiceAdvisor):
             and 'set_hive_configs' in services['configurations']['beacon-env']['properties'] \
             and services['configurations']['beacon-env']['properties']['set_hive_configs'] == 'true' and hive_site:
       hive_user = 'hive'
-      putHdfsCoreSiteProperty('hadoop.proxyuser.{0}.hosts'.format(hive_user), '*')
+
+      if 'HDFS' in servicesList and 'core-site' in services['configurations']:
+        putHdfsCoreSiteProperty('hadoop.proxyuser.{0}.hosts'.format(hive_user), '*')
+
       if not self.is_cloud_warehouse(hive_site['hive.metastore.warehouse.dir']):
         putHiveSiteProperty('hive.metastore.dml.events', 'true')
         putHiveSiteProperty('hive.repl.cm.enabled', 'true')

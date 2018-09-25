@@ -30,8 +30,6 @@ import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
-import com.hortonworks.beacon.service.BeaconStoreService;
 import com.hortonworks.beacon.service.ServiceManager;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -51,9 +49,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.PrivilegedAction;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -67,9 +63,6 @@ public final class Beacon {
 
     private static Server server;
     private static Timer timer = new Timer();
-
-    static final List<String> DEFAULT_SERVICES = Arrays.asList(BeaconStoreService.class.getName());
-    static final List<String> DEPENDENT_SERVICES = Arrays.asList(BeaconQuartzScheduler.class.getName());
 
     private static final String APP_PATH = "app";
     private static final String APP_PORT = "port";
@@ -194,7 +187,6 @@ public final class Beacon {
                 tlsEnabled, bindHost, port);
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 
-        ServiceManager.getInstance().initialize(DEFAULT_SERVICES, DEPENDENT_SERVICES);
         if (isSpnegoEnable()) {
             if (loginUserFromKeytab()) {
                 try{
@@ -255,18 +247,8 @@ public final class Beacon {
 
     private static boolean loginUserFromKeytab() throws IOException {
         String keytab = AUTHCONFIG.getProperty(BEACON_USER_KEYTAB);
-        String principal = null;
-        try {
-            principal = SecureClientLogin.getPrincipal(AUTHCONFIG.getProperty(BEACON_USER_PRINCIPAL),
-                    BeaconConfig.getInstance().getEngine().getHostName());
-        } catch (IOException ignored) {
-            LOG.warn("Failed to get beacon.kerberos.principal. Reason: {}", ignored.toString());
-        }
-        String nameRules = AUTHCONFIG.getProperty(NAME_RULES);
-        if (StringUtils.isBlank(nameRules)) {
-            LOG.info("Name is empty. Setting Name Rule as 'DEFAULT'");
-            nameRules = DEFAULT_NAME_RULE;
-        }
+        String principal = SecureClientLogin.getPrincipal(AUTHCONFIG.getProperty(BEACON_USER_PRINCIPAL),
+                BeaconConfig.getInstance().getEngine().getHostName());
         if (AUTHCONFIG.getProperty(BEACON_AUTH_TYPE) != null
                 && AUTHCONFIG.getProperty(BEACON_AUTH_TYPE).trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS)
                 && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {

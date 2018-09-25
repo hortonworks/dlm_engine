@@ -23,18 +23,26 @@
 package com.hortonworks.beacon.servlet;
 
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
+import com.hortonworks.beacon.service.BeaconStoreService;
+import com.hortonworks.beacon.service.ServiceManager;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * ServletContextListener thats called at server start, before filters/servlets are initialized.
  */
 public class BeaconServletContextListener implements ServletContextListener {
     private static final Logger LOG = LoggerFactory.getLogger(BeaconServletContextListener.class);
+    static final List<String> DEFAULT_SERVICES = Arrays.asList(BeaconStoreService.class.getName());
+    static final List<String> DEPENDENT_SERVICES = Arrays.asList(BeaconQuartzScheduler.class.getName());
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
@@ -47,6 +55,12 @@ public class BeaconServletContextListener implements ServletContextListener {
 
         //Force loading of beacon config so that beacon conf directory is set for others to load
         BeaconConfig.getInstance();
+
+        try {
+            ServiceManager.getInstance().initialize(DEFAULT_SERVICES, DEPENDENT_SERVICES);
+        } catch (BeaconException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

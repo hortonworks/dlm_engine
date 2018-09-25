@@ -44,6 +44,7 @@ import com.hortonworks.beacon.util.FileSystemClientFactory;
  */
 final class DistCpOptionsUtil {
     private static final Logger LOG = LoggerFactory.getLogger(DistCpOptionsUtil.class);
+    public static final String DYNAMIC = "dynamic";
 
     private DistCpOptionsUtil() {
     }
@@ -75,6 +76,9 @@ final class DistCpOptionsUtil {
         if (maxBandwidth != null) {
             distcpOptions.setMapBandwidth(Integer.parseInt(maxBandwidth));
         }
+
+        //BUG-111601 - HDFS onprem to cloud replications are slow
+        distcpOptions.setCopyStrategy(DYNAMIC);
 
         LOG.info("HCFS DistCp options submitted: [{}]", distcpOptions.toString());
         return distcpOptions;

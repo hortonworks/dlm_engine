@@ -74,7 +74,6 @@ public abstract class FSDataSet extends DataSet {
 
     private FSDataSet(String path, Configuration conf, ReplicationPolicy policy) throws BeaconException {
         this.path = resolvePath(path, policy);
-        LOG.info("Resolved path: {}", this.path);
         this.conf = conf != null ? conf : getHadoopConf(path, policy);
         Configuration defaultConf = new Configuration(true);
         merge(defaultConf, this.conf);

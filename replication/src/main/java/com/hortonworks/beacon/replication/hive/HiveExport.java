@@ -190,6 +190,7 @@ public class HiveExport extends InstanceReplication {
             captureHiveReplicationMetrics(jobContext, HiveActionType.EXPORT, sourceStatement);
             close(res);
             close(sourceStatement);
+            close(sourceHiveClient);
         }
         return dumpDirectory;
     }
@@ -224,13 +225,15 @@ public class HiveExport extends InstanceReplication {
 
     private long getReplEventId() throws BeaconException {
         Statement statement = null;
+        HiveServerClient hiveServerClient = null;
         try {
-            HiveServerClient hiveServerClient = HiveClientFactory.getHiveServerClient(targetConnectionString);
+            hiveServerClient = HiveClientFactory.getHiveServerClient(targetConnectionString);
             statement = hiveServerClient.createStatement();
             ReplCommand replCommand = new ReplCommand();
             return replCommand.getReplicatedEventId(statement, properties);
         } finally {
             close(statement);
+            close(hiveServerClient);
         }
     }
 }

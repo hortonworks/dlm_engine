@@ -81,9 +81,14 @@ public class HiveJobBuilder extends JobBuilder {
     private boolean isBootstrapRun(ReplicationPolicy policy) throws BeaconException {
         Cluster cluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
         Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
-        HiveServerClient hiveServerClient = HiveClientFactory.getHiveServerClient(cluster.getHsEndpoint(),
-                                                                                    targetCluster);
-        long replId = hiveServerClient.getReplicatedEventId(policy.getTargetDataset());
-        return replId <= 0;
+        HiveServerClient hiveServerClient = null;
+        try {
+            hiveServerClient = HiveClientFactory.getHiveServerClient(cluster.getHsEndpoint(),
+                    targetCluster);
+            long replId = hiveServerClient.getReplicatedEventId(policy.getTargetDataset());
+            return replId <= 0;
+        } finally {
+            HiveClientFactory.close(hiveServerClient);
+        }
     }
 }

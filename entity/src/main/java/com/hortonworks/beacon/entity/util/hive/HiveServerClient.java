@@ -29,12 +29,10 @@ import java.sql.Statement;
 /**
  * Client interface for hive server.
  */
-public interface HiveServerClient {
+public interface HiveServerClient extends AutoCloseable {
     Statement createStatement() throws BeaconException;
 
     void killQuery(String queryId) throws BeaconException;
-
-    void close();
 
     long getReplicatedEventId(String dbName) throws BeaconException;
 }

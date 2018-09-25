@@ -197,16 +197,16 @@ public class RESTClientBuilder {
                 case KNOX:
                     String[] proxiedUrls = getProxiedUrls(baseUrls);
                     this.hdpCookie = new Cookie(KNOX_HDP_COOKIE_NAME, getSSOToken(knoxGatewayUrlForProxy));
-                    LOG.info("BeaconAtlasPlugin: authStrategy: {} : knox hdpCookie: {}: proxiedUrls: {}",
-                            authStrategy, hdpCookie, proxiedUrls);
+                    LOG.info("BeaconAtlasPlugin: authStrategy: {} : knox hdpCookie: {}: knoxGatewayUrlForProxy: {},"
+                            + " proxiedUrls: {}", authStrategy, hdpCookie, knoxGatewayUrlForProxy, proxiedUrls);
 
-                    clientV2 = new AtlasClientV2(proxiedUrls, this.hdpCookie);
+                    clientV2 = new BeaconAtlasClient(proxiedUrls, this.hdpCookie);
                     return new AtlasRESTClient(clientV2);
 
                 case KERBEROS:
-                    clientV2 = new AtlasClientV2(this.userGroupInformation,
-                            this.userGroupInformation.getShortUserName(), baseUrls);
 
+                    clientV2 = new BeaconAtlasClient(this.userGroupInformation,
+                            this.userGroupInformation.getShortUserName(), baseUrls);
                     return new AtlasRESTClient(clientV2);
 
                 case USER_NAME_PASSWORD:
@@ -216,7 +216,7 @@ public class RESTClientBuilder {
                     }
 
                     userIdPwd(getUserName(), getPassword());
-                    clientV2 = new AtlasClientV2(conf, baseUrls, new String[]{userId, password});
+                    clientV2 = new BeaconAtlasClient(conf, baseUrls, new String[]{userId, password});
                     return new AtlasRESTClient(clientV2);
 
                 default:
@@ -269,9 +269,7 @@ public class RESTClientBuilder {
                             ? "true"
                             : "false");
 
-            if (AUTHCONFIG.getProperty(TLS_ENABLED) != null) {
-                props.setProperty(TLS_ENABLED, AUTHCONFIG.getProperty(TLS_ENABLED));
-            }
+            props.setProperty(TLS_ENABLED, Boolean.toString(BeaconConfig.getInstance().getEngine().isTlsEnabled()));
 
             config = ConfigurationConverter.getConfiguration(props);
 

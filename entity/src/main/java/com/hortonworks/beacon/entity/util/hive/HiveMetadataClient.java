@@ -29,9 +29,7 @@ import java.util.List;
 /**
  * Hive Metadata client interface.
  */
-public interface HiveMetadataClient {
-    void close();
-
+public interface HiveMetadataClient extends AutoCloseable {
     List<String> listDatabases() throws BeaconException;
 
     Path getDatabaseLocation(String dbName) throws BeaconException;

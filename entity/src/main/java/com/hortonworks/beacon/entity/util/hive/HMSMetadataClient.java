@@ -70,7 +70,11 @@ public class HMSMetadataClient implements HiveMetadataClient {
     @Override
     public void close() {
         if (client != null) {
-            client.close();
+            try {
+                client.close();
+            } catch (Exception e) {
+                LOG.warn("Failed to close", e);
+            }
         }
     }
 

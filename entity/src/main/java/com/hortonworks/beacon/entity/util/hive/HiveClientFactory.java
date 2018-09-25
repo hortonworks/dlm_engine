@@ -25,12 +25,15 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Hive Metadata Client.
  */
 public final class HiveClientFactory {
 
+    private static final Logger LOG = LoggerFactory.getLogger(HiveClientFactory.class);
     private static HiveServerClient hiveServerClient;
 
     private HiveClientFactory() {
@@ -82,13 +85,21 @@ public final class HiveClientFactory {
 
     public static void close(HiveMetadataClient client) {
         if (client != null) {
-            client.close();
+            try {
+                client.close();
+            } catch (Exception e) {
+                LOG.warn("Failed to close", e);
+            }
         }
     }
 
     public static void close(HiveServerClient client) {
         if (client != null) {
-            client.close();
+            try {
+                client.close();
+            } catch (Exception e) {
+                LOG.warn("Failed to close", e);
+            }
         }
     }
 }

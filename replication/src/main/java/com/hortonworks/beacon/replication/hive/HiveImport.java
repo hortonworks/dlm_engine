@@ -165,7 +165,7 @@ public class HiveImport extends InstanceReplication {
             shutdownTimer();
             captureHiveReplicationMetrics(jobContext, HiveActionType.IMPORT, targetStatement);
             close(targetStatement);
-            HiveClientFactory.close(hiveServerClient);
+            close(hiveServerClient);
         }
     }
 
@@ -193,7 +193,7 @@ public class HiveImport extends InstanceReplication {
                 hiveServerClient = HiveClientFactory.getHiveServerClient(targetConnection);
                 hiveServerClient.killQuery(queryId);
             } finally {
-                HiveClientFactory.close(hiveServerClient);
+                close(hiveServerClient);
             }
         } else {
             LOG.debug("No Hive query id found!");
@@ -258,7 +258,7 @@ public class HiveImport extends InstanceReplication {
             return replCommand.getReplicatedEventId(statement, properties);
         } finally {
             close(statement);
-            HiveClientFactory.close(hiveServerClient);
+            close(hiveServerClient);
         }
     }
 }

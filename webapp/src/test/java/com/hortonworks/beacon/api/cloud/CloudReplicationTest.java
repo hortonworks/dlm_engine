@@ -142,7 +142,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         targetClient.deletePolicy(policyName, false);
     }
 
-    @Test
+    @Test(enabled = false)
     public void pluginLineageTestWithPreserveMeta() throws Exception {
         BeaconConfig.getInstance().getEngine().setPreserveMeta(true);
         CloudCred cloudCred = getCloudCred();

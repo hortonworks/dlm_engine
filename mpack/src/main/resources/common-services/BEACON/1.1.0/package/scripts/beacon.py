@@ -272,6 +272,17 @@ def beacon(type, action = None, upgrade_type=None):
                 beacon_atlas_user_policy_item = {'groups': [], 'conditions': [], 'users': [get_beacon_atlas_user], 'accesses': [{'type': 'read', 'isAllowed': True}, {'type': 'create', 'isAllowed': True}, {'type': 'update', 'isAllowed': True}, {'type':'delete', 'isAllowed': True}, {'type':'all', 'isAllowed': True}]}
                 atlas_policy_data = ranger_api_functions.update_policy_item(atlas_policy_response, beacon_atlas_user_policy_item)
                 atlas_update_policy_response = ranger_api_functions.update_policy(ranger_admin_url, atlas_policy_id, atlas_policy_data, format("{ranger_admin_user}:{ranger_admin_passwd}"))
+
+            # Get Ranger Atlas default policy for OPERATION resource
+            atlas_operation_policy_response = ranger_api_functions.get_ranger_service_default_policy(ranger_admin_url, params.ranger_atlas_service_name, format("{ranger_admin_user}:{ranger_admin_passwd}"), ['operation'])
+            if atlas_operation_policy_response:
+              beacon_atlas_user_present = ranger_api_functions.check_user_policy(atlas_operation_policy_response, get_beacon_atlas_user)
+              if not beacon_atlas_user_present:
+                # Updating beacon atlas user in Ranger Atlas default policy for operation resource
+                atlas_operation_policy_id = atlas_operation_policy_response['id']
+                beacon_atlas_user_policy_item = {'groups': [], 'conditions': [], 'users': [get_beacon_atlas_user], 'accesses': [{'type': 'read', 'isAllowed': True}, {'type': 'create', 'isAllowed': True}, {'type': 'update', 'isAllowed': True}, {'type':'delete', 'isAllowed': True}, {'type':'all', 'isAllowed': True}]}
+                atlas_operation_policy_data = ranger_api_functions.update_policy_item(atlas_operation_policy_response, beacon_atlas_user_policy_item)
+                atlas_operation_policy_update_response = ranger_api_functions.update_policy(ranger_admin_url, atlas_operation_policy_id, atlas_operation_policy_data, format("{ranger_admin_user}:{ranger_admin_passwd}"))
       except:
         show_logs(params.beacon_log_dir, params.beacon_user)
         raise

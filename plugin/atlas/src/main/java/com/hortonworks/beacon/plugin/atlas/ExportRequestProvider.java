@@ -187,7 +187,7 @@ final class ExportRequestProvider {
 
     public static String getQualifiedName(String dataSetName, String clusterName) {
 
-        String qualifiedName = String.format(QUALIFIED_NAME_FORMAT, dataSetName, clusterName);
+        String qualifiedName = String.format(QUALIFIED_NAME_FORMAT, dataSetName.toLowerCase(), clusterName);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("AtlasProcess: getQualifiedName: {}", qualifiedName);

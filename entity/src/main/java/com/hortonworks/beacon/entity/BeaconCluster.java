@@ -27,6 +27,7 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.util.ClusterDao;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.store.BeaconStoreException;
+import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -90,7 +91,9 @@ public class BeaconCluster extends Cluster {
 
     public FileSystem getFileSystem() throws BeaconException {
         if (getFsEndpoint() != null) {
-            return FileSystemClientFactory.get().createFileSystem(getHadoopConfiguration());
+            Configuration conf = new Configuration();
+            FSUtils.merge(conf, getHadoopConfiguration());
+            return FileSystemClientFactory.get().createFileSystem(conf);
         }
         return null;
     }

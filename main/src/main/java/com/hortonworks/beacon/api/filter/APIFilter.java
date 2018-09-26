@@ -58,6 +58,7 @@ public class APIFilter implements Filter {
             add("aws.access.key");
             add("aws.secret.key");
             add("cloud.encryptionKey");
+            add("wasb.access.key");
         }
     };
 

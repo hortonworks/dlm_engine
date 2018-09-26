@@ -48,7 +48,7 @@ engine:
     hadoopJobLookupRetries: 10
     hadoopJobLookupDelay: 2
     authReloginSeconds: 3600
-    excludeFileRegex: '\/.*_COPYING$|^.*\/\.[^\/]*$|\/_temporary$|\/\_temporary\/|.*/\.Trash\/.*'
+    excludeFileRegex: '\/.*_COPYING_$|\/.*_COPYING$|^.*\/\.[^\/]*$|\/_temporary$|\/\_temporary\/|.*/\.Trash\/.*'
     refreshEncryptionZones: 0
     refreshSnapshotDirs: 0
     snapshotRetentionNumber: 3

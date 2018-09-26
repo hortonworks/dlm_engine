@@ -149,6 +149,7 @@ public class RecoveryService implements BeaconService {
 
     private static void markInstancesDeleted(String instanceId, PolicyBean policyBean) {
         PolicyInstanceBean bean = new PolicyInstanceBean();
+        bean.setEndTime(new Date());
         bean.setInstanceId(instanceId);
         bean.setStatus(policyBean.getStatus());
         bean.setRetirementTime(policyBean.getRetirementTime());
@@ -159,6 +160,7 @@ public class RecoveryService implements BeaconService {
     private static void markInstanceStatus(String instanceId, String message, JobStatus jobStatus) {
         PolicyInstanceBean bean = new PolicyInstanceBean();
         bean.setInstanceId(instanceId);
+        bean.setEndTime(new Date());
         bean.setRetirementTime(new Date());
         bean.setStatus(jobStatus.name());
         bean.setMessage(message);

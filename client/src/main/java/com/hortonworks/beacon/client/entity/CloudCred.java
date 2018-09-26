@@ -159,6 +159,8 @@ public class CloudCred extends Entity {
 
     /**
      * S3 cloud cred configuration keys.
+     * All future credentials config which are passwords added in this class must be added to APIFilter class
+     * for masking.
      */
     public enum Config {
         VERSION("version", null, null, false),

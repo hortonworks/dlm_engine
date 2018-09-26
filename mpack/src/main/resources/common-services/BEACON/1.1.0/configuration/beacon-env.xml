@@ -456,7 +456,7 @@
   </property>
   <property>
     <name>beacon_exclude_file_regex</name>
-    <value>\/.*_COPYING$|^.*\/\.[^\/]*$|\/_temporary$|\/\_temporary\/|.*/\.Trash\/.*</value>
+    <value>\/.*_COPYING_$|\/.*_COPYING$|^.*\/\.[^\/]*$|\/_temporary$|\/\_temporary\/|.*/\.Trash\/.*</value>
     <description>Regex to exclude file(s).</description>
     <display-name>Regex to exclude file(s).</display-name>
   </property>

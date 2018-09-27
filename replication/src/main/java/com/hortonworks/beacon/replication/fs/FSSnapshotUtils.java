@@ -57,7 +57,7 @@ import static com.hortonworks.beacon.constants.BeaconConstants.SNAPSHOT_PREFIX;
 public final class FSSnapshotUtils {
     private static final Logger LOG = LoggerFactory.getLogger(FSSnapshotUtils.class);
 
-    public static final String TEMP_REPLICATION_SNAPSHOT = "tempReplicationSnapshot";
+    private static final String TEMP_REPLICATION_SNAPSHOT = "tempReplicationSnapshot";
 
     private FSSnapshotUtils() {
     }
@@ -335,6 +335,12 @@ public final class FSSnapshotUtils {
     static String getSnapshotName(String jobName) {
         String fsReplicationName;
         fsReplicationName = getSnapshotNamePrefix(jobName).concat(String.valueOf(System.currentTimeMillis()));
+        return fsReplicationName;
+    }
+
+    static String getTempSnapshotName(String jobName) {
+        String fsReplicationName;
+        fsReplicationName = getSnapshotNamePrefix(jobName).concat(TEMP_REPLICATION_SNAPSHOT);
         return fsReplicationName;
     }
 

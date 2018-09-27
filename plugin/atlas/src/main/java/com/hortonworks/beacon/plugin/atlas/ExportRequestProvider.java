@@ -70,7 +70,10 @@ final class ExportRequestProvider {
 
         List<AtlasObjectId> itemsToExport = getItemsToExport(dataSetType, sourceClusterName, sourceDataSet, fsUri);
 
-        long fromTimestamp = getFromTimestamp(process, targetCluster, sourceClusterName, entityGuid);
+        long fromTimestamp = getFromTimestamp(process, targetCluster,
+                getFullClusterName(dataSet.getSourceCluster()),
+                entityGuid);
+
         Map<String, Object> options = getOptions(dataSetType, fromTimestamp);
 
         addReplicatedTo(options, (dataSet.getTargetCluster() != null)
@@ -78,6 +81,10 @@ final class ExportRequestProvider {
                 : StringUtils.EMPTY);
 
         return createRequest(itemsToExport, options);
+    }
+
+    private static String getFullClusterName(Cluster cluster) {
+        return (cluster != null) ? cluster.getName() : StringUtils.EMPTY;
     }
 
     private static String getClusterName(AtlasProcess process, Cluster cluster) {
@@ -100,7 +107,7 @@ final class ExportRequestProvider {
 
     private static long getFromTimestamp(AtlasProcess process,
                                          Cluster targetCluster,
-                                         String sourceClusterName,
+                                         String sourceClusterFullName,
                                          String entityGuid) throws BeaconException {
         if (targetCluster == null) {
             return 0L;
@@ -108,7 +115,7 @@ final class ExportRequestProvider {
 
         RESTClient client = process.getClient(targetCluster);
 
-        AtlasServer cluster = client.getServer(sourceClusterName);
+        AtlasServer cluster = client.getServer(sourceClusterFullName);
         long ret = (cluster != null && cluster.getAdditionalInfoRepl(entityGuid) != null)
                 ? (long) cluster.getAdditionalInfoRepl(entityGuid)
                 : 0L;

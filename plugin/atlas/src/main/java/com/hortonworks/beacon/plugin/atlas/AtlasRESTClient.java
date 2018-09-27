@@ -50,7 +50,10 @@ public class AtlasRESTClient extends RetryingClient implements RESTClient {
 
     @Override
     public InputStream exportData(final AtlasExportRequest request) throws BeaconException {
-        debugLog("exportData: {}", request);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("exportData: {}", request);
+        }
+
         return invokeWithRetry(new Callable<InputStream>() {
             @Override
             public InputStream call() throws Exception {
@@ -67,7 +70,10 @@ public class AtlasRESTClient extends RetryingClient implements RESTClient {
             return defaultResult;
         }
 
-        debugLog("importData: {}", request);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("importData: {}", request);
+        }
+
         return invokeWithRetry(new Callable<AtlasImportResult>() {
             @Override
             public AtlasImportResult call() throws Exception {
@@ -86,7 +92,10 @@ public class AtlasRESTClient extends RetryingClient implements RESTClient {
         try {
             return clientV2.getServer(serverName);
         } catch (AtlasServiceException e) {
-            warnDebugLog("getServer of: {} returned: {}", serverName, e.getMessage(), e);
+            LOG.warn("getServer of: {} returned: {}", serverName, e.getMessage());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("getServer of: {} returned: {}", serverName, e.getMessage(), e);
+            }
         }
 
         return null;
@@ -111,32 +120,15 @@ public class AtlasRESTClient extends RetryingClient implements RESTClient {
 
             return entityWithExtInfo.getEntity().getGuid();
         } catch (AtlasServiceException e) {
-            warnDebugLog2("getEntityGuid: Could not retrieve entity guid for: {}-{}-{}",
-                    entityType, attributeName, qualifiedName, e);
+            LOG.warn("getEntityGuid: Could not retrieve entity guid for: {}-{}-{}",
+                    entityType, attributeName, qualifiedName);
+            if (LOG.isDebugEnabled()) {
+                LOG.warn("getEntityGuid: Could not retrieve entity guid for: {}-{}-{}",
+                        entityType, attributeName, qualifiedName, e);
+            }
+
             return null;
         }
-    }
-
-    private void warnDebugLog2(String formatString, String entityType, String attributeName,
-                               String qualifiedName,
-                               AtlasServiceException e) {
-        LOG.warn(formatString,
-                entityType, attributeName, qualifiedName);
-        debugLog(formatString,
-                entityType, attributeName, qualifiedName, e);
-    }
-
-    private void warnDebugLog(String formatString, String serverName, String message, AtlasServiceException e) {
-        LOG.warn(formatString, serverName, message);
-        debugLog(formatString, serverName, e);
-    }
-
-    private void debugLog(String s, Object... params) {
-        if (!LOG.isDebugEnabled()) {
-            return;
-        }
-
-        LOG.debug(s, params);
     }
 
     public static RESTClientBuilder build() {

@@ -48,12 +48,15 @@ final class ImportRequestProvider {
     private static final String ATTRIBUTE_NAME_NAME = ".name";
     private static final String ATTRIBUTE_NAME_REPLICATED_TO = "replicatedTo";
     private static final String ATTRIBUTE_NAME_REPLICATED_FROM = "replicatedFrom";
+    private static final String ATTRIBUTE_NAME_LOCATION = ".location";
 
     private static final String HDFS_PATH_CLUSTER_NAME = ATLAS_TYPE_HDFS_PATH + ATTRIBUTE_NAME_CLUSTER_NAME;
     private static final String HIVE_DB_CLUSTER_NAME = ATLAS_TYPE_HIVE_DB + ATTRIBUTE_NAME_CLUSTER_NAME;
 
     private static final String HDFS_PATH_NAME = ATLAS_TYPE_HDFS_PATH + ATTRIBUTE_NAME_NAME;
     private static final String HIVE_DB_NAME = ATLAS_TYPE_HIVE_DB + ATTRIBUTE_NAME_NAME;
+    private static final String HIVE_DB_LOCATION = ATLAS_TYPE_HIVE_DB + ATTRIBUTE_NAME_LOCATION;
+
     private static final String TRANSFORM_ENTITY_SCOPE = "__entity";
 
     private ImportRequestProvider() {
@@ -120,7 +123,20 @@ final class ImportRequestProvider {
             }
         }
 
+        if (dataSetType == DataSet.DataSetType.HIVE) {
+            addLocationTransform(transforms, sourcefsEndpoint, targetFsEndpoint);
+        }
+
         options.put(AtlasImportRequest.TRANSFORMERS_KEY, AtlasType.toJson(transforms));
+    }
+
+    private static void addLocationTransform(List<AttributeTransform> transforms,
+                                             String srcFsUri, String tgtFsUri) {
+        transforms.add(create(
+                HIVE_DB_LOCATION, "STARTS_WITH_IGNORE_CASE: " + srcFsUri,
+                HIVE_DB_LOCATION, "REPLACE_PREFIX: = :" + srcFsUri + "=" + tgtFsUri
+                )
+        );
     }
 
     private static void addDataSetRenameTransform(List<AttributeTransform> transforms,

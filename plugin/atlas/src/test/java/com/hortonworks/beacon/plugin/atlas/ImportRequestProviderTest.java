@@ -65,33 +65,50 @@ public class ImportRequestProviderTest extends RequestProviderBase {
             "{\"conditions\":{\"hdfs_path.name\":\"EQUALS: hdfs://serverSrc:8020/tmp/hr/\"},"
                     + "\"action\":{\"hdfs_path.name\":\"SET: hdfs://serverTgt:8020/tmp/hr_dw/\"}}";
 
+    private static final String HIVE_DB_LOCATION_RENAME = "{\"conditions\":"
+                    + "{\"hive_db.location\":\"STARTS_WITH_IGNORE_CASE: "
+                    + "hdfs://serverSrc:8020\"},"
+                    + "\"action\":{\"hive_db.location\":\"REPLACE_PREFIX: = "
+                    + ":hdfs://serverSrc:8020=hdfs://serverTgt:8020\"}}";
+
     private static final String HIVE_SOURCE_STOCKS = "stocks";
     private static final String HIVE_SOURCE_STOCKS_DW = "stocks_dw";
 
     private static final String HDFS_SOURCE_HR = "/tmp/hr";
     private static final String HDFS_SOURCE_HR_DW = "/tmp/hr_dw";
 
+    private static final String HIVE_HDFS_LOCATION = "/tmp/path/";
+
     @Test
     public void hiveDBClusterRename() {
-        String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR, HIVE_DB_CLUSTER_NAME_RENAME };
+        String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR,
+                             HIVE_DB_CLUSTER_NAME_RENAME, HIVE_DB_LOCATION_RENAME,
+            };
 
         assertTransform(4,
-                DataSet.DataSetType.HIVE, parts, HIVE_SOURCE_STOCKS, HIVE_SOURCE_STOCKS);
+                DataSet.DataSetType.HIVE, parts, HIVE_SOURCE_STOCKS, HIVE_SOURCE_STOCKS,
+                SOURCE_FS_URI,
+                TARGET_FS_URI);
     }
 
     @Test
     public void hiveDBWithRename() {
-        String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR, HIVE_DB_CLUSTER_NAME_RENAME, HIVE_DB_NAME_RENAME };
+        String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR, HIVE_DB_CLUSTER_NAME_RENAME,
+                             HIVE_DB_NAME_RENAME, HIVE_DB_LOCATION_RENAME,
+            };
 
         assertTransform(4,
-                DataSet.DataSetType.HIVE, parts, HIVE_SOURCE_STOCKS, HIVE_SOURCE_STOCKS_DW);
+                DataSet.DataSetType.HIVE, parts, HIVE_SOURCE_STOCKS, HIVE_SOURCE_STOCKS_DW,
+                SOURCE_FS_URI,
+                TARGET_FS_URI);
     }
 
     @Test
     public void hdfsClusterRename() {
         String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR, HDFS_CLUSTER_NAME_RENAME};
 
-        assertTransform(1, DataSet.DataSetType.HDFS, parts, HDFS_SOURCE_HR, HDFS_SOURCE_HR);
+        assertTransform(1, DataSet.DataSetType.HDFS, parts, HDFS_SOURCE_HR, HDFS_SOURCE_HR,
+                "", "");
     }
 
     @Test
@@ -99,7 +116,8 @@ public class ImportRequestProviderTest extends RequestProviderBase {
         String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR, HDFS_CLUSTER_NAME_RENAME, HDFS_NAME_RENAME };
 
         assertTransform(1,
-                DataSet.DataSetType.HDFS, parts, HDFS_SOURCE_HR, HDFS_SOURCE_HR_DW);
+                DataSet.DataSetType.HDFS, parts, HDFS_SOURCE_HR, HDFS_SOURCE_HR_DW,
+                "", "");
     }
 
     @Test
@@ -109,18 +127,21 @@ public class ImportRequestProviderTest extends RequestProviderBase {
         assertTransform(1,
                 DataSet.DataSetType.HDFS, parts,
                 SOURCE_FS_URI + HDFS_SOURCE_HR,
-                TARGET_FS_URI + HDFS_SOURCE_HR_DW);
+                TARGET_FS_URI + HDFS_SOURCE_HR_DW, "", "");
     }
 
-    private void assertTransform(int expectedTransformCount, DataSet.DataSetType dataSetType, String[] jsonParts,
-                                 String sourceDataSetName, String targetDataSetName) {
+    private void assertTransform(int expectedTransformCount, DataSet.DataSetType dataSetType,
+                                 String[] jsonParts,
+                                 String sourceDataSetName, String targetDataSetName,
+                                 String sourceFsEndpoint,
+                                 String targetFsEndpoint) {
         String expectedTransformJSON = composeJson(jsonParts);
 
         DataSet dataSet = getDataSet(dataSetType, sourceDataSetName, targetDataSetName, false);
         AtlasImportRequest request = ImportRequestProvider.create(dataSet.getType(),
                 dataSet.getSourceDataSet(),
                 dataSet.getTargetDataSet(),
-                SOURCE_CLUSTER_NAME, TARGET_CLUSTER_NAME, "", "", "");
+                SOURCE_CLUSTER_NAME, TARGET_CLUSTER_NAME, sourceFsEndpoint, targetFsEndpoint, "");
 
         String actualTransformsJSON = request.getOptions().get(AtlasImportRequest.TRANSFORMERS_KEY);
         assertNotNull(actualTransformsJSON);

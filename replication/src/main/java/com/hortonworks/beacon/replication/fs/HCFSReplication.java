@@ -253,7 +253,7 @@ public class HCFSReplication extends FSReplication {
             String toSnapshot = null;
             String fromSnapshot = null;
             if (isSnapshot && isPushRepl) {
-                toSnapshot = FSSnapshotUtils.TEMP_REPLICATION_SNAPSHOT;
+                toSnapshot = FSSnapshotUtils.getTempSnapshotName(getDetails().getName());
                 String snapshotPrefix = SNAPSHOT_PREFIX + getDetails().getName();
                 fromSnapshot = FSSnapshotUtils.getLatestSnapshot(sourceFs, sourceStagingUri, snapshotPrefix);
                 FSSnapshotUtils.checkAndCreateSnapshot(sourceFs, sourceStagingUri, toSnapshot);
@@ -387,7 +387,7 @@ public class HCFSReplication extends FSReplication {
             if (job.isComplete() && job.isSuccessful()) {
                 if (isSnapshot && isPushRepl) {
                     FSSnapshotUtils.checkAndRenameSnapshot(sourceFs, sourceStagingUri,
-                            FSSnapshotUtils.TEMP_REPLICATION_SNAPSHOT,
+                            FSSnapshotUtils.getTempSnapshotName(getDetails().getName()),
                             FSSnapshotUtils.getSnapshotName(getDetails().getName()));
                     FSSnapshotUtils.handleSnapshotEviction(sourceFs, properties, sourceStagingUri);
                 }

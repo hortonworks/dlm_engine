@@ -71,6 +71,12 @@ public class ImportRequestProviderTest extends RequestProviderBase {
                     + "\"action\":{\"hive_db.location\":\"REPLACE_PREFIX: = "
                     + ":hdfs://serverSrc:8020=hdfs://serverTgt:8020\"}}";
 
+    private static final String HIVE_DB_LOCATION_RENAME_CLUSTER_REPLACE = "{\"conditions\":"
+            + "{\"hive_db.location\":\"STARTS_WITH_IGNORE_CASE: "
+            + "clSrc\"},"
+            + "\"action\":{\"hive_db.location\":\"REPLACE_PREFIX: = "
+            + ":clSrc=clTgt\"}}";
+
     private static final String HIVE_SOURCE_STOCKS = "stocks";
     private static final String HIVE_SOURCE_STOCKS_DW = "stocks_dw";
 
@@ -83,6 +89,7 @@ public class ImportRequestProviderTest extends RequestProviderBase {
     public void hiveDBClusterRename() {
         String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR,
                              HIVE_DB_CLUSTER_NAME_RENAME, HIVE_DB_LOCATION_RENAME,
+                             HIVE_DB_LOCATION_RENAME_CLUSTER_REPLACE,
             };
 
         assertTransform(4,
@@ -95,6 +102,7 @@ public class ImportRequestProviderTest extends RequestProviderBase {
     public void hiveDBWithRename() {
         String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR, HIVE_DB_CLUSTER_NAME_RENAME,
                              HIVE_DB_NAME_RENAME, HIVE_DB_LOCATION_RENAME,
+                             HIVE_DB_LOCATION_RENAME_CLUSTER_REPLACE,
             };
 
         assertTransform(4,

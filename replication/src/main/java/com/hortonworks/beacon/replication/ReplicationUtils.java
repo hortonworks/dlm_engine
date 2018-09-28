@@ -312,4 +312,21 @@ public final class ReplicationUtils {
     public static int getReplicationMetricsInterval() {
         return BeaconConfig.getInstance().getScheduler().getReplicationMetricsInterval();
     }
+
+    public static boolean isSourceDataConflictAndTgtClusterConflict(ReplicationPolicy policy) throws BeaconException {
+        PolicyBean policyBean = new PolicyBean();
+        policyBean.setType(policy.getType());
+        policyBean.setSourceCluster(policy.getSourceCluster());
+        policyBean.setTargetCluster(policy.getTargetCluster());
+        policyBean.setSourceDataset(policy.getSourceDataset());
+        PolicyExecutor policyExecutor = new PolicyExecutor(policyBean);
+        List<PolicyBean> existingPolicies = policyExecutor
+                .getPolicies(PolicyQuery.GET_POLICY_SAME_SOURCE_AND_TGT_CLUSTER);
+        if (existingPolicies.size() > 0) {
+            LOG.info(StringFormat.format("Source dataset {} already in replication on same target cluster {}",
+                    policy.getSourceDataset(), policy.getTargetCluster()));
+            return true;
+        }
+        return false;
+    }
 }

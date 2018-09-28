@@ -632,6 +632,14 @@ public final class ValidationUtil {
         if (targetDatasetConflicted) {
             notification.addError("Target dataset already in replication, " + policy.getTargetDataset());
         }
+
+        boolean sourceDataConflictAndTgtClusterConflict = ReplicationUtils
+                .isSourceDataConflictAndTgtClusterConflict(policy);
+        if (sourceDataConflictAndTgtClusterConflict) {
+            notification.addError(StringFormat.format("Source dataset {} already in replication"
+                            + " on same target cluster {}",
+                    policy.getSourceDataset(), policy.getTargetCluster()));
+        }
         // TODO : Check if a target dataset is source for another policy and vice versa.
         if (notification.hasErrors()) {
             throw new BeaconException(notification.errorMessage());

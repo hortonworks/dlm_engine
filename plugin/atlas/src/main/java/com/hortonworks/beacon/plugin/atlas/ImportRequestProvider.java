@@ -124,17 +124,25 @@ final class ImportRequestProvider {
         }
 
         if (dataSetType == DataSet.DataSetType.HIVE) {
-            addLocationTransform(transforms, sourcefsEndpoint, targetFsEndpoint);
+            addLocationTransform(transforms, sourceClusterName, targetClusterName,
+                    sourcefsEndpoint, targetFsEndpoint);
         }
 
         options.put(AtlasImportRequest.TRANSFORMERS_KEY, AtlasType.toJson(transforms));
     }
 
     private static void addLocationTransform(List<AttributeTransform> transforms,
+                                             String sourceClusterName, String targetClusterName,
                                              String srcFsUri, String tgtFsUri) {
         transforms.add(create(
                 HIVE_DB_LOCATION, "STARTS_WITH_IGNORE_CASE: " + srcFsUri,
                 HIVE_DB_LOCATION, "REPLACE_PREFIX: = :" + srcFsUri + "=" + tgtFsUri
+                )
+        );
+
+        transforms.add(create(
+                HIVE_DB_LOCATION, "STARTS_WITH_IGNORE_CASE: " + sourceClusterName,
+                HIVE_DB_LOCATION, "REPLACE_PREFIX: = :" + sourceClusterName + "=" + targetClusterName
                 )
         );
     }

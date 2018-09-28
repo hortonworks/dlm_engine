@@ -54,6 +54,7 @@ public class PolicyExecutor extends BaseExecutor {
         GET_ACTIVE_POLICY,
         DELETE_POLICY,
         GET_POLICY,
+        GET_POLICY_SAME_SOURCE_AND_TGT_CLUSTER,
         GET_POLICIES_FOR_TYPE,
         GET_POLICY_BY_ID,
         GET_PAIRED_CLUSTER_POLICY,
@@ -137,6 +138,12 @@ public class PolicyExecutor extends BaseExecutor {
                 break;
             case GET_POLICIES_FOR_TYPE:
                 query.setParameter("policyType", bean.getType());
+                break;
+            case GET_POLICY_SAME_SOURCE_AND_TGT_CLUSTER:
+                query.setParameter("type", bean.getType());
+                query.setParameter("sourceCluster", bean.getSourceCluster());
+                query.setParameter("targetCluster", bean.getTargetCluster());
+                query.setParameter("sourceDataset", bean.getSourceDataset());
                 break;
             case GET_PAIRED_CLUSTER_POLICY:
                 query.setParameter("sourceCluster", bean.getSourceCluster());

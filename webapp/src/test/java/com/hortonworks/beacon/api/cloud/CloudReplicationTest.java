@@ -33,6 +33,7 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.EncryptionAlgorithmType;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.util.StringFormat;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.testng.annotations.AfterClass;
@@ -313,7 +314,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
     }
 
     @Test
-    public void testHiveCloudOneToManyReplicationTest() throws Exception {
+    public void testHiveCloudOneToManyReplicationWithDiffTargetSameClusterShouldFailTest() throws Exception {
         CloudCred cloudCred = getCloudCred();
         String cloudCredId = targetClient.submitCloudCred(cloudCred);
         assertNotNull(cloudCredId);
@@ -336,16 +337,13 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         ReplicationPolicy policy2 = testDataGenerator.getPolicy(policyName2, sourceDataSet,
                 testDataGenerator.getRandomString("HiveTestDb"), "HIVE", 60,
                 sourceCluster.getName(), targetCluster.getName(), cloudProps);
-        targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties());
-        waitOnCondition(10000, "First Instance Success ", new Condition() {
-            @Override
-            public boolean exit() throws BeaconClientException {
-                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName2);
-                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
-            }
-        });
+        try {
+            targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties());
+        } catch (BeaconClientException ex) {
+            assertTrue(ex.getMessage()
+                    .contains(StringFormat.format("Source dataset {} already in replication", sourceDataSet)));
+        }
         targetClient.deletePolicy(policyName1, false);
-        targetClient.deletePolicy(policyName2, false);
     }
 
     @Test

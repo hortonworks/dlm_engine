@@ -308,17 +308,13 @@ public class PolicyResourceTest extends ResourceBaseTest {
         testDataGenerator.createFSMocks(replicationPath);
         ReplicationPolicy policyRequest2 = testDataGenerator.getPolicy(policyName2, replicationPath);
         policyRequest2.setTargetDataset(TARGET_DIR);
-        targetClient.submitAndScheduleReplicationPolicy(policyName2, policyRequest2.asProperties());
-        waitOnCondition(20000, "First Instance Success ", new Condition() {
-            @Override
-            public boolean exit() throws BeaconClientException {
-                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName2);
-                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
-            }
-        });
-
+        try {
+            targetClient.submitAndScheduleReplicationPolicy(policyName2, policyRequest2.asProperties());
+        } catch (BeaconClientException ex) {
+            assertTrue(ex.getMessage()
+                    .contains(StringFormat.format("Source dataset {} already in replication", replicationPath)));
+        }
         targetClient.deletePolicy(policyName1, false);
-        targetClient.deletePolicy(policyName2, false);
     }
 
     @Test

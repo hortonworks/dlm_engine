@@ -31,6 +31,8 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.HiveActionType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +43,8 @@ import java.util.Properties;
  */
 
 public class HiveJobBuilder extends JobBuilder {
+
+    private static final Logger LOG = LoggerFactory.getLogger(HiveJobBuilder.class);
 
     public List<ReplicationJobDetails> buildJob(ReplicationPolicy policy) throws BeaconException {
         List<ReplicationJobDetails> replicationJobDetailsList = new ArrayList<>();
@@ -78,14 +82,14 @@ public class HiveJobBuilder extends JobBuilder {
         return new ReplicationJobDetails(type, name, type, hiveDRProperties);
     }
 
-    private boolean isBootstrapRun(ReplicationPolicy policy) throws BeaconException {
-        Cluster cluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
-        Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
-
-        boolean isDatalake = Boolean.valueOf(
-                targetCluster.getCustomProperties().getProperty(Cluster.ClusterFields.CLOUDDATALAKE.getName()));
+    private boolean isBootstrapRun(ReplicationPolicy policy) {
         HiveServerClient hiveServerClient = null;
         try {
+            Cluster cluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
+            Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
+
+            boolean isDatalake = Boolean.valueOf(
+                    targetCluster.getCustomProperties().getProperty(Cluster.ClusterFields.CLOUDDATALAKE.getName()));
             if (isDatalake) {
                 hiveServerClient = HiveClientFactory.getHiveServerClient(cluster.getHsEndpoint(),
                         targetCluster);
@@ -94,8 +98,11 @@ public class HiveJobBuilder extends JobBuilder {
             }
             long replId = hiveServerClient.getReplicatedEventId(policy.getTargetDataset());
             return replId <= 0;
+        } catch (Throwable t) {
+            LOG.warn("Unable to retrieve hive bootstrap run status, won't run bootstrap + incremental if required.", t);
         } finally {
             HiveClientFactory.close(hiveServerClient);
         }
+        return false;
     }
 }

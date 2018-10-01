@@ -58,7 +58,6 @@ public class RESTClientBuilder {
     private static final String ATLAS_PROPERTY_CONNECT_TIMEOUT_IN_MS = "atlas.client.connectTimeoutMSecs";
     private static final String ATLAS_PROPERTY_REST_ADDRESS = "atlas.rest.address";
     private static final String ATLAS_PROPERTY_AUTH_KERBEROS = "atlas.authentication.method.kerberos";
-    private static final String ATLAS_PROPERTY_TIME_OUT_DEFAULT = "60000";
 
     private static final String KNOX_HDP_COOKIE_NAME = "hadoop-jwt";
 
@@ -247,8 +246,9 @@ public class RESTClientBuilder {
         try {
 
             Properties props = new Properties();
-            props.setProperty(ATLAS_PROPERTY_READ_TIMEOUT_IN_MS, ATLAS_PROPERTY_TIME_OUT_DEFAULT);
-            props.setProperty(ATLAS_PROPERTY_CONNECT_TIMEOUT_IN_MS, ATLAS_PROPERTY_TIME_OUT_DEFAULT);
+
+            props.setProperty(ATLAS_PROPERTY_READ_TIMEOUT_IN_MS, getReadTimeoutValue());
+            props.setProperty(ATLAS_PROPERTY_CONNECT_TIMEOUT_IN_MS, getConnectTimeoutValue());
 
             if (BeaconConfig.getInstance().getEngine().getTrustStore() != null) {
                 props.setProperty(KEYSTORE_FILE_KEY, BeaconConfig.getInstance().getEngine().getTrustStore());
@@ -279,6 +279,25 @@ public class RESTClientBuilder {
         }
 
         return config;
+    }
+
+    private String getConnectTimeoutValue() {
+        int valueFromConfig = BeaconConfig.getInstance().getEngine().getRangerClientConnectTimeout() * 1000;
+        if (valueFromConfig > 0) {
+            return String.valueOf(valueFromConfig * 1000);
+        }
+
+        return ATLAS_PROPERTY_CONNECT_TIMEOUT_IN_MS;
+    }
+
+    private String getReadTimeoutValue() {
+        int valueFromConfig = BeaconConfig.getInstance().getEngine().getRangerClientReadTimeout() * 1000;
+
+        if (valueFromConfig > 0) {
+            return String.valueOf(valueFromConfig * 1000);
+        }
+
+        return ATLAS_PROPERTY_READ_TIMEOUT_IN_MS;
     }
 
     private String getPassword() throws AtlasException {

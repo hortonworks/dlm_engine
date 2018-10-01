@@ -30,6 +30,8 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -73,9 +75,12 @@ public class BeaconAtlasPluginTest extends RequestProviderBase {
         when(dfs.create((Path) anyObject())).thenReturn(mock(FSDataOutputStream.class));
         when(dfs.getFileStatus((Path) anyObject())).thenReturn(new FileStatus());
         when(dfs.getUri()).thenReturn(new URI(LOCAL_HOST_FS_URL));
-
-        InputStream inputStream = getSeekableByteArrayInputStream(getZipFilePath());
-        when(dfs.open((Path) anyObject())).thenReturn(new FSDataInputStream(inputStream));
+        when(dfs.open((Path) anyObject())).thenAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                return getSeekableByteArrayInputStream(getZipFilePath());
+            }
+        });
 
         clientBuilder = new AtlasMockRESTClient.Builder();
         clientBuilder.setFilePath(getZipFilePath());

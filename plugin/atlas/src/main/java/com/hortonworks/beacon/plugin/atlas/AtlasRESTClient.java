@@ -29,9 +29,13 @@ import org.apache.atlas.model.impexp.AtlasImportRequest;
 import org.apache.atlas.model.impexp.AtlasImportResult;
 import org.apache.atlas.model.impexp.AtlasServer;
 import org.apache.atlas.model.instance.AtlasEntity;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,9 +68,9 @@ public class AtlasRESTClient extends RetryingClient implements RESTClient {
 
     @Override
     public AtlasImportResult importData(final AtlasImportRequest request,
-                                        final InputStream inputStream) throws BeaconException {
+                                        final Path filePath) throws BeaconException {
         AtlasImportResult defaultResult = getDefaultAtlasImportResult(request);
-        if (inputStream == null) {
+        if (filePath == null) {
             return defaultResult;
         }
 
@@ -77,11 +81,30 @@ public class AtlasRESTClient extends RetryingClient implements RESTClient {
         return invokeWithRetry(new Callable<AtlasImportResult>() {
             @Override
             public AtlasImportResult call() throws Exception {
-                return clientV2.importData(request, inputStream);
+                InputStream inputStream = null;
+
+                try {
+                    FileSystem targetFS = FileSystemUtils.getFs(filePath.toString());
+                    FileStatus fileStatus = FileSystemUtils.locateFile(targetFS, filePath);
+                    if (fileStatus == null) {
+                        LOG.warn("BeaconAtlasPlugin: importProcess: locateFile: file not found: {}!", filePath);
+                        return null;
+                    }
+
+                    inputStream = FileSystemUtils.getInputStream(targetFS, filePath);
+                    return clientV2.importData(request, inputStream);
+                } finally {
+                    if (inputStream != null) {
+                        try {
+                            inputStream.close();
+                        } catch (IOException ex) {
+                            LOG.warn("BeaconAtlasPlugin: Error closing stream for: {}", filePath);
+                        }
+                    }
+                }
             }
         }, defaultResult);
     }
-
 
     private AtlasImportResult getDefaultAtlasImportResult(AtlasImportRequest request) {
         return new AtlasImportResult(request, "", "", "", 0L);

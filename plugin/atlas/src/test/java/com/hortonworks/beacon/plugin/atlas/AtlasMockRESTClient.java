@@ -32,6 +32,7 @@ import org.apache.atlas.model.impexp.AtlasImportRequest;
 import org.apache.atlas.model.impexp.AtlasImportResult;
 import org.apache.atlas.model.impexp.AtlasServer;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.Path;
 import org.testng.SkipException;
 
 import javax.ws.rs.core.Response;
@@ -64,9 +65,9 @@ public class AtlasMockRESTClient extends RetryingClient implements RESTClient {
     }
 
     @Override
-    public AtlasImportResult importData(final AtlasImportRequest request, InputStream inputStream) {
+    public AtlasImportResult importData(final AtlasImportRequest request, Path path) {
         try {
-            if (StringUtils.contains(filePath, "empty")) {
+            if (StringUtils.contains(this.filePath, "empty")) {
                 return invokeWithRetry(new Callable<AtlasImportResult>() {
                     @Override
                     public AtlasImportResult call() throws AtlasServiceException {

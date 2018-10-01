@@ -26,6 +26,7 @@ import org.apache.atlas.model.impexp.AtlasServer;
 import org.apache.atlas.model.impexp.AtlasExportRequest;
 import org.apache.atlas.model.impexp.AtlasImportRequest;
 import org.apache.atlas.model.impexp.AtlasImportResult;
+import org.apache.hadoop.fs.Path;
 
 import java.io.InputStream;
 
@@ -46,11 +47,11 @@ public interface RESTClient {
      * Uses Atlas to perform import of data.
      *
      * @param request,   request details
-     * @param inputStream, contents to be imported
+     * @param filePath, contents to be imported
      * @return
      * @throws BeaconException
      */
-    AtlasImportResult importData(AtlasImportRequest request, InputStream inputStream) throws BeaconException;
+    AtlasImportResult importData(AtlasImportRequest request, Path filePath) throws BeaconException;
 
     /**
      * Queries Atlas for getting last synchronization information.

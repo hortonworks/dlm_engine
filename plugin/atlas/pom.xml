@@ -79,6 +79,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.hortonworks.beacon</groupId>
             <artifactId>beacon-ranger</artifactId>
         </dependency>

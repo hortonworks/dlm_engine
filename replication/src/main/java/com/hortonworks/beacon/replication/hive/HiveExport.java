@@ -32,6 +32,7 @@ import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
 import com.hortonworks.beacon.entity.util.hive.HiveServerClient;
 import com.hortonworks.beacon.entity.util.hive.ReplCommand;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.exceptions.BeaconSuspendException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
@@ -181,6 +182,9 @@ public class HiveExport extends InstanceReplication {
                 return null;
             }
         } catch (SQLException e) {
+            if (e.getErrorCode() >= 20000 && e.getErrorCode() <= 29999) {
+                throw new BeaconSuspendException(e, e.getErrorCode());
+            }
             throw new BeaconException(e, "SQL Exception occurred");
         } catch (BeaconException e) {
             LOG.error("Exception occurred for export statement", e);

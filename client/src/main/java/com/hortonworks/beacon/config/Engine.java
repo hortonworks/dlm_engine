@@ -88,6 +88,9 @@ public class Engine {
     private int rangerClientConnectTimeout;
     private int rangerClientReadTimeout;
 
+    private int atlasClientConnectTimeout;
+    private int atlasClientReadTimeout;
+
     private boolean knoxProxyEnabled;
 
     private String knoxPreAuthTopology;
@@ -185,6 +188,8 @@ public class Engine {
         setRangerClientConnectTimeout(o.getRangerClientConnectTimeout());
         setRangerClientReadTimeout(o.getRangerClientReadTimeout());
         setMaxFileListPerPage(o.maxFileListPerPage);
+        setAtlasClientConnectTimeout(o.getAtlasClientConnectTimeout());
+        setAtlasClientReadTimeout(o.getAtlasClientReadTimeout());
     }
 
     public String getHostName() {
@@ -577,4 +582,22 @@ public class Engine {
     public void setMaxFileListPerPage(long maxFileListPerPage) {
         this.maxFileListPerPage = maxFileListPerPage;
     }
+
+    public int getAtlasClientConnectTimeout() {
+        return atlasClientConnectTimeout;
+    }
+
+    public void setAtlasClientConnectTimeout(int atlasClientConnectTimeout) {
+        this.atlasClientConnectTimeout = atlasClientConnectTimeout;
+    }
+
+    public int getAtlasClientReadTimeout() {
+        return atlasClientReadTimeout;
+    }
+
+    public void setAtlasClientReadTimeout(int atlasClientReadTimeout) {
+        this.atlasClientReadTimeout = atlasClientReadTimeout;
+    }
+
+
 }

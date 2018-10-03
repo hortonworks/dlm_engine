@@ -58,24 +58,31 @@ public class ImportRequestProviderTest extends RequestProviderBase {
                     + "\"action\":{\"hdfs_path.clusterName\":\"SET: clTgt\"}}";
 
     private static final String HDFS_NAME_RENAME =
-            "{\"conditions\":{\"hdfs_path.name\":\"EQUALS: /tmp/hr/\"},"
-                    + "\"action\":{\"hdfs_path.name\":\"SET: /tmp/hr_dw/\"}}";
+            "{\"conditions\":{\"hdfs_path.name\":\"STARTS_WITH_IGNORE_CASE: /tmp/hr/\"},"
+                    + "\"action\":{\"hdfs_path.name\":\"REPLACE_PREFIX: = "
+                    + ":/tmp/hr/=/tmp/hr_dw/\"}}";
 
     private static final String HDFS_NAME_RENAME_URI =
-            "{\"conditions\":{\"hdfs_path.name\":\"EQUALS: hdfs://serverSrc:8020/tmp/hr/\"},"
-                    + "\"action\":{\"hdfs_path.name\":\"SET: hdfs://serverTgt:8020/tmp/hr_dw/\"}}";
+            "{\"conditions\":{\"hdfs_path.name\":\"STARTS_WITH_IGNORE_CASE: hdfs://serverSrc:8020/tmp/hr/\"},"
+                    + "\"action\":{\"hdfs_path.name\":\"REPLACE_PREFIX: = "
+                    + ":hdfs://serverSrc:8020/tmp/hr/=hdfs://serverTgt:8020/tmp/hr_dw/\"}}";
 
-    private static final String HIVE_DB_LOCATION_RENAME = "{\"conditions\":"
-                    + "{\"hive_db.location\":\"STARTS_WITH_IGNORE_CASE: "
-                    + "hdfs://serverSrc:8020\"},"
-                    + "\"action\":{\"hive_db.location\":\"REPLACE_PREFIX: = "
-                    + ":hdfs://serverSrc:8020=hdfs://serverTgt:8020\"}}";
+    private static final String HDFS_NAME_RENAME_SAME_URI =
+            "{\"conditions\":{\"hdfs_path.name\":\"STARTS_WITH_IGNORE_CASE: /tmp/hr/\"},"
+                    + "\"action\":{\"hdfs_path.name\":\"REPLACE_PREFIX: = "
+                    + ":/tmp/hr/=/tmp/hr/\"}}";
 
     private static final String HIVE_DB_LOCATION_RENAME_CLUSTER_REPLACE = "{\"conditions\":"
             + "{\"hive_db.location\":\"STARTS_WITH_IGNORE_CASE: "
-            + "clSrc\"},"
+            + "hdfs://serverSrc:8020\"},"
             + "\"action\":{\"hive_db.location\":\"REPLACE_PREFIX: = "
-            + ":clSrc=clTgt\"}}";
+            + ":hdfs://serverSrc:8020=hdfs://serverTgt:8020\"}}";
+
+    private static final String HIVE_SD_LOCATION_RENAME_CLUSTER_REPLACE = "{\"conditions\":"
+            + "{\"hive_storagedesc.location\":\"STARTS_WITH_IGNORE_CASE: "
+            + "hdfs://serverSrc:8020\"},"
+            + "\"action\":{\"hive_storagedesc.location\":\"REPLACE_PREFIX: = "
+            + ":hdfs://serverSrc:8020=hdfs://serverTgt:8020\"}}";
 
     private static final String HIVE_SOURCE_STOCKS = "stocks";
     private static final String HIVE_SOURCE_STOCKS_DW = "stocks_dw";
@@ -83,13 +90,12 @@ public class ImportRequestProviderTest extends RequestProviderBase {
     private static final String HDFS_SOURCE_HR = "/tmp/hr";
     private static final String HDFS_SOURCE_HR_DW = "/tmp/hr_dw";
 
-    private static final String HIVE_HDFS_LOCATION = "/tmp/path/";
-
     @Test
     public void hiveDBClusterRename() {
         String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR,
-                             HIVE_DB_CLUSTER_NAME_RENAME, HIVE_DB_LOCATION_RENAME,
+                             HIVE_DB_CLUSTER_NAME_RENAME,
                              HIVE_DB_LOCATION_RENAME_CLUSTER_REPLACE,
+                             HIVE_SD_LOCATION_RENAME_CLUSTER_REPLACE,
             };
 
         assertTransform(4,
@@ -100,9 +106,9 @@ public class ImportRequestProviderTest extends RequestProviderBase {
 
     @Test
     public void hiveDBWithRename() {
-        String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR, HIVE_DB_CLUSTER_NAME_RENAME,
-                             HIVE_DB_NAME_RENAME, HIVE_DB_LOCATION_RENAME,
+        String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR, HIVE_DB_CLUSTER_NAME_RENAME, HIVE_DB_NAME_RENAME,
                              HIVE_DB_LOCATION_RENAME_CLUSTER_REPLACE,
+                             HIVE_SD_LOCATION_RENAME_CLUSTER_REPLACE,
             };
 
         assertTransform(4,
@@ -113,7 +119,8 @@ public class ImportRequestProviderTest extends RequestProviderBase {
 
     @Test
     public void hdfsClusterRename() {
-        String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR, HDFS_CLUSTER_NAME_RENAME};
+        String[] parts = { CLASSIFICATION, REPLICATED_ATTR_CLEAR, HDFS_CLUSTER_NAME_RENAME, HDFS_NAME_RENAME_SAME_URI,
+            };
 
         assertTransform(1, DataSet.DataSetType.HDFS, parts, HDFS_SOURCE_HR, HDFS_SOURCE_HR,
                 "", "");

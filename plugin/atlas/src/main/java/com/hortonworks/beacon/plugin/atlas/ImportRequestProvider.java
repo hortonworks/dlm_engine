@@ -37,6 +37,7 @@ import java.util.Map;
 
 import static com.hortonworks.beacon.plugin.atlas.ExportRequestProvider.ATLAS_TYPE_HDFS_PATH;
 import static com.hortonworks.beacon.plugin.atlas.ExportRequestProvider.ATLAS_TYPE_HIVE_DB;
+import static com.hortonworks.beacon.plugin.atlas.ExportRequestProvider.ATLAS_TYPE_HIVE_SD;
 
 /**
  * Helper class to create import request.
@@ -56,6 +57,7 @@ final class ImportRequestProvider {
     private static final String HDFS_PATH_NAME = ATLAS_TYPE_HDFS_PATH + ATTRIBUTE_NAME_NAME;
     private static final String HIVE_DB_NAME = ATLAS_TYPE_HIVE_DB + ATTRIBUTE_NAME_NAME;
     private static final String HIVE_DB_LOCATION = ATLAS_TYPE_HIVE_DB + ATTRIBUTE_NAME_LOCATION;
+    private static final String HIVE_SD_LOCATION = ATLAS_TYPE_HIVE_SD + ATTRIBUTE_NAME_LOCATION;
 
     private static final String TRANSFORM_ENTITY_SCOPE = "__entity";
 
@@ -118,22 +120,17 @@ final class ImportRequestProvider {
             String srcFsUri = ExportRequestProvider.getPathWithTrailingPathSeparator(sourcefsEndpoint, sourceDataSet);
             String tgtFsUri = ExportRequestProvider.getPathWithTrailingPathSeparator(targetFsEndpoint, targetDataSet);
 
-            if (!srcFsUri.equals(tgtFsUri)) {
-                addDataSetRenameTransform(transforms, dataSetType, srcFsUri, tgtFsUri);
-            }
+            addHdfsRenameTransform(transforms, srcFsUri, tgtFsUri);
         }
 
         if (dataSetType == DataSet.DataSetType.HIVE) {
-            addLocationTransform(transforms, sourceClusterName, targetClusterName,
-                    sourcefsEndpoint, targetFsEndpoint);
+            addLocationTransform(transforms, sourcefsEndpoint, targetFsEndpoint);
         }
 
         options.put(AtlasImportRequest.TRANSFORMERS_KEY, AtlasType.toJson(transforms));
     }
 
-    private static void addLocationTransform(List<AttributeTransform> transforms,
-                                             String sourceClusterName, String targetClusterName,
-                                             String srcFsUri, String tgtFsUri) {
+    private static void addLocationTransform(List<AttributeTransform> transforms, String srcFsUri, String tgtFsUri) {
         transforms.add(create(
                 HIVE_DB_LOCATION, "STARTS_WITH_IGNORE_CASE: " + srcFsUri,
                 HIVE_DB_LOCATION, "REPLACE_PREFIX: = :" + srcFsUri + "=" + tgtFsUri
@@ -141,8 +138,8 @@ final class ImportRequestProvider {
         );
 
         transforms.add(create(
-                HIVE_DB_LOCATION, "STARTS_WITH_IGNORE_CASE: " + sourceClusterName,
-                HIVE_DB_LOCATION, "REPLACE_PREFIX: = :" + sourceClusterName + "=" + targetClusterName
+                HIVE_SD_LOCATION, "STARTS_WITH_IGNORE_CASE: " + srcFsUri,
+                HIVE_SD_LOCATION, "REPLACE_PREFIX: = :" + srcFsUri + "=" + tgtFsUri
                 )
         );
     }
@@ -155,6 +152,13 @@ final class ImportRequestProvider {
         transforms.add(create(
                 propertyName, "EQUALS: " + sourceDataSet,
                 propertyName, "SET: " + targetDataSet));
+    }
+
+    private static void addHdfsRenameTransform(List<AttributeTransform> transforms,
+                                               String srcFsUri, String tgtFsUri) {
+        transforms.add(create(
+                HDFS_PATH_NAME, "STARTS_WITH_IGNORE_CASE: " + srcFsUri,
+                HDFS_PATH_NAME, "REPLACE_PREFIX: = :" + srcFsUri + "=" + tgtFsUri));
     }
 
     private static void addClusterRenameTransform(List<AttributeTransform> transforms, DataSet.DataSetType dataSetType,

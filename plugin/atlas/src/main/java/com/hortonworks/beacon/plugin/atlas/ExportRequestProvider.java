@@ -48,6 +48,7 @@ final class ExportRequestProvider {
     public static final String ATTRIBUTE_QUALIFIED_NAME = "qualifiedName";
     static final String ATTRIBUTE_PATH_NAME = "path";
     static final String ATLAS_TYPE_HIVE_DB = "hive_db";
+    static final String ATLAS_TYPE_HIVE_SD = "hive_storagedesc";
     static final String ATLAS_TYPE_HDFS_PATH = "hdfs_path";
     private static final String PATH_FILE_SEPARATOR = "/";
 

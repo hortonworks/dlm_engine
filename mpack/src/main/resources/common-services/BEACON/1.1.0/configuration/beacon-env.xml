@@ -566,4 +566,18 @@
     <description>Max no. of file(s)/dir(s) list per page in HDFS API</description>
     <display-name>Max no. of file(s)/dir(s) list per page in HDFS API</display-name>
   </property>
+
+  <property>
+    <name>atlas_client_connect_timeout</name>
+    <value>10</value>
+    <description>Atlas http client connect timeout (in seconds)</description>
+    <display-name>Atlas http client connect timeout (in seconds)</display-name>
+  </property>
+  <property>
+    <name>atlas_client_read_timeout</name>
+    <value>120</value>
+    <description>Atlas http client read timeout (in seconds)</description>
+    <display-name>Atlas http client read timeout (in seconds)</display-name>
+  </property>
+
 </configuration>

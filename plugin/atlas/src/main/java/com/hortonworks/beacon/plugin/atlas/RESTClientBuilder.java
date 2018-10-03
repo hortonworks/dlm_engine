@@ -68,8 +68,8 @@ public class RESTClientBuilder {
 
     private static final String ATLAS_CLIENT_DEFAULT_USER = "admin";
     private static final String ATLAS_CLIENT_DEFAULT_PASSWORD = "admin";
-    private static final String ATLAS_CLIENT_USER_NAME_KEY = "beacon.atlas.user";
-    private static final String ATLAS_CLIENT_USER_PASSWORD_KEY = "beacon.atlas.password";
+    private static final String BEACON_ATLAS_CLIENT_USER_NAME = "beacon.atlas.user";
+    private static final String BEACON_ATLAS_CLIENT_USER_PASSWORD = "beacon.atlas.password";
 
     private static final String URL_SEPERATOR = ",";
     private static final PropertiesUtil AUTHCONFIG = PropertiesUtil.getInstance();
@@ -282,30 +282,21 @@ public class RESTClientBuilder {
     }
 
     private String getConnectTimeoutValue() {
-        int valueFromConfig = BeaconConfig.getInstance().getEngine().getRangerClientConnectTimeout() * 1000;
-        if (valueFromConfig > 0) {
-            return String.valueOf(valueFromConfig * 1000);
-        }
-
-        return ATLAS_PROPERTY_CONNECT_TIMEOUT_IN_MS;
+        int valueFromConfig = BeaconConfig.getInstance().getEngine().getAtlasClientConnectTimeout() * 1000;
+        return String.valueOf(valueFromConfig);
     }
 
     private String getReadTimeoutValue() {
-        int valueFromConfig = BeaconConfig.getInstance().getEngine().getRangerClientReadTimeout() * 1000;
-
-        if (valueFromConfig > 0) {
-            return String.valueOf(valueFromConfig * 1000);
-        }
-
-        return ATLAS_PROPERTY_READ_TIMEOUT_IN_MS;
+        int valueFromConfig = BeaconConfig.getInstance().getEngine().getAtlasClientReadTimeout() * 1000;
+        return String.valueOf(valueFromConfig);
     }
 
-    private String getPassword() throws AtlasException {
-        return getDefaultConfiguration().getString(ATLAS_CLIENT_USER_NAME_KEY, ATLAS_CLIENT_DEFAULT_USER);
+    private String getPassword() {
+        return AUTHCONFIG.getProperty(BEACON_ATLAS_CLIENT_USER_PASSWORD, ATLAS_CLIENT_DEFAULT_PASSWORD);
     }
 
-    private String getUserName() throws AtlasException {
-        return getDefaultConfiguration().getString(ATLAS_CLIENT_USER_PASSWORD_KEY, ATLAS_CLIENT_DEFAULT_PASSWORD);
+    private String getUserName() {
+        return AUTHCONFIG.getProperty(BEACON_ATLAS_CLIENT_USER_NAME, ATLAS_CLIENT_DEFAULT_USER);
     }
 
     private Configuration getDefaultConfiguration() throws AtlasException {

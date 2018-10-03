@@ -57,6 +57,9 @@ engine:
     rangerClientConnectTimeout: 10
     rangerClientReadTimeout: 60
     maxFileListPerPage: -1
+    atlasClientConnectTimeout: 10
+    atlasClientReadTimeout: 120
+
 
 dbStore:
     driver: ${beacon.driver}

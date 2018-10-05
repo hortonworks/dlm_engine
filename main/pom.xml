@@ -254,6 +254,10 @@
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-servlets</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>beacon-replication-fs</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

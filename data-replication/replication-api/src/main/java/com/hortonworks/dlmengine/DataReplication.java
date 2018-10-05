@@ -20,10 +20,17 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.authorize;
+package com.hortonworks.dlmengine;
+
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.entity.BeaconCluster;
+import com.hortonworks.beacon.exceptions.BeaconException;
+
 /**
- * This class contains resource types of beacon.
+ * Api contract for any type of data replication.
  */
-public enum BeaconResourceTypes {
-    UNKNOWN, CLUSTER, POLICY, SCHEDULE, EVENT, LOGS
+public interface DataReplication {
+    void validate(BeaconCluster cluster);
+
+    BeaconReplicationPolicy buildReplicationPolicy(ReplicationPolicy policyRequest) throws BeaconException;
 }

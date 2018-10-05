@@ -23,6 +23,7 @@
 package com.hortonworks.beacon.entity;
 
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.StringFormat;
@@ -58,10 +59,19 @@ public enum EncryptionAlgorithmType {
         return name;
     }
 
-    public static EncryptionAlgorithmType getEncryptionAlgorithmByName(final String name) throws BeaconException {
+    public static EncryptionAlgorithmType getEncryptionAlgorithm(final String name) throws BeaconException {
         if (StringUtils.isEmpty(name)) {
             return NONE;
         }
+
+        //Try value of
+        try {
+            return EncryptionAlgorithmType.valueOf(name);
+        } catch (IllegalArgumentException ex) {
+            //ignore
+        }
+
+        //Try by name
         EncryptionAlgorithmType[] algorithmTypes = EncryptionAlgorithmType.values();
         for (EncryptionAlgorithmType algorithmType: algorithmTypes) {
             if (algorithmType.getName().equalsIgnoreCase(name)) {
@@ -71,18 +81,6 @@ public enum EncryptionAlgorithmType {
         throw new BeaconException("Encryption algorithm {} is not supported", name);
     }
 
-    public static EncryptionAlgorithmType getEncryptionAlgorithmByEnumType(final String cloudEncType)
-            throws BeaconException {
-        if (StringUtils.isEmpty(cloudEncType)) {
-            return NONE;
-        }
-        try {
-            return EncryptionAlgorithmType.valueOf(cloudEncType);
-        } catch (IllegalArgumentException ex) {
-            throw new BeaconException("Encryption algorithm {} is not supported", cloudEncType, ex);
-        }
-    }
-
     private String getActualConfName(String argument) {
         return String.format(getConfName(), argument);
     }
@@ -90,12 +88,12 @@ public enum EncryptionAlgorithmType {
     private static final String AWS_SSEKMSKEY = "fs.s3a.bucket.%s.server-side-encryption.key";
     private static final String AWS_SSES3KEY = "fs.s3a.bucket.%s.server-side-encryption-algorithm";
 
-    public static Configuration getHadoopConf(ReplicationPolicy policy, String cloudPath)
+    public static Configuration getHadoopConf(ReplicationPolicy policy, Path cloudPath)
             throws BeaconException {
         Configuration conf = new Configuration(false);
         if (policy.getCloudEncryptionAlgorithm() != null) {
             EncryptionAlgorithmType encryptionAlgorithm = PolicyHelper.getCloudEncryptionAlgorithm(policy);
-            String bucketName = new Path(cloudPath).toUri().getAuthority();
+            String bucketName = cloudPath.toUri().getAuthority();
             conf.set(encryptionAlgorithm.getActualConfName(bucketName), encryptionAlgorithm.getConfValue());
 
             switch (encryptionAlgorithm) {
@@ -114,5 +112,22 @@ public enum EncryptionAlgorithmType {
             }
         }
         return conf;
+    }
+
+    public static void validate(ReplicationPolicy policy) throws BeaconException {
+        validate(PolicyHelper.getCloudEncryptionAlgorithm(policy), PolicyHelper.getCloudEncryptionKey(policy));
+    }
+
+    public static void validate(String encryptionAlgorithm, String encryptionKey) throws BeaconException {
+        com.hortonworks.beacon.entity.EncryptionAlgorithmType encryptionAlgorithmType =
+                com.hortonworks.beacon.entity.EncryptionAlgorithmType.getEncryptionAlgorithm(encryptionAlgorithm);
+        validate(encryptionAlgorithmType, encryptionKey);
+    }
+
+    private static void validate(EncryptionAlgorithmType encryptionAlgorithm, String encryptionKey)
+            throws BeaconException {
+        if (encryptionAlgorithm == AWS_SSEKMS && StringUtils.isEmpty(encryptionKey)) {
+            throw new ValidationException("Cloud Encryption key is mandatory with this cloud encryption algorithm");
+        }
     }
 }

@@ -25,7 +25,7 @@ package com.hortonworks.beacon.api;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.result.FileListResult;
 import com.hortonworks.beacon.entity.BeaconCluster;
-import com.hortonworks.beacon.entity.util.EncryptionZoneListing;
+import com.hortonworks.dlmengine.fs.hdfs.EncryptionZoneListing;
 import com.hortonworks.beacon.replication.fs.SnapshotListing;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
@@ -94,8 +94,7 @@ public class DatasetListingTest extends PowerMockTestCase {
                 .thenReturn(getRemoteFileStatusIterator(fileStatuses, new Path(path)));
 
         when(EncryptionZoneListing.get()).thenReturn(encryptionZoneListing);
-        when(encryptionZoneListing.getBaseEncryptedPath(cluster.getName(), cluster.getFsEndpoint(),
-                path)).thenReturn(baseEncryptedPath);
+        when(encryptionZoneListing.getBaseEncryptedPath(cluster, path)).thenReturn(baseEncryptedPath);
         when(encryptionZoneListing.isEncrypted(baseEncryptedPath)).thenReturn(true);
         when(encryptionZoneListing.getEncryptionKeyName(cluster.getName(), baseEncryptedPath)).thenReturn(keyName);
 
@@ -124,8 +123,7 @@ public class DatasetListingTest extends PowerMockTestCase {
         when(FSUtils.getStagingUri(cluster.getFsEndpoint(), path)).thenReturn(path);
         when(fs.listStatusIterator(new Path(path)))
                 .thenReturn(getRemoteFileStatusIterator(fileStatuses, new Path(path)));
-        when(encryptionZoneListing.getBaseEncryptedPath(cluster.getName(), cluster.getFsEndpoint(),
-                subPath)).thenReturn(subPath);
+        when(encryptionZoneListing.getBaseEncryptedPath(cluster, subPath)).thenReturn(subPath);
         when(encryptionZoneListing.isEncrypted(subPath)).thenReturn(true);
         when(encryptionZoneListing.getEncryptionKeyName(cluster.getName(), subPath)).thenReturn(keyName);
 

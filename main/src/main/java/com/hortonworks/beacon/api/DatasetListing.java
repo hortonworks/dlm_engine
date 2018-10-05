@@ -24,18 +24,17 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.CloudCred;
-import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.FileListResult;
 import com.hortonworks.beacon.client.result.FileListResult.FileList;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.BeaconCluster;
-import com.hortonworks.beacon.entity.util.EncryptionZoneListing;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.fs.SnapshotListing;
+import com.hortonworks.dlmengine.fs.hdfs.EncryptionZoneListing;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -93,8 +92,7 @@ final class DatasetListing {
             EncryptionZoneListing encryptionZoneListing = EncryptionZoneListing.get();
             SnapshotListing snapshotListing = SnapshotListing.get();
 
-            String baseEncryptedPath = encryptionZoneListing.getBaseEncryptedPath(cluster.getName(),
-                    cluster.getFsEndpoint(), path);
+            String baseEncryptedPath = encryptionZoneListing.getBaseEncryptedPath(cluster, path);
             boolean parentEncrypted = encryptionZoneListing.isEncrypted(baseEncryptedPath);
             String parentEncryptionKey = encryptionZoneListing.getEncryptionKeyName(cluster.getName(),
                     baseEncryptedPath);
@@ -104,8 +102,8 @@ final class DatasetListing {
             for (FileStatus status : fileStatusList) {
                 FileList fileList = createFileList(status);
                 if (!parentEncrypted) {
-                    String encryptedPath = encryptionZoneListing.getBaseEncryptedPath(cluster.getName(),
-                            cluster.getFsEndpoint(), status.getPath().toString());
+                    String encryptedPath = encryptionZoneListing.getBaseEncryptedPath(cluster,
+                            status.getPath().toString());
                     fileList.isEncrypted = encryptionZoneListing.isEncrypted(encryptedPath);
                     fileList.encryptionKeyName = encryptionZoneListing.getEncryptionKeyName(cluster.getName(),
                             encryptedPath);
@@ -189,7 +187,7 @@ final class DatasetListing {
         return fileList;
     }
 
-    DBListResult listHiveDBDetails(Cluster cluster, String dbName) throws BeaconException {
+    DBListResult listHiveDBDetails(BeaconCluster cluster, String dbName) throws BeaconException {
         HiveMetadataClient hiveClient = null;
         try {
             hiveClient = HiveClientFactory.getMetadataClient(cluster);
@@ -208,8 +206,8 @@ final class DatasetListing {
                 for (String db : databases) {
                     DBListResult.DBList dbList = new DBListResult.DBList();
                     Path dbLocation = hiveClient.getDatabaseLocation(db);
-                    String baseEncryptedPath = encryptionZoneListing.getBaseEncryptedPath(cluster.getName(),
-                            cluster.getFsEndpoint(), dbLocation.toString());
+                    String baseEncryptedPath = encryptionZoneListing.getBaseEncryptedPath(cluster,
+                            dbLocation.toString());
                     dbList.isEncrypted = StringUtils.isNotEmpty(baseEncryptedPath);
                     if (dbList.isEncrypted) {
                         dbList.encryptionKeyName = encryptionZoneListing.getEncryptionKeyName(cluster.getName(),

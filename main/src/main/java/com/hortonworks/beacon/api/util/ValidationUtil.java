@@ -43,7 +43,6 @@ import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.CloudCredDao;
 import com.hortonworks.beacon.entity.util.ClusterDao;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
-import com.hortonworks.beacon.entity.util.EncryptionZoneListing;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
@@ -60,6 +59,7 @@ import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.util.StringFormat;
+import com.hortonworks.dlmengine.fs.hdfs.EncryptionZoneListing;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -820,7 +820,7 @@ public final class ValidationUtil {
             Cluster cluster = clusterDao.getActiveCluster(clusterName);
             if (StringUtils.isNotEmpty(cluster.getFsEndpoint())) {
                 SnapshotListing.get().updateListing(clusterName, cluster.getFsEndpoint(), Path.SEPARATOR);
-                EncryptionZoneListing.get().updateListing(clusterName, cluster.getFsEndpoint(),
+                EncryptionZoneListing.get().updateListing(new BeaconCluster(cluster),
                         Path.SEPARATOR);
             }
         }

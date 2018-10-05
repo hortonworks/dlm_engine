@@ -46,6 +46,7 @@
         <module>mpack</module>
         <module>tools</module>
         <module>cli</module>
+        <module>data-replication</module>
     </modules>
     <name>beacon</name>
     <organization>
@@ -239,6 +240,19 @@
                 <artifactId>beacon-ranger</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>com.hortonworks.beacon</groupId>
+                <artifactId>beacon-replication-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.hortonworks.beacon</groupId>
+                <artifactId>beacon-replication-fs</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>

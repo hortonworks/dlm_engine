@@ -57,6 +57,31 @@ public class ReplicationPolicy extends Entity {
     private String user;
     private Notification notification;
 
+    public ReplicationPolicy(ReplicationPolicy policy) {
+        super(EntityType.REPLICATIONPOLICY);
+        this.policyId = policy.policyId;
+        this.name = policy.name;
+        this.type = policy.type;
+        this.description = policy.description;
+        this.status = policy.status;
+        this.lastInstanceStatus = policy.lastInstanceStatus;
+        this.executionType = policy.executionType;
+        this.sourceDataset = policy.sourceDataset;
+        this.targetDataset = policy.targetDataset;
+        this.sourceCluster = policy.sourceCluster;
+        this.targetCluster = policy.targetCluster;
+        this.creationTime = policy.creationTime;
+        this.startTime = policy.startTime;
+        this.endTime = policy.endTime;
+        this.frequencyInSec = policy.frequencyInSec;
+        this.tags = policy.tags;
+        this.plugins = policy.plugins;
+        this.customProperties = policy.customProperties;
+        this.retry = policy.retry;
+        this.user = policy.user;
+        this.notification = policy.notification;
+    }
+
     /**
      * ReplicationPolicy fields used in policy properties.
      */
@@ -99,9 +124,11 @@ public class ReplicationPolicy extends Entity {
     }
 
     public ReplicationPolicy() {
+        super(EntityType.REPLICATIONPOLICY);
     }
 
     public ReplicationPolicy(Builder builder) {
+        super(EntityType.REPLICATIONPOLICY);
         this.name = builder.name;
         this.type = builder.type;
         this.description = builder.description;

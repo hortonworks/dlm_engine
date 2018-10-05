@@ -26,7 +26,6 @@ import com.codahale.metrics.annotation.Timed;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.SchemeType;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
-import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
@@ -222,7 +221,7 @@ public class BeaconResource extends AbstractResourceManager {
         return datasetListing.listCloudFiles(cloudCred.getProvider(), configuration, path);
     }
 
-    private DBListResult listHiveDBs(Cluster cluster) throws BeaconException {
+    private DBListResult listHiveDBs(BeaconCluster cluster) throws BeaconException {
         try {
             return datasetListing.listHiveDBDetails(cluster, " ");
         } catch (Exception e) {
@@ -230,7 +229,7 @@ public class BeaconResource extends AbstractResourceManager {
         }
     }
 
-    private DBListResult listHiveTables(Cluster cluster, String dbName) throws BeaconException {
+    private DBListResult listHiveTables(BeaconCluster cluster, String dbName) throws BeaconException {
         try {
             return datasetListing.listHiveDBDetails(cluster, dbName);
         } catch (Exception e) {

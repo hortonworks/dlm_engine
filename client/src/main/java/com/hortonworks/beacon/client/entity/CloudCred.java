@@ -69,9 +69,11 @@ public class CloudCred extends Entity {
     private String lastModifiedTime;
 
     public CloudCred() {
+        super(EntityType.CLOUDCRED);
     }
 
     public CloudCred(CloudCred cloudCred) {
+        super(EntityType.CLOUDCRED);
         this.id = cloudCred.id;
         this.name = cloudCred.name;
         this.provider = cloudCred.provider;

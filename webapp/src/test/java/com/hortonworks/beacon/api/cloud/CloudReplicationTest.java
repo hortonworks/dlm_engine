@@ -445,7 +445,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
             targetClient.dryrunPolicy(policyName, policy.asProperties());
 
         } catch (BeaconClientException ex) {
-            String errorMessage = "Encryption algorithm " + EncryptionAlgorithmType.AWS_SSES3.getName()
+            String errorMessage = "encryption algorithm " + EncryptionAlgorithmType.AWS_SSES3.getName()
                     + " is not supported";
             assertTrue(ex.getMessage().endsWith(errorMessage));
             shouldThrowup = true;

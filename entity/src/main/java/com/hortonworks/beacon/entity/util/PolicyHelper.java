@@ -127,7 +127,7 @@ public final class PolicyHelper {
             BeaconCluster targetCluster = new BeaconCluster(ClusterHelper.getActiveCluster(policy.getTargetCluster()));
             cloudEncAlgoType = targetCluster.getHiveCloudEncryptionAlgorithm();
         }
-        return EncryptionAlgorithmType.getEncryptionAlgorithmByEnumType(cloudEncAlgoType);
+        return EncryptionAlgorithmType.getEncryptionAlgorithm(cloudEncAlgoType);
     }
 
     public static String getCloudEncryptionKey(ReplicationPolicy policy) throws BeaconException {

@@ -41,6 +41,7 @@ import com.hortonworks.beacon.service.BeaconStoreService;
 import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.tools.BeaconDBSetup;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
+import com.hortonworks.dlmengine.fs.hdfs.HDFSAdminFactory;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -105,6 +106,7 @@ public class LocalTestDataGenerator extends TestDataGenerator {
         BeaconClientFactory.setBeaconClient(sourceClient);
         HdfsAdmin hdfsAdmin = mock(HdfsAdmin.class);
         HdfsAdminFactory.setHdfsAdmin(hdfsAdmin);
+        HDFSAdminFactory.setHdfsAdmin(hdfsAdmin);
         RemoteIterator<EncryptionZone> remoteIterator = mock(EncryptionZoneIterator.class);
         when(remoteIterator.hasNext()).thenReturn(false);
         when(hdfsAdmin.listEncryptionZones()).thenReturn(remoteIterator);

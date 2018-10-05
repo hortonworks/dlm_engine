@@ -20,60 +20,45 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.authorize.simple;
+package com.hortonworks.dlmengine.hive;
 
-import java.util.List;
-import java.util.Map;
-
-import com.hortonworks.beacon.authorize.BeaconActionTypes;
-import com.hortonworks.beacon.authorize.BeaconResourceTypes;
+import com.hortonworks.beacon.ExecutionType;
+import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
+import com.hortonworks.dlmengine.fs.FSDataSet;
+import com.hortonworks.dlmengine.fs.HCFSDataset;
 
 /**
- * This class contains File Policy definitions.
+ * Hive replication - on-prem or cloud.
  */
-public class PolicyDef {
-
-    private String policyName;
-    private Map<String, List<BeaconActionTypes>> users;
-    private Map<String, List<BeaconActionTypes>> groups;
-    private Map<BeaconResourceTypes, List<String>> resources;
-
-    public String getPolicyName() {
-        return policyName;
-    }
-
-    public void setPolicyName(String policyName) {
-        this.policyName = policyName;
-    }
-
-    public Map<String, List<BeaconActionTypes>> getUsers() {
-        return users;
-    }
-
-    public void setUsers(Map<String, List<BeaconActionTypes>> users) {
-        this.users = users;
-    }
-
-    public Map<String, List<BeaconActionTypes>> getGroups() {
-        return groups;
-    }
-
-    public void setGroups(Map<String, List<BeaconActionTypes>> groups) {
-        this.groups = groups;
-    }
-
-    public Map<BeaconResourceTypes, List<String>> getResources() {
-        return resources;
-    }
-
-    public void setResources(Map<BeaconResourceTypes, List<String>> resources) {
-        this.resources = resources;
+public class HiveReplication extends BeaconReplicationPolicy<HiveDBDataSet, HiveDBDataSet> {
+    public HiveReplication(ReplicationPolicy policyRequest) throws BeaconException {
+        super(policyRequest,
+                new HiveDBDataSet(policyRequest.getSourceDataset(), policyRequest.getSourceCluster(), policyRequest),
+                new HiveDBDataSet(policyRequest.getTargetDataset(), policyRequest.getTargetCluster(), policyRequest));
     }
 
     @Override
-    public String toString() {
-        return "PolicyDef [policyName=" + policyName + ", users=" + users + ", groups=" + groups + ", resources="
-            + resources + "]";
+    public ExecutionType getExecutionTypeEnum() {
+        return ExecutionType.HIVE;
     }
 
+    @Override
+    protected Cluster getSchedulableCluster() {
+        FSDataSet warehouse = getTargetDatasetV2().getWarehouseDataset();
+        if (warehouse instanceof HCFSDataset) {
+            return getSourceDatasetV2().getCluster();
+        } else {
+            return getTargetDatasetV2().getCluster();
+        }
+    }
+
+    @Override
+    public void validatePairing() {
+        ClusterHelper.areClustersPaired(getSourceDatasetV2().getCluster(), getTargetCluster());
+    }
 }
+

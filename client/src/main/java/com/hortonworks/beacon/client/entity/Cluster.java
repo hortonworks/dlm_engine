@@ -92,9 +92,11 @@ public class Cluster extends Entity {
     }
 
     public Cluster() {
+        super(EntityType.CLUSTER);
     }
 
     public Cluster(Cluster cluster) {
+        super(EntityType.CLUSTER);
         this.name = cluster.name;
         this.version = cluster.version;
         this.description = cluster.description;
@@ -112,6 +114,7 @@ public class Cluster extends Entity {
     }
 
     public Cluster(Builder builder) {
+        super(EntityType.CLUSTER);
         this.name = builder.name;
         this.description = builder.description;
         this.fsEndpoint = builder.fsEndpoint;

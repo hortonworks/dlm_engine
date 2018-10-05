@@ -20,31 +20,42 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.authorize;
+package com.hortonworks.dlmengine.fs.hdfs;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.hortonworks.beacon.entity.BeaconCluster;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.client.HdfsAdmin;
+
+import java.io.IOException;
 
 /**
- * This interface contains BeaconAutorizer related method signatures.
+ * Factory for creating {@link HdfsAdmin}.
  */
+public final class HDFSAdminFactory {
 
-public interface BeaconAuthorizer {
+    private static final HDFSAdminFactory INSTANCE = new HDFSAdminFactory();
 
+    private static HdfsAdmin hdfsAdmin;
 
-    /**
-     * This method will load the policy file and would initialize the required data-structures.
-     */
-    void init();
+    public static HDFSAdminFactory getInstance() {
+        return INSTANCE;
+    }
 
-    /**
-     * This method is responsible to perform the actual authorization for every REST API call. It will check if
-     * user can perform action on resource.
-     */
-    boolean isAccessAllowed(BeaconAccessRequest request) throws BeaconAuthorizationException;
+    @VisibleForTesting
+    public static void setHdfsAdmin(HdfsAdmin hdfsAdmin) {
+        HDFSAdminFactory.hdfsAdmin = hdfsAdmin;
+    }
 
-    /**
-     * This method is responsible to perform the cleanup and release activities. It must be called when you are done
-     * with the Authorization activity and once it's called a restart would be required. Try to invoke this while
-     * destroying the context.
-     */
-    void cleanUp();
+    public HdfsAdmin createHDFSAdmin(BeaconCluster cluster) throws BeaconException {
+        if (hdfsAdmin != null) {
+            return hdfsAdmin;
+        }
+        try {
+            return new HdfsAdmin(new Path(cluster.getFsEndpoint()).toUri(), cluster.getHadoopConfiguration());
+        } catch (IOException e) {
+            throw new BeaconException(e);
+        }
+    }
 }

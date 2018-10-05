@@ -20,40 +20,30 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.authorize.simple;
+package com.hortonworks.dlmengine.hive;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
-
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.entity.BeaconCluster;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
+import com.hortonworks.dlmengine.DataReplication;
 
 /**
- * This class contains File Reader utility.
+ * Hive based implementation of {@link DataReplication}.
  */
-public final class FileReaderUtil {
-    private static Logger logger = LoggerFactory.getLogger(FileReaderUtil.class);
-    private static boolean isDebugEnabled = logger.isDebugEnabled();
+public class HiveDataReplication implements DataReplication {
+    @Override
+    public void validate(BeaconCluster cluster) {
 
-    private FileReaderUtil(){
     }
-    public static List<String> readFile(InputStream policyStoreStream) throws IOException {
-        List<String> list = new ArrayList<>();
-        List<String> fileLines = IOUtils.readLines(policyStoreStream, StandardCharsets.UTF_8);
-        if (fileLines != null) {
-            for (String line : fileLines) {
-                if ((!line.startsWith("#")) && Pattern.matches(".+;;.*;;.*;;.+", line)) {
-                    list.add(line);
-                }
-            }
-        }
 
-        logger.debug("Policies read :: " + list);
-        return list;
+    @Override
+    public BeaconReplicationPolicy buildReplicationPolicy(ReplicationPolicy policyRequest) throws BeaconException {
+        BeaconReplicationPolicy.ReplicationPolicyType policyType =
+                BeaconReplicationPolicy.ReplicationPolicyType.fromReplicationPolicy(policyRequest.getType());
+        if (policyType == BeaconReplicationPolicy.ReplicationPolicyType.HIVE) {
+            return new HiveReplication(policyRequest);
+        }
+        return null;
     }
 }

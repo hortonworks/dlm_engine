@@ -20,12 +20,38 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.authorize;
+package com.hortonworks.dlmengine.fs;
+
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.entity.BeaconCluster;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
+import com.hortonworks.dlmengine.DataReplication;
 
 /**
- * This class represents methods allowed in REST APIs.
+ * HDFS-Cloud based implementation of {@link DataReplication}.
  */
+public class HDFSDataReplication implements DataReplication {
+    @Override
+    public void validate(BeaconCluster cluster) {
 
-public enum BeaconActionTypes {
-    READ, CREATE, UPDATE, DELETE
+    }
+
+    @Override
+    public BeaconReplicationPolicy buildReplicationPolicy(ReplicationPolicy policyRequest) throws BeaconException {
+        BeaconReplicationPolicy.ReplicationPolicyType policyType =
+                BeaconReplicationPolicy.ReplicationPolicyType.fromReplicationPolicy(policyRequest.getType());
+        if (policyType == BeaconReplicationPolicy.ReplicationPolicyType.FS) {
+            String srcCluster = policyRequest.getSourceCluster();
+            String targetCluster = policyRequest.getTargetCluster();
+            if (srcCluster != null && targetCluster != null) {
+                return new HDFSReplication(policyRequest);
+            } else if (srcCluster != null && targetCluster == null) {
+                return new HDFSCloudReplication(policyRequest);
+            } else if (srcCluster == null && targetCluster != null) {
+                return new CloudHDFSReplication(policyRequest);
+            }
+        }
+        return null;
+    }
 }

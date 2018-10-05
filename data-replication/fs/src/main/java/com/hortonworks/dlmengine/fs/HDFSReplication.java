@@ -20,45 +20,40 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.authorize;
+package com.hortonworks.dlmengine.fs;
 
-import com.hortonworks.beacon.util.StringFormat;
+import com.hortonworks.beacon.ExecutionType;
+import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
+import com.hortonworks.dlmengine.fs.hdfs.HDFSDataSet;
 
 /**
- * This class extends Exception class and shall be used for authorization module exception.
+ * HDFS on-prem to on-prem replication.
  */
+public class HDFSReplication extends BeaconReplicationPolicy<HDFSDataSet, HDFSDataSet> {
 
-public class BeaconAuthorizationException extends Exception {
-    private static final long serialVersionUID = 1L;
-
-    public BeaconAuthorizationException(String message) {
-        super(message);
+    public HDFSReplication(ReplicationPolicy policyRequest) throws BeaconException {
+        super(policyRequest,
+                (HDFSDataSet) FSDataSet.create(policyRequest.getSourceDataset(), policyRequest.getSourceCluster()),
+                (HDFSDataSet) FSDataSet.create(policyRequest.getTargetDataset(), policyRequest.getTargetCluster()));
     }
 
-    public BeaconAuthorizationException(String message, Throwable exception) {
-        super(message, exception);
+    @Override
+    public ExecutionType getExecutionTypeEnum() throws BeaconException {
+        return getSourceDatasetV2().isSnapshottable() ? ExecutionType.FS_SNAPSHOT : ExecutionType.FS;
     }
 
-    public BeaconAuthorizationException(String message, Throwable exception, boolean enableSuppression,
-        boolean writableStackTrace) {
-        super(message, exception, enableSuppression, writableStackTrace);
+    @Override
+    protected Cluster getSchedulableCluster() {
+        return getTargetDatasetV2().getCluster();
     }
 
-    public BeaconAuthorizationException(BeaconAccessRequest request) {
-        super("Unauthorized Request : " + request);
-    }
-
-    public BeaconAuthorizationException(String message, Object... objects) {
-        this(StringFormat.format(message, objects));
-    }
-
-    public BeaconAuthorizationException(String message, Throwable exception, Object... objects) {
-        this(StringFormat.format(message, objects), exception);
-    }
-
-    public BeaconAuthorizationException(String message, Throwable exception, boolean enableSuppression,
-        boolean writableStackTrace, Object... objects) {
-        this(StringFormat.format(message, objects), exception, enableSuppression,
-            writableStackTrace);
+    @Override
+    public void validatePairing() {
+        ClusterHelper.areClustersPaired(getSourceDatasetV2().getCluster(), getTargetCluster());
     }
 }
+

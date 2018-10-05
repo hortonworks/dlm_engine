@@ -33,6 +33,7 @@ import java.util.List;
 public abstract class Entity {
 
     private static final String EQUALS = "=";
+    private final EntityType entityType;
 
     public abstract String getName();
 
@@ -48,14 +49,13 @@ public abstract class Entity {
         SUSPENDEDFORINTERVENTION
     }
 
+    public Entity(EntityType entityType) {
+        this.entityType = entityType;
+    }
+
     @JsonIgnore
     public EntityType getEntityType() {
-        for (EntityType type : EntityType.values()) {
-            if (type.getEntityClass().equals(getClass())) {
-                return type;
-            }
-        }
-        return null;
+        return entityType;
     }
 
     @Override

@@ -20,72 +20,79 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.entity.entityNeo;
+package com.hortonworks.dlmengine.fs;
 
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
-import com.hortonworks.beacon.entity.EncryptionAlgorithmType;
+import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-import static com.hortonworks.beacon.util.FSUtils.merge;
-
 /**
  * Dataset that represents file on Hadoop Compatible Filesystem (HCFS) like S3, WASB etc.
  */
 public abstract class HCFSDataset extends FSDataSet {
+    private static final Logger LOG = LoggerFactory.getLogger(HCFSDataset.class);
+    protected BeaconCloudCred cloudCred;
 
-    private static final Logger LOG = LoggerFactory.getLogger(FSDataSet.class);
-
-    public HCFSDataset(String path, ReplicationPolicy policy) throws BeaconException {
-        super(path, policy);
-    }
-
-    protected Configuration getHadoopConf(String path, ReplicationPolicy policy) throws BeaconException {
-        BeaconCloudCred cloudCred = new BeaconCloudCred(policy.getCloudCred());
-
-        Configuration conf = cloudCred.getHadoopConf(false);
-        //Disable filesystem caching for cloud connectors
-        conf.set("fs." + cloudCred.getProvider().getHcfsScheme() + ".impl.disable.cache", "true");
-        Configuration encryptionConf = EncryptionAlgorithmType.getHadoopConf(policy, new Path(getResolvedPath()));
-
-        merge(conf, encryptionConf);
-        return conf;
+    public HCFSDataset(String path, BeaconCloudCred cloudCred) throws BeaconException {
+        super(path);
+        this.cloudCred = cloudCred;
     }
 
     @Override
-    public boolean isSnapshottable() throws IOException {
+    public Configuration getHadoopConf() throws BeaconException {
+        //TODO set fs caching = false
+        return cloudCred.getHadoopConf(false);
+    }
+
+    @Override
+    public void validateWriteAllowed() throws ValidationException {
+        String tmpFileName = ".Beacon_" + System.currentTimeMillis() + ".tmp";
+        try {
+            Path tmpFilePath = new Path(path, tmpFileName);
+            FSDataOutputStream os = fileSystem.create(tmpFilePath);
+            os.close();
+            boolean tmpDeleted = fileSystem.delete(tmpFilePath, false);
+            if (tmpDeleted) {
+                LOG.debug("Deleted the temp file {} created during policy validation process", tmpFileName);
+            } else {
+                LOG.warn("Could not delete the temp file {} created during policy validation process", tmpFileName);
+            }
+        } catch (IOException ioEx) {
+            throw new ValidationException(ioEx, ioEx.getCause().getMessage());
+        }
+        LOG.info("Validation for write access to cloud path {} succeeded", path);
+    }
+
+
+    @Override
+    public boolean isSnapshottable() {
         return false;
     }
 
     @Override
-    public void deleteAllSnapshots(String snapshotNamePrefix) throws IOException {
-        throw new IllegalStateException("deleteAllSnapshots doesn't apply for HCFS");
+    public void deleteAllSnapshots(String snapshotNamePrefix) {
+        //do nothing
     }
 
     @Override
-    public void allowSnapshot() throws IOException {
-        throw new IllegalStateException("allowSnapshot doesn't apply for HCFS");
+    public void allowSnapshot() {
+        //do nothing
     }
 
     @Override
-    public void disallowSnapshot() throws IOException {
-        throw new IllegalStateException("disallowSnapshot doesn't apply for HCFS");
+    public void disallowSnapshot() {
+        //do nothing
     }
 
     @Override
     public void close() {
-        if (fileSystem != null) {
-            try {
-                fileSystem.close();
-            } catch (IOException e) {
-                LOG.debug("IOException while closing fileSystem", e);
-            }
-        }
+        close(fileSystem);
     }
 }

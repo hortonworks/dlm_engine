@@ -23,7 +23,7 @@
 package com.hortonworks.beacon.main;
 
 
-import com.hortonworks.beacon.plugin.service.PluginManagerService;
+import com.hortonworks.beacon.plugin.service.MetaDataPluginManagerService;
 import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.service.Services;
 import junit.framework.Assert;
@@ -36,7 +36,7 @@ import java.util.List;
  * Test class for ServiceInitializer.
  */
 public class ServiceManagerTest {
-    private static final List<String> SERVICES = Arrays.asList(PluginManagerService.class.getName());
+    private static final List<String> SERVICES = Arrays.asList(MetaDataPluginManagerService.class.getName());
 
     @Test(enabled = false)
     public void testServiceInitEnabled() throws Exception {

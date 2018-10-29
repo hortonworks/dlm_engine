@@ -140,22 +140,23 @@ hive.metastore.warehouse.dir and hive.repl.replica.functions.root.dir should be 
 Update these properties in the default config of hive through ambari and restart hive.
 Sync the target cluster using DLM UI.
 [source, properties]
-hive.metastore.warehouse.dir=<cloud storage path like wasb://wasb-hive@beaconmthakur.blob.core.windows.net/apps/hive/warehouse>
-hive.repl.replica.functions.root.dir=<cloud storage path like wasb://wasb-hive@beaconmthakur.blob.core.windows.net/apps/hive/repl>
+hive.metastore.warehouse.dir=<cloud storage path like wasb://wasb-hive@dummy-wasb-account.blob.core.windows.net/apps/hive/warehouse or s3a://dummy-s3-bucket/apps/hive/warehouse>
+hive.repl.replica.functions.root.dir=<cloud storage path like wasb://wasb-hive@dummy-wasb-account.blob.core.windows.net/apps/hive/repl or s3a://dummy-s3-bucket/apps/hive/repl>
 hive.warehouse.subdir.inherit.perms=false
 
 
 2. Cloud access credentials - When Hive metastore is configured with hive warehouse directory on cloud storage, hive will also require the credentials to
 access the cloud storage. This can be setup with one of the following configurations,
 
-* https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_cloud-data-access/content/s3-auth-per-bukcet.html[Access key and secret key]
-* https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_cloud-data-access/content/s3-credential-providers.html[Access key and secret key in credential file]
-* https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_cloud-data-access/content/s3-temp-session.html[Session token]
+* https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_cloud-data-access/content/s3-auth-per-bukcet.html[S3 Access key and secret key]
+* https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_cloud-data-access/content/s3-credential-providers.html[S3 Access key and secret key in credential file]
+* https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_cloud-data-access/content/s3-temp-session.html[S3 Session token]
+* https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_cloud-data-access/content/authentication-wasb.html[Wasb Account and access key]
 * For IAAS clusters, setup instance profiles
 
 3. Cloud encryption configurations - If the bucket is encrypted, setup the https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_cloud-data-access/content/per-bucket-encryption.html[bucket encryption details]
 
-Note that all these configurations can be set in hive-site.xml
+*Note that all these configurations can be set in hive-site.xml*
 
 ==== Cluster Entity
 ===== Source Cluster

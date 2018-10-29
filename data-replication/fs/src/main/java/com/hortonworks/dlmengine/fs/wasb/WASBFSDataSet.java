@@ -23,7 +23,9 @@
 package com.hortonworks.dlmengine.fs.wasb;
 
 import com.hortonworks.beacon.client.entity.CloudCred;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
+import com.hortonworks.beacon.entity.EncryptionAlgorithmType;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.StringFormat;
 import com.hortonworks.dlmengine.fs.HCFSDataset;
@@ -35,13 +37,16 @@ import org.apache.hadoop.fs.Path;
 public class WASBFSDataSet extends HCFSDataset {
     //TODO remove
     public static final String WASB_ENDPOINT = ".blob.core.windows.net";
+    private ReplicationPolicy policy;
 
-    public WASBFSDataSet(String path, BeaconCloudCred cloudCred) throws BeaconException {
-        super(path, cloudCred);
+    public WASBFSDataSet(String path, BeaconCloudCred cloudCred, ReplicationPolicy policy) throws BeaconException {
+        super(path, cloudCred, policy);
+        this.policy = policy;
     }
 
     @Override
-    public String resolvePath(String path) {
+    public String resolvePath(String path, ReplicationPolicy policyInp) {
+        cloudCred = new BeaconCloudCred(policyInp.getCloudCred());
         String wasbAccount = cloudCred.getConfigs().get(CloudCred.Config.WASB_ACCOUNT_NAME);
         String authority = new Path(path).toUri().getAuthority();
         String myPath = new Path(path).toUri().getPath();
@@ -60,6 +65,11 @@ public class WASBFSDataSet extends HCFSDataset {
          * Encryption is by default enabled in WASB store and can't be disabled also.
          */
         return true;
+    }
+
+    @Override
+    public void validateEncryptionParameters() throws BeaconException {
+        EncryptionAlgorithmType.validate(policy);
     }
 }
 

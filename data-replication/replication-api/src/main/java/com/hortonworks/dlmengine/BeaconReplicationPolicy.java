@@ -28,10 +28,14 @@ import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.notification.BeaconNotification;
+import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.executors.PolicyExecutor;
+import com.hortonworks.beacon.util.StringFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,15 +94,31 @@ public abstract class BeaconReplicationPolicy<S extends DataSet, T extends DataS
         super(policyRequest);
         this.sourceDataset = srcDataset;
         this.targetDataset = targetDataset;
-        policyRequest.setExecutionType(getExecutionTypeEnum().name());
+        this.setExecutionType(getExecutionTypeEnum().name());
         LOG.info("Created replication policy {} with source dataset {} and target dataset {}");
     }
 
     public static BeaconReplicationPolicy create(String policyName) throws BeaconException {
-        return null;
-        //TODO
-//        return buildReplicationPolicy(new PolicyDao().getActivePolicy(policyName));
+        return buildReplicationPolicy(new PolicyDao().getActivePolicy(policyName));
     }
+
+    public static BeaconReplicationPolicy buildReplicationPolicy(ReplicationPolicy policy) throws BeaconException{
+        DataPluginManagerService dataPluginManagerService = Services.get().getService(DataPluginManagerService.class);
+        List<String> dataPlugins = dataPluginManagerService.getRegisteredPlugins();
+        if (dataPlugins.isEmpty()) {
+            throw new BeaconException("No Registered DataPlugin found");
+        }
+        for(String dataPluginName : dataPlugins) {
+            DataPlugin dataPlugin = dataPluginManagerService.getPlugin(dataPluginName);
+            BeaconReplicationPolicy beaconReplicationPolicy = dataPlugin.buildReplicationPolicy(policy);
+            if (beaconReplicationPolicy != null) {
+                return beaconReplicationPolicy;
+            }
+        }
+        throw new BeaconException(StringFormat.format("Unable to build BeaconReplicationPolicy having "
+                + "name {} and type {} ", policy.getName(), policy.getType()));
+    }
+
 
     public S getSourceDatasetV2() {
         return sourceDataset;
@@ -110,15 +130,54 @@ public abstract class BeaconReplicationPolicy<S extends DataSet, T extends DataS
 
     public void validate() throws BeaconException {
         validateAPIAllowed();
-        validateTargetDatasetConflict();
-
+        validateDataSetConflict();
         validateSourceDatasetExists();
         deleteSourceSnapshots();
-
         validateEncryptionAndSnapshot();
-
         validateTargetExistsEmpty();
         validateTargetIsWritable();
+    }
+
+    private void validateDataSetConflict() throws BeaconStoreException, ValidationException {
+        BeaconNotification notification = new BeaconNotification();
+        // Source dataset conflict validation.
+        boolean sourceDataConflictAndTgtClusterConflict = isSourceDataConflictAndTgtClusterConflict();
+        if (sourceDataConflictAndTgtClusterConflict) {
+            notification.addError(StringFormat.format("Source dataset {} already in replication"
+                            + " on same target cluster {}",
+                    this.getSourceDataset(), this.getTargetCluster()));
+        }
+
+        // Target dataset conflict validation.
+        List<String> targets = getTargetsForType(getReplicationType());
+        for (String target: targets) {
+            if (targetDataset.conflicts(target)) {
+                notification.addError("Target dataset already in replication " + targetDataset.name);
+            }
+        }
+
+        if (notification.hasErrors()) {
+            throw new ValidationException(notification.errorMessage());
+        }
+
+    }
+
+
+    private boolean isSourceDataConflictAndTgtClusterConflict() throws BeaconStoreException {
+        PolicyBean policyBean = new PolicyBean();
+        policyBean.setType(this.getType());
+        policyBean.setSourceCluster(this.getSourceCluster());
+        policyBean.setTargetCluster(this.getTargetCluster());
+        policyBean.setSourceDataset(this.getSourceDataset());
+        PolicyExecutor policyExecutor = new PolicyExecutor(policyBean);
+        List<PolicyBean> existingPolicies = policyExecutor
+                .getPolicies(PolicyExecutor.PolicyQuery.GET_POLICY_SAME_SOURCE_AND_TGT_CLUSTER);
+        if (existingPolicies.size() > 0) {
+            LOG.info(StringFormat.format("Source dataset {} already in replication on same target cluster {}",
+                    this.getSourceDataset(), this.getTargetCluster()));
+            return true;
+        }
+        return false;
     }
 
     private void validateTargetIsWritable() throws ValidationException {
@@ -129,10 +188,11 @@ public abstract class BeaconReplicationPolicy<S extends DataSet, T extends DataS
         if (targetDataset.exists() && !targetDataset.isEmpty()) {
             throw new ValidationException("Target dataset directory {} is not empty", targetDataset.name);
         }
-//        if (!targetDataset.exists() && targetDataset.failIfTargetNotExists()) {
-//            //TODO
-//        }
+        /**
+         * Creating the destination with same permissions as source.
+         */
         targetDataset.create(sourceDataset.getFileStatus());
+        targetDataset.validateEncryptionParameters();
     }
 
     private void validateEncryptionAndSnapshot() throws BeaconException {
@@ -142,9 +202,7 @@ public abstract class BeaconReplicationPolicy<S extends DataSet, T extends DataS
         if (sourceDataset.isEncrypted() || targetDataset.isEncrypted()) {
             getCustomProperties().setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
         }
-        if (sourceDataset.isEncrypted() && !targetDataset.isEncrypted()) {
-            throw new ValidationException("Target dataset directory {} is not encrypted", targetDataset.name);
-        }
+        // Allowing replication from encrypted source to non-encrypted destination (BUG-110915).
         if (isSnapshotBased()) {
             sourceDataset.allowSnapshot();
             targetDataset.allowSnapshot();
@@ -185,15 +243,6 @@ public abstract class BeaconReplicationPolicy<S extends DataSet, T extends DataS
         }
         return dataset;
 
-    }
-
-    private void validateTargetDatasetConflict() throws BeaconStoreException, ValidationException {
-        List<String> targets = getTargetsForType(getReplicationType());
-        for (String target: targets) {
-            if (targetDataset.conflicts(target)) {
-                throw new ValidationException("Target dataset already in replication " + targetDataset.name);
-            }
-        }
     }
 
     public void validateAPIAllowed() throws BeaconException {

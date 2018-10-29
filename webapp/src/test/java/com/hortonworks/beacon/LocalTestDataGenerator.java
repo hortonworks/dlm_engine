@@ -23,8 +23,8 @@
 package com.hortonworks.beacon;
 
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.hortonworks.beacon.entity.util.HdfsAdminFactory;
 import com.hortonworks.beacon.api.LocalBeaconClient;
+import com.hortonworks.beacon.entity.util.HdfsAdminFactory;
 import com.hortonworks.beacon.api.ResourceBaseTest;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.entity.Cluster;
@@ -34,18 +34,23 @@ import com.hortonworks.beacon.entity.S3OperationFactory;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
 import com.hortonworks.beacon.entity.util.hive.HiveServerClient;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.metrics.FSReplicationMetrics;
+import com.hortonworks.beacon.plugin.service.MetaDataPluginManagerService;
 import com.hortonworks.beacon.replication.fs.DistCpFactory;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.BeaconStoreService;
 import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.tools.BeaconDBSetup;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
+import com.hortonworks.dlmengine.DataPluginManagerService;
 import com.hortonworks.dlmengine.fs.hdfs.HDFSAdminFactory;
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.client.HdfsAdmin;
 import org.apache.hadoop.hdfs.protocol.EncryptionZone;
@@ -86,7 +91,9 @@ public class LocalTestDataGenerator extends TestDataGenerator {
         MockitoAnnotations.initMocks(this);
         BeaconDBSetup.setupDB();
         List<String> defaultServices = Arrays.asList(BeaconStoreService.class.getName());
-        List<String> dependentServices = Arrays.asList(BeaconQuartzScheduler.class.getName());
+        List<String> dependentServices = Arrays.asList(BeaconQuartzScheduler.class.getName(),
+                DataPluginManagerService.class.getName(),
+                MetaDataPluginManagerService.class.getName());
         ServiceManager.getInstance().initialize(defaultServices, dependentServices);
         initCustomMocks();
 
@@ -225,6 +232,17 @@ public class LocalTestDataGenerator extends TestDataGenerator {
     @Override
     public void createFSMocks(String path) throws IOException {
         when(targetFs.exists(any(Path.class))).thenReturn(true);
-        when(targetFs.create(new Path(path))).thenReturn(mock(FSDataOutputStream.class));
+        when(targetFs.create(any(Path.class))).thenReturn(mock(FSDataOutputStream.class));
+        FileStatus fileStatus = mock(FileStatus.class);
+        when(targetFs.getFileStatus(any(Path.class))).thenReturn(fileStatus);
+        when(fileStatus.getOwner()).thenReturn("dummy");
+        when(fileStatus.getPermission()).thenReturn(mock(FsPermission.class));
+        when(fileStatus.getGroup()).thenReturn("dummy");
+        when(targetFs.mkdirs(any(Path.class), any(FsPermission.class))).thenReturn(true);
+    }
+
+    @Override
+    public void createHiveMocks(String dbName) throws BeaconException {
+        when(hiveMetadataClient.doesDBExist(dbName)).thenReturn(true);
     }
 }

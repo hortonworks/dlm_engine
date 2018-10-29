@@ -31,6 +31,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
+import java.util.Properties;
+
+import static com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields.CLOUD_ENCRYPTIONALGORITHM;
+import static com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields.CLOUD_ENCRYPTIONKEY;
+
 /**
  * Cloud Object store encryption algorithm types.
  */
@@ -115,19 +120,54 @@ public enum EncryptionAlgorithmType {
     }
 
     public static void validate(ReplicationPolicy policy) throws BeaconException {
-        validate(PolicyHelper.getCloudEncryptionAlgorithm(policy), PolicyHelper.getCloudEncryptionKey(policy));
+        Properties cloudEncProps = new Properties();
+
+        if (policy.getCloudEncryptionAlgorithm() != null) {
+            cloudEncProps.put(CLOUD_ENCRYPTIONALGORITHM.getName(), policy.getCloudEncryptionAlgorithm());
+        }
+
+        if (policy.getCloudEncryptionKey() != null) {
+            cloudEncProps.put(CLOUD_ENCRYPTIONKEY.getName(), policy.getCloudEncryptionKey());
+        }
+        // When a sourceDataset is on Cloud, beacon doesn't need an encryption key and hence that is not mandatory.
+        boolean isKeyMandatory = true;
+        if (PolicyHelper.isDatasetHCFS(policy.getSourceDataset())) {
+            isKeyMandatory = false;
+        }
+        validateEncryptionAlgorithmType(cloudEncProps, isKeyMandatory);
     }
 
-    public static void validate(String encryptionAlgorithm, String encryptionKey) throws BeaconException {
-        com.hortonworks.beacon.entity.EncryptionAlgorithmType encryptionAlgorithmType =
-                com.hortonworks.beacon.entity.EncryptionAlgorithmType.getEncryptionAlgorithm(encryptionAlgorithm);
-        validate(encryptionAlgorithmType, encryptionKey);
-    }
-
-    private static void validate(EncryptionAlgorithmType encryptionAlgorithm, String encryptionKey)
-            throws BeaconException {
-        if (encryptionAlgorithm == AWS_SSEKMS && StringUtils.isEmpty(encryptionKey)) {
-            throw new ValidationException("Cloud Encryption key is mandatory with this cloud encryption algorithm");
+    private static void validateEncryptionAlgorithmType(Properties cloudEncProps, boolean isKeyMandatory)
+            throws ValidationException {
+        String encryptionAlgorithm = cloudEncProps.getProperty(CLOUD_ENCRYPTIONALGORITHM.getName());
+        String encryptionKey = cloudEncProps.getProperty(CLOUD_ENCRYPTIONKEY.getName());
+        if (StringUtils.isEmpty(encryptionAlgorithm)) {
+            if (StringUtils.isNotEmpty(encryptionKey)) {
+                throw new ValidationException(
+                        "Cloud Encryption key without a cloud encryption algorithm is not allowed");
+            }
+            return;
+        }
+        try {
+            EncryptionAlgorithmType encryptionAlgorithmType = EncryptionAlgorithmType.valueOf(encryptionAlgorithm);
+            switch (encryptionAlgorithmType) {
+                case AWS_SSEKMS:
+                    if (StringUtils.isEmpty(encryptionKey) && isKeyMandatory) {
+                        throw new ValidationException(
+                                "Cloud Encryption key is mandatory with this cloud encryption algorithm");
+                    }
+                    break;
+                default:
+                    if (StringUtils.isNotEmpty(encryptionKey)) {
+                        throw new ValidationException(
+                                "Cloud encryption key is not applicable to this cloud encryption algorithm",
+                                encryptionAlgorithm);
+                    }
+                    break;
+            }
+        } catch (IllegalArgumentException iaEx) {
+            throw new ValidationException("Cloud encryption algorithm {} is not supported", encryptionAlgorithm, iaEx);
         }
     }
+
 }

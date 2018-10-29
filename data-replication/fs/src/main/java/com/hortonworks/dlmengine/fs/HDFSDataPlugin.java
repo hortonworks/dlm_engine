@@ -20,18 +20,18 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.dlmengine.hive;
+package com.hortonworks.dlmengine.fs;
 
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.dlmengine.BeaconReplicationPolicy;
-import com.hortonworks.dlmengine.DataReplication;
+import com.hortonworks.dlmengine.DataPlugin;
 
 /**
- * Hive based implementation of {@link DataReplication}.
+ * HDFS-Cloud based implementation of {@link DataPlugin}.
  */
-public class HiveDataReplication implements DataReplication {
+public class HDFSDataPlugin implements DataPlugin {
     @Override
     public void validate(BeaconCluster cluster) {
 
@@ -41,8 +41,16 @@ public class HiveDataReplication implements DataReplication {
     public BeaconReplicationPolicy buildReplicationPolicy(ReplicationPolicy policyRequest) throws BeaconException {
         BeaconReplicationPolicy.ReplicationPolicyType policyType =
                 BeaconReplicationPolicy.ReplicationPolicyType.fromReplicationPolicy(policyRequest.getType());
-        if (policyType == BeaconReplicationPolicy.ReplicationPolicyType.HIVE) {
-            return new HiveReplication(policyRequest);
+        if (policyType == BeaconReplicationPolicy.ReplicationPolicyType.FS) {
+            String srcCluster = policyRequest.getSourceCluster();
+            String targetCluster = policyRequest.getTargetCluster();
+            if (srcCluster != null && targetCluster != null) {
+                return new HDFSReplication(policyRequest);
+            } else if (srcCluster != null && targetCluster == null) {
+                return new HDFSCloudReplication(policyRequest);
+            } else if (srcCluster == null && targetCluster != null) {
+                return new CloudHDFSReplication(policyRequest);
+            }
         }
         return null;
     }

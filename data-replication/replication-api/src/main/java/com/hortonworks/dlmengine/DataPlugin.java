@@ -20,44 +20,17 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon;
+package com.hortonworks.dlmengine;
 
-import com.hortonworks.beacon.api.ResourceBaseTest;
-import com.hortonworks.beacon.client.BeaconClient;
-import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import org.apache.hadoop.fs.FileSystem;
 
 /**
- * Test data generator for ambari based cluster.
+ * Api contract for any type of data replication.
  */
-public class AmbariBasedTestDataGenerator extends TestDataGenerator {
-    @Override
-    public void init() throws BeaconException {
-    }
+public interface DataPlugin {
+    void validate(BeaconCluster cluster);
 
-    @Override
-    public Cluster getCluster(ResourceBaseTest.ClusterType clusterType, boolean isLocal) {
-        return null;
-    }
-
-    @Override
-    public BeaconClient getClient(ResourceBaseTest.ClusterType clusterType) {
-        return null;
-    }
-
-    @Override
-    public FileSystem getFileSystem(ResourceBaseTest.ClusterType clusterType) {
-        return null;
-    }
-
-    @Override
-    public void createFSMocks(String path) {
-        //Do nothing
-    }
-
-    @Override
-    public void createHiveMocks(String dbName) throws BeaconException {
-
-    }
+    BeaconReplicationPolicy buildReplicationPolicy(ReplicationPolicy policyRequest) throws BeaconException;
 }

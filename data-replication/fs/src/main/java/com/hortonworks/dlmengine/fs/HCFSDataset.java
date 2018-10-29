@@ -22,7 +22,9 @@
 
 package com.hortonworks.dlmengine.fs;
 
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
+import com.hortonworks.beacon.entity.EncryptionAlgorithmType;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.hadoop.conf.Configuration;
@@ -33,6 +35,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+import static com.hortonworks.beacon.util.FSUtils.merge;
+
 /**
  * Dataset that represents file on Hadoop Compatible Filesystem (HCFS) like S3, WASB etc.
  */
@@ -40,16 +44,25 @@ public abstract class HCFSDataset extends FSDataSet {
     private static final Logger LOG = LoggerFactory.getLogger(HCFSDataset.class);
     protected BeaconCloudCred cloudCred;
 
-    public HCFSDataset(String path, BeaconCloudCred cloudCred) throws BeaconException {
-        super(path);
+    public HCFSDataset(String path, BeaconCloudCred cloudCred, ReplicationPolicy policy) throws BeaconException {
+        super(path, policy);
         this.cloudCred = cloudCred;
     }
 
     @Override
-    public Configuration getHadoopConf() throws BeaconException {
-        //TODO set fs caching = false
-        return cloudCred.getHadoopConf(false);
+    protected Configuration getHadoopConf(String path, ReplicationPolicy policy)
+            throws BeaconException {
+        BeaconCloudCred beaconCloudCred = new BeaconCloudCred(policy.getCloudCred());
+        Configuration conf = beaconCloudCred.getHadoopConf(false);
+        //Disable filesystem caching for cloud connectors
+        conf.set("fs." + beaconCloudCred.getProvider().getHcfsScheme() + ".impl.disable.cache", "true");
+        Configuration encryptionConf = EncryptionAlgorithmType
+                .getHadoopConf(policy, new Path(resolvePath(path, policy)));
+        merge(conf, encryptionConf);
+        return conf;
     }
+
+
 
     @Override
     public void validateWriteAllowed() throws ValidationException {

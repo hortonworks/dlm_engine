@@ -164,6 +164,14 @@
             <groupId>com.hortonworks.beacon</groupId>
             <artifactId>beacon-atlas</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>beacon-replication-hive</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>beacon-replication-fs</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -295,7 +303,8 @@
             com.hortonworks.beacon.scheduler.internal.StoreCleanupService,
             com.hortonworks.beacon.scheduler.internal.AdminJobService,
             com.hortonworks.beacon.scheduler.RecoveryService,
-            com.hortonworks.beacon.plugin.service.PluginManagerService,
+            com.hortonworks.beacon.plugin.service.MetaDataPluginManagerService,
+            com.hortonworks.dlmengine.DataPluginManagerService,
             com.hortonworks.beacon.service.PolicyRecoveryService
         </beacon.services>
         <beacon.app.path>../webapp/target/beacon-webapp-1.1-SNAPSHOT</beacon.app.path>

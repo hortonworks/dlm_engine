@@ -25,6 +25,7 @@ package com.hortonworks.dlmengine.fs;
 import com.hortonworks.beacon.ExecutionType;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.dlmengine.BeaconReplicationPolicy;
 import com.hortonworks.dlmengine.fs.hdfs.HDFSDataSet;
@@ -35,9 +36,9 @@ import com.hortonworks.dlmengine.fs.hdfs.HDFSDataSet;
 public class HDFSCloudReplication extends BeaconReplicationPolicy<HDFSDataSet, HCFSDataset> {
     public HDFSCloudReplication(ReplicationPolicy policyRequest) throws BeaconException {
         super(policyRequest,
-                new HDFSDataSet(policyRequest.getSourceDataset(), policyRequest.getSourceCluster()),
-                (HCFSDataset) FSDataSet.create(policyRequest.getTargetCluster(), policyRequest.getTargetCluster(),
-                        policyRequest));
+                (HDFSDataSet) FSDataSet.create(policyRequest.getSourceDataset(), policyRequest.getSourceCluster()),
+                (HCFSDataset) FSDataSet.create(policyRequest.getTargetDataset(), policyRequest.getTargetCluster(),
+                        new BeaconCloudCred(policyRequest.getCloudCred()), policyRequest));
     }
 
     @Override

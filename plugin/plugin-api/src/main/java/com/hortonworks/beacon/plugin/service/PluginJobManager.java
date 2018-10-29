@@ -33,6 +33,7 @@ import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.plugin.Plugin;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.service.Services;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
@@ -59,13 +60,15 @@ public class PluginJobManager extends InstanceReplication {
     @Override
     public void perform(JobContext jobContext) throws BeaconException {
         Properties properties = getProperties();
+        MetaDataPluginManagerService pluginManagerService = Services.get()
+                .getService(MetaDataPluginManagerService.class);
         // get the plugin name
         String pluginName = properties.getProperty(PluginJobProperties.JOB_TYPE.getName());
-        if (!PluginManagerService.isPluginRegistered(pluginName)) {
+        if (!pluginManagerService.isPluginRegistered(pluginName)) {
             throw new BeaconException("Plugin {} is not registered. Cannot perform the job", pluginName);
         }
 
-        Plugin plugin = PluginManagerService.getPlugin(pluginName);
+        Plugin plugin = pluginManagerService.getPlugin(pluginName);
         Plugin.Status pluginStatus = plugin.getStatus();
         // To-DO: Do we throw exception?
         if (Plugin.Status.ACTIVE != pluginStatus) {
@@ -90,7 +93,7 @@ public class PluginJobManager extends InstanceReplication {
         DataSet pluginDataset = new DatasetImpl(sourceDataset, targetDataset,
                 DataSet.DataSetType.valueOf(datasetType.toUpperCase()), srcCluster, targetCluster, stagingDir);
         LOG.debug("Staging directory: {}", stagingDir);
-        switch (PluginManagerService.getActionType(action)) {
+        switch (pluginManagerService.getActionType(action)) {
             case EXPORT:
                 Path path = plugin.exportData(pluginDataset);
                 if (path != null) {

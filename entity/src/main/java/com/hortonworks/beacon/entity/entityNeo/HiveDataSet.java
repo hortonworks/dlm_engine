@@ -59,7 +59,7 @@ public class HiveDataSet extends DataSet {
     }
 
     @Override
-    public boolean exists() throws IOException, BeaconException {
+    public boolean exists() throws BeaconException {
         return metadataClient.doesDBExist(dbName);
     }
 

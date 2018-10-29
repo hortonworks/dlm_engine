@@ -28,6 +28,7 @@ import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.hadoop.fs.FileSystem;
 
@@ -66,6 +67,8 @@ public abstract class TestDataGenerator {
     public abstract FileSystem getFileSystem(ResourceBaseTest.ClusterType clusterType);
 
     public abstract void createFSMocks(String path) throws IOException;
+
+    public abstract void createHiveMocks(String dbName) throws BeaconException;
 
     private void populateCustomProperties(ReplicationPolicy policy) {
         policy.getCustomProperties().setProperty("distcpMaxMaps", "1");

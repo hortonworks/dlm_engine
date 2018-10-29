@@ -57,24 +57,26 @@ public class PluginJobBuilder extends JobBuilder {
     @Override
     public List<ReplicationJobDetails> buildJob(ReplicationPolicy policy) throws BeaconException {
         List<ReplicationJobDetails> jobList = new ArrayList<>();
-        if (!Services.get().isRegistered(PluginManagerService.class.getName())) {
+        MetaDataPluginManagerService pluginManagerService = Services.get()
+                .getService(MetaDataPluginManagerService.class);
+        if (!Services.get().isRegistered(MetaDataPluginManagerService.class.getName())) {
             return jobList;
         }
 
-        if (PluginManagerService.getRegisteredPlugins().isEmpty()) {
+        if (pluginManagerService.getRegisteredPlugins().isEmpty()) {
             LOG.info("No plugin has been registered!");
             return jobList;
         }
 
         List<String> pluginsEnabled = policy.getPlugins();
         if (pluginsEnabled.isEmpty()) {
-            pluginsEnabled = PluginManagerService.getRegisteredPlugins();
+            pluginsEnabled = pluginManagerService.getRegisteredPlugins();
         }
 
-        Set<String> orderedPlugins = getPluginOrder(PluginManagerService.getRegisteredPlugins());
+        Set<String> orderedPlugins = getPluginOrder(pluginManagerService.getRegisteredPlugins());
         for (String pluginName: orderedPlugins) {
             if (pluginsEnabled.contains(pluginName)) {
-                List<PluginAction> lineage = PluginManagerService.getPlugin(pluginName).getLineage(policy);
+                List<PluginAction> lineage = pluginManagerService.getPlugin(pluginName).getLineage(policy);
                 List<ReplicationJobDetails> tmpJobList = new ArrayList<>();
                 for (PluginAction action: lineage) {
                     ReplicationJobDetails jobDetails = buildReplicationJobDetails(policy, pluginName, action.getName());
@@ -173,8 +175,10 @@ public class PluginJobBuilder extends JobBuilder {
             inDegree.put(plugin, 0);
             adjList.put(plugin, new ArrayList<String>());
         }
+        MetaDataPluginManagerService pluginManagerService = Services.get()
+                .getService(MetaDataPluginManagerService.class);
         for (String plugin: plugins) {
-            List<String> dependencies = PluginManagerService.getPlugin(plugin).getInfo().getDependencies();
+            List<String> dependencies = pluginManagerService.getPlugin(plugin).getInfo().getDependencies();
             if (dependencies != null && !dependencies.isEmpty()) {
                 for (String dependency: dependencies) {
                     int inDegreeCount = 0;

@@ -78,6 +78,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         cluster.setCustomProperties(getPropertiesTargetHiveCloudCluster());
         return cluster;
     }
+
     @AfterClass
     public void cleanup() throws Exception {
         targetClient.unpairClusters(targetCluster.getName(), true);
@@ -109,6 +110,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
                 sourceCluster.getName(), null, cloudProps);
         testDataGenerator.createFSMocks(sourceDataSet);
         targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+
         waitOnCondition(50000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -296,12 +298,13 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         String cloudCredId = targetClient.submitCloudCred(cloudCred);
         assertNotNull(cloudCredId);
         final String policyName = testDataGenerator.getRandomString("HiveCloudPolicy");
-        String sourceDataSet = SOURCE_DIR + policyName;
+        String sourceDataSet = policyName;
         Map<String, String> cloudProps = new HashMap<>();
         cloudProps.put("cloudCred", cloudCredId);
         ReplicationPolicy policy = testDataGenerator.getPolicy(policyName, sourceDataSet,
                 testDataGenerator.getRandomString("HiveTestDb"), "HIVE", 60,
                 sourceCluster.getName(), targetCluster.getName(), cloudProps);
+        testDataGenerator.createHiveMocks(sourceDataSet);
         targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
         waitOnCondition(10000, "First Instance Success ", new Condition() {
             @Override
@@ -319,12 +322,15 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         String cloudCredId = targetClient.submitCloudCred(cloudCred);
         assertNotNull(cloudCredId);
         final String policyName1 = testDataGenerator.getRandomString("HiveCloudPolicy");
-        String sourceDataSet = SOURCE_DIR + policyName1;
+        String sourceDataSet = policyName1;
+        String tgtDataSet = testDataGenerator.getRandomString("HiveTestDb");
         Map<String, String> cloudProps = new HashMap<>();
         cloudProps.put("cloudCred", cloudCredId);
         ReplicationPolicy policy1 = testDataGenerator.getPolicy(policyName1, sourceDataSet,
-                testDataGenerator.getRandomString("HiveTestDb"), "HIVE", 60,
+                tgtDataSet, "HIVE", 60,
                 sourceCluster.getName(), targetCluster.getName(), cloudProps);
+        testDataGenerator.createHiveMocks(sourceDataSet);
+        testDataGenerator.createFSMocks(tgtDataSet);
         targetClient.submitAndScheduleReplicationPolicy(policyName1, policy1.asProperties());
         waitOnCondition(10000, "First Instance Success ", new Condition() {
             @Override
@@ -337,12 +343,15 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         ReplicationPolicy policy2 = testDataGenerator.getPolicy(policyName2, sourceDataSet,
                 testDataGenerator.getRandomString("HiveTestDb"), "HIVE", 60,
                 sourceCluster.getName(), targetCluster.getName(), cloudProps);
+        boolean exceptionThrown = false;
         try {
             targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties());
         } catch (BeaconClientException ex) {
+            exceptionThrown = true;
             assertTrue(ex.getMessage()
                     .contains(StringFormat.format("Source dataset {} already in replication", sourceDataSet)));
         }
+        assertTrue(exceptionThrown);
         targetClient.deletePolicy(policyName1, false);
     }
 
@@ -352,12 +361,14 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         String cloudCredId = targetClient.submitCloudCred(cloudCred);
         assertNotNull(cloudCredId);
         final String policyName1 = testDataGenerator.getRandomString("HiveCloudPolicy");
-        String sourceDataSet = SOURCE_DIR + policyName1;
+        String sourceDataSet = policyName1;
         String targetDataSet = testDataGenerator.getRandomString("HiveTestDb");
         Map<String, String> cloudProps = new HashMap<>();
         cloudProps.put("cloudCred", cloudCredId);
         ReplicationPolicy policy1 = testDataGenerator.getPolicy(policyName1, sourceDataSet, targetDataSet, "HIVE", 60,
                 sourceCluster.getName(), targetCluster.getName(), cloudProps);
+        testDataGenerator.createFSMocks(targetDataSet);
+        testDataGenerator.createHiveMocks(sourceDataSet);
         targetClient.submitAndScheduleReplicationPolicy(policyName1, policy1.asProperties());
         waitOnCondition(10000, "First Instance Success ", new Condition() {
             @Override
@@ -369,11 +380,14 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         final String policyName2 = testDataGenerator.getRandomString("HiveCloudPolicy");
         ReplicationPolicy policy2 = testDataGenerator.getPolicy(policyName2, sourceDataSet, targetDataSet, "HIVE", 60,
                 sourceCluster.getName(), targetCluster.getName(), cloudProps);
+        boolean exceptionThrown = false;
         try {
             targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties());
         } catch (BeaconClientException ex) {
             assertTrue(ex.getMessage().contains("Target dataset already in replication"));
+            exceptionThrown = true;
         }
+        assertTrue(exceptionThrown);
         targetClient.deletePolicy(policyName1, false);
     }
 
@@ -383,12 +397,14 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         String cloudCredId = targetClient.submitCloudCred(cloudCred);
         assertNotNull(cloudCredId);
         final String policyName = testDataGenerator.getRandomString("HiveCloudPolicy1");
-        String sourceDataSet = SOURCE_DIR + policyName;
+        String sourceDataSet = policyName;
         Map<String, String> cloudProps = new HashMap<>();
         cloudProps.put("cloudCred", cloudCredId);
         ReplicationPolicy policy = testDataGenerator.getPolicy(policyName, sourceDataSet,
                 testDataGenerator.getRandomString("HiveTestDb"), "HIVE", 15,
                 sourceCluster.getName(), targetCluster.getName(), cloudProps);
+        testDataGenerator.createFSMocks(sourceDataSet);
+        testDataGenerator.createHiveMocks(sourceDataSet);
         targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
         waitOnCondition(10000, "First Instance Success ", new Condition() {
             @Override
@@ -416,7 +432,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         String cloudCredId = targetClient.submitCloudCred(cloudCred);
         assertNotNull(cloudCredId);
         final String policyName = testDataGenerator.getRandomString("HDFSCloudEncryptionBasedPolicy");
-        String sourceDataSet = SOURCE_DIR + policyName;
+        String sourceDataSet = policyName;
         Map<String, String> cloudProps = new HashMap<>();
         cloudProps.put(FSDRProperties.CLOUD_CRED.getName(), cloudCredId);
         cloudProps.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(),
@@ -443,7 +459,6 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         shouldThrowup = false;
         try {
             targetClient.dryrunPolicy(policyName, policy.asProperties());
-
         } catch (BeaconClientException ex) {
             String errorMessage = "encryption algorithm " + EncryptionAlgorithmType.AWS_SSES3.getName()
                     + " is not supported";
@@ -572,12 +587,13 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         String cloudCredId = targetClient.submitCloudCred(cloudCred);
         assertNotNull(cloudCredId);
         final String policyName = testDataGenerator.getRandomString("HiveS3Policy");
-        String sourceDataSet = SOURCE_DIR + policyName;
+        String sourceDataSet = policyName;
         Map<String, String> cloudProps = new HashMap<>();
         cloudProps.put("cloudCred", cloudCredId);
         ReplicationPolicy policy = testDataGenerator.getPolicy(policyName, sourceDataSet,
                 testDataGenerator.getRandomString("HiveTestDb"), "HIVE", 60,
                 sourceCluster.getName(), targetCluster.getName(), cloudProps);
+        testDataGenerator.createHiveMocks(sourceDataSet);
         targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
         waitOnCondition(10000, "First Instance Success ", new Condition() {
             @Override

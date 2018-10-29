@@ -53,27 +53,26 @@ public class S3FSDataSet extends HCFSDataset {
     private ReplicationPolicy policy;
 
     public S3FSDataSet(String path, BeaconCloudCred cloudCred, ReplicationPolicy policy) throws BeaconException {
-        super(path, cloudCred);
+        super(path, cloudCred, policy);
         this.policy = policy;
     }
 
     @Override
-    public String resolvePath(String path) {
+    public String resolvePath(String path, ReplicationPolicy policyInput) {
         URI uri = new Path(path).toUri();
         return String.format("%s://%s%s", CloudCred.Provider.AWS.getHcfsScheme(), uri.getAuthority(), uri.getPath());
     }
 
     @Override
-    public Configuration getHadoopConf() throws BeaconException {
-        Configuration conf = super.getHadoopConf();
-
-        Configuration bucketConf = getBucketEndpointConf(path, cloudCred);
+    protected Configuration getHadoopConf(String path, ReplicationPolicy policyInput)
+            throws BeaconException {
+        Configuration conf = super.getHadoopConf(path, policyInput);
+        BeaconCloudCred cloudCred = new BeaconCloudCred(policyInput.getCloudCred());
+        Configuration bucketConf = getBucketEndpointConf(new Path(resolvePath(path, policyInput)), cloudCred);
         merge(conf, bucketConf);
-
-        if (policy != null) {
-            Configuration encryptionConf = EncryptionAlgorithmType.getHadoopConf(policy, path);
-            merge(conf, encryptionConf);
-        }
+        Configuration encryptionConf = EncryptionAlgorithmType
+                .getHadoopConf(policyInput, new Path(resolvePath(path, policyInput)));
+        merge(conf, encryptionConf);
         return conf;
     }
 

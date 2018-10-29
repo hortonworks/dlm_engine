@@ -308,12 +308,15 @@ public class PolicyResourceTest extends ResourceBaseTest {
         testDataGenerator.createFSMocks(replicationPath);
         ReplicationPolicy policyRequest2 = testDataGenerator.getPolicy(policyName2, replicationPath);
         policyRequest2.setTargetDataset(TARGET_DIR);
+        boolean exceptionThrown = false;
         try {
             targetClient.submitAndScheduleReplicationPolicy(policyName2, policyRequest2.asProperties());
         } catch (BeaconClientException ex) {
+            exceptionThrown = true;
             assertTrue(ex.getMessage()
                     .contains(StringFormat.format("Source dataset {} already in replication", replicationPath)));
         }
+        assertTrue(exceptionThrown);
         targetClient.deletePolicy(policyName1, false);
     }
 
@@ -336,11 +339,14 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetFs.mkdirs(new Path(replicationPath));
         testDataGenerator.createFSMocks(replicationPath);
         ReplicationPolicy policyRequest2 = testDataGenerator.getPolicy(policyName2, replicationPath);
+        boolean exceptionThrown = false;
         try {
             targetClient.submitAndScheduleReplicationPolicy(policyName2, policyRequest2.asProperties());
         } catch (BeaconClientException bex) {
             assertTrue(bex.getMessage().contains("Target dataset already in replication"));
+            exceptionThrown = true;
         }
+        assertTrue(exceptionThrown);
 
     }
 
@@ -498,8 +504,10 @@ public class PolicyResourceTest extends ResourceBaseTest {
     public void testSubmitHivePolicy() throws Exception{
         final String policyName = testDataGenerator.getRandomString("HivePolicy");
         String replicationPath = policyName;
+        testDataGenerator.createHiveMocks(replicationPath);
         ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath, "HIVE");
         targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        testDataGenerator.createHiveMocks(replicationPath);
         waitOnCondition(10000, "Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -531,6 +539,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         ResultSet resultSetReplStatus = mock(ResultSet.class);
         ResultSet resultSetReplDump = mock(ResultSet.class);
         mockForRerunHiveFailedAdmin(statementForThisTest, resultSetReplStatus, resultSetReplDump);
+        testDataGenerator.createHiveMocks(replicationPath);
         targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
         waitOnCondition(10000, "Instance FAILED_ADMIN ", new Condition() {
             @Override

@@ -28,7 +28,8 @@ import com.hortonworks.beacon.client.resource.ServerVersionResult;
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.main.BeaconServer;
-import com.hortonworks.beacon.plugin.service.PluginManagerService;
+import com.hortonworks.beacon.plugin.service.MetaDataPluginManagerService;
+import com.hortonworks.beacon.service.Services;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.ws.rs.GET;
@@ -76,7 +77,8 @@ public class AdminResource extends AbstractResourceManager {
         //Beacon 1.0 features
         result.setWireEncryption(config.getEngine().isTlsEnabled());
         result.setSecurity("None");
-        List<String> registeredPlugins = PluginManagerService.getRegisteredPlugins();
+        List<String> registeredPlugins = Services.get()
+                .getService(MetaDataPluginManagerService.class).getRegisteredPlugins();
         if (registeredPlugins.isEmpty()) {
             result.setPlugins("None");
         } else {

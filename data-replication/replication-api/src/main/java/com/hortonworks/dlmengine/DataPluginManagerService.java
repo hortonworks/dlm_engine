@@ -22,15 +22,15 @@
 
 package com.hortonworks.dlmengine;
 
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.entity.BeaconCluster;
-import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.service.PluginManagerService;
 
 /**
- * Api contract for any type of data replication.
+ * Class which loads all implementation of {@link DataPlugin}.
  */
-public interface DataReplication {
-    void validate(BeaconCluster cluster);
+public class DataPluginManagerService extends PluginManagerService<DataPlugin> {
 
-    BeaconReplicationPolicy buildReplicationPolicy(ReplicationPolicy policyRequest) throws BeaconException;
+    @Override
+    public Class getPluginServiceClassName() {
+        return DataPlugin.class;
+    }
 }

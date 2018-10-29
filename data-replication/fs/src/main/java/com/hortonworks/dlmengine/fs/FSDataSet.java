@@ -22,6 +22,7 @@
 
 package com.hortonworks.dlmengine.fs;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
@@ -31,7 +32,6 @@ import com.hortonworks.dlmengine.DataSet;
 import com.hortonworks.dlmengine.fs.hdfs.HDFSDataSet;
 import com.hortonworks.dlmengine.fs.s3.S3FSDataSet;
 import com.hortonworks.dlmengine.fs.wasb.WASBFSDataSet;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -54,21 +54,40 @@ public abstract class FSDataSet extends DataSet {
 
     protected Path path;
     protected FileSystem fileSystem;
+    private Configuration conf;
 
-    protected FSDataSet(String path) throws BeaconException {
+    protected FSDataSet(String path, ReplicationPolicy policy) throws BeaconException {
+        this(path, null, policy);
+    }
+
+    // This is used by hdfsDataSet only
+    protected FSDataSet(FileSystem fileSystem, String path) {
         super(path);
+        this.path = new Path(resolvePath(path, null));
+        this.fileSystem = fileSystem;
     }
 
-    private void init() throws BeaconException {
-        this.path = new Path(resolvePath(name));
+    private FSDataSet(String path, Configuration conf, ReplicationPolicy policy) throws BeaconException {
+        super(path);
+        this.path = new Path(resolvePath(path, policy));
+        this.conf = conf != null ? conf : getHadoopConf(path, policy);
         Configuration defaultConf = new Configuration(true);
-        merge(defaultConf, getHadoopConf());
-        fileSystem = FileSystemClientFactory.get().createFileSystem(this.path.toString(), defaultConf);
+        merge(defaultConf, this.conf);
+        fileSystem = FileSystemClientFactory.get().createFileSystem(resolvePath(path, policy), defaultConf);
     }
 
-    public abstract String resolvePath(String path);
+    public FSDataSet(String path, Configuration conf) throws BeaconException {
+        this(path, conf, null);
+    }
 
-    public abstract Configuration getHadoopConf() throws BeaconException;
+    public abstract String resolvePath(String path, ReplicationPolicy policy);
+
+    protected abstract Configuration getHadoopConf(String path, ReplicationPolicy policy) throws BeaconException;
+
+    @Override
+    public Configuration getHadoopConf() throws BeaconException {
+        return conf;
+    }
 
     @Override
     public void create(FileStatus fileStatus) throws BeaconException {
@@ -126,55 +145,54 @@ public abstract class FSDataSet extends DataSet {
         return create(path, null, null, policy);
     }
 
-    public static FSDataSet create(String path, String clusterName, ReplicationPolicy policy) throws BeaconException {
+    public static FSDataSet create(String path, BeaconCloudCred cloudCred, ReplicationPolicy policy)
+            throws BeaconException {
+        return create(path, null, cloudCred, policy);
+    }
+
+    public static FSDataSet create(String path, String clusterName, ReplicationPolicy policy)
+            throws BeaconException {
         return create(path, clusterName, null, policy);
     }
 
-    private static FSDataSet create(String path, String clusterName, BeaconCloudCred cloudCred,
+    public static FSDataSet create(String path, String clusterName, BeaconCloudCred cloudCred,
                                    ReplicationPolicy policy) throws BeaconException {
-        BeaconCloudCred localCloudCred = cloudCred;
-        if (localCloudCred == null && policy != null && policy.getCloudCred() != null) {
-            localCloudCred = new BeaconCloudCred(policy.getCloudCred());
-        }
 
-        FSDataSet dataset = null;
+        CloudCred.Provider provider = null;
         String scheme = new Path(path).toUri().getScheme();
-        CloudCred.Provider provider;
-        //Get using scheme in the path if available
-        if (StringUtils.isNotEmpty(scheme)) {
+        FSDataSet dataset = null;
+
+        if (scheme != null) {
             provider = CloudCred.Provider.createFromScheme(scheme);
-            dataset = getDatasetForProvider(provider, path, localCloudCred, policy);
+            dataset = getDataset(provider, path, policy, cloudCred);
         }
 
         if (dataset == null && clusterName != null) {
             dataset = new HDFSDataSet(path, clusterName);
         }
 
-        if (dataset == null) {
-            dataset = getDatasetForProvider(localCloudCred.getProvider(), path, localCloudCred, policy);
+        if (dataset == null && policy.getCloudCred() != null) {
+            dataset = getDataset(cloudCred.getProvider(), path, policy, cloudCred);
         }
-
-        if (dataset != null) {
-            dataset.init();
-            return dataset;
-        }
-
-        throw new IllegalStateException("Unhandled dataset " + path);
+        return dataset;
     }
 
-    private static FSDataSet getDatasetForProvider(CloudCred.Provider provider, String path, BeaconCloudCred cloudCred,
-                                                   ReplicationPolicy replicationPolicy) throws BeaconException {
-        if (provider != null) {
-            switch (provider) {
-                case AWS:
-                    return new S3FSDataSet(path, cloudCred, replicationPolicy);
+    private static FSDataSet getDataset(CloudCred.Provider provider, String path,
+                                        ReplicationPolicy policy, BeaconCloudCred cloudCred)
+            throws BeaconException {
+        if (provider == null) {
+            return null;
+        }
 
-                case WASB:
-                    return new WASBFSDataSet(path, cloudCred);
+        switch (provider) {
+            case AWS:
+                return new S3FSDataSet(path, cloudCred, policy);
 
-                default:
-                    break;
-            }
+            case WASB:
+                return new WASBFSDataSet(path, cloudCred, policy);
+
+            default:
+                break;
         }
         return null;
     }
@@ -208,6 +226,13 @@ public abstract class FSDataSet extends DataSet {
 
     public abstract boolean isEncrypted(Path path) throws BeaconException;
 
+    @VisibleForTesting
+    public static FSDataSet create(FileSystem fileSystem, String path) throws BeaconException {
+        if (fileSystem != null && path != null) {
+            return new HDFSDataSet(fileSystem, path);
+        }
+        throw new IllegalStateException("Unhandled dataset " + path);
+    }
     @Override
     public boolean isEncrypted() throws BeaconException {
         return isEncrypted(path);

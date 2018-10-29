@@ -22,12 +22,14 @@
 
 package com.hortonworks.dlmengine.fs.hdfs;
 
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.dlmengine.fs.FSDataSet;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
@@ -47,22 +49,27 @@ public class HDFSDataSet extends FSDataSet {
     private BeaconCluster beaconCluster;
 
     public HDFSDataSet(String path, String clusterName) throws BeaconException {
-        this(path, new BeaconCluster(clusterName));
+        super(path, new BeaconCluster(clusterName).getHadoopConfiguration());
+        this.beaconCluster = new BeaconCluster(clusterName);
     }
 
-    public HDFSDataSet(String path, BeaconCluster cluster) throws BeaconException {
-        super(path);
-        this.beaconCluster = cluster;
+    public HDFSDataSet(FileSystem fileSystem, String path) throws BeaconException {
+        super(fileSystem, path);
     }
 
     @Override
-    public String resolvePath(String path) {
-        return beaconCluster.getFsEndpoint() + path;
+    public String resolvePath(String path, ReplicationPolicy policy) {
+        return path;
     }
 
     @Override
     public Configuration getHadoopConf() {
         return beaconCluster.getHadoopConfiguration();
+    }
+
+    @Override
+    protected Configuration getHadoopConf(String path, ReplicationPolicy policy) throws BeaconException {
+        throw new IllegalStateException();
     }
 
     @Override

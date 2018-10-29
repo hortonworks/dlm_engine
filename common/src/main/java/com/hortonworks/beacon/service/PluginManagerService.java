@@ -20,13 +20,10 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.plugin.service;
+package com.hortonworks.beacon.service;
 
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.plugin.Plugin;
-import com.hortonworks.beacon.plugin.PluginInfo;
-import com.hortonworks.beacon.service.BeaconService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,15 +38,17 @@ import java.util.NoSuchElementException;
 import java.util.ServiceLoader;
 
 /**
- *  Plugin Manager for managing plugins.
+ * Abstract class to initialise different plugins.
+ * @param <C>
  */
-public final class PluginManagerService implements BeaconService {
-    private static final Logger LOG = LoggerFactory.getLogger(PluginManagerService.class);
+public abstract class PluginManagerService<C> implements BeaconService {
 
-    private static ServiceLoader<Plugin> pluginServiceLoader;
-    private static Map<String, Plugin> registeredPluginsMap = new HashMap<>();
+    private static final Logger LOG =  LoggerFactory.getLogger(PluginManagerService.class);
 
+    protected ServiceLoader<C> pluginServiceLoader;
+    protected Map<String, C> registeredPluginsMap = new HashMap<>();
 
+    public abstract Class getPluginServiceClassName();
 
     @Override
     public void init() throws BeaconException {
@@ -69,9 +68,9 @@ public final class PluginManagerService implements BeaconService {
     }
 
     private void loadPlugins() throws BeaconException {
-        Class pluginServiceClassName = Plugin.class;
+        Class pluginServiceClassName = getPluginServiceClassName();
         pluginServiceLoader = ServiceLoader.load(pluginServiceClassName);
-        Iterator<Plugin> pluginServices = pluginServiceLoader.iterator();
+        Iterator<C> pluginServices = pluginServiceLoader.iterator();
         if (!pluginServices.hasNext()) {
             LOG.info("Cannot find implementation for: {}", pluginServiceClassName);
         }
@@ -79,45 +78,18 @@ public final class PluginManagerService implements BeaconService {
 
     /* Register all the plugins once the local cluster is submitted as Plugin need to know the cluster details */
     public void registerPlugins() throws BeaconException {
-        for (Plugin plugin : pluginServiceLoader) {
-            PluginInfo pluginInfo = plugin.register();
-            if (pluginInfo == null) {
+        for (C plugin : pluginServiceLoader) {
+            if (plugin == null) {
                 throw new BeaconException("Plugin info cannot be null or empty. Registration failed");
             }
-            if (Plugin.Status.INVALID == plugin.getStatus() || Plugin.Status.INACTIVE == plugin.getStatus()) {
-                LOG.info("Plugin {} is in {} state. Not registering.", pluginInfo.getName(), plugin.getStatus());
-                continue;
-            }
-            logPluginDetails(pluginInfo);
-            if (!registeredPluginsMap.containsKey(pluginInfo.getName().toUpperCase())) {
-                registeredPluginsMap.put(pluginInfo.getName().toUpperCase(), plugin);
-                LOG.info("Plugin {} registered successfully.", pluginInfo.getName());
+            if (!registeredPluginsMap.containsKey(plugin.getClass().getName().toUpperCase())) {
+                registeredPluginsMap.put(plugin.getClass().getName().toUpperCase(), plugin);
+                LOG.info("Plugin {} registered successfully.", plugin.getClass().getName());
             }
         }
     }
 
-    private static void logPluginDetails(PluginInfo pluginInfo) throws BeaconException {
-        LOG.debug("Registering plugin: {}", pluginInfo.getName());
-        LOG.debug("Plugin dependencies: {}", pluginInfo.getDependencies());
-        LOG.debug("Plugin description: {}", pluginInfo.getDescription());
-        LOG.debug("Plugin version: {}", pluginInfo.getVersion());
-        LOG.debug("Plugin ignore failures for plugin jobs: {}", pluginInfo.ignoreFailures());
-    }
-
-    public Plugin.Status getStatus(final String pluginName) throws BeaconException {
-        if (StringUtils.isBlank(pluginName)) {
-            throw new BeaconException("pluginName cannot be null or empty");
-        }
-
-        Plugin plugin = registeredPluginsMap.get(pluginName.toUpperCase());
-        if (plugin == null) {
-            throw new BeaconException("No such plugin {} has been registered with beacon", pluginName);
-        }
-
-        return plugin.getStatus();
-    }
-
-    public static List<String> getRegisteredPlugins() {
+    public List<String> getRegisteredPlugins() {
         List<String> pluginList = new ArrayList<>();
         if (registeredPluginsMap != null && !registeredPluginsMap.isEmpty()) {
             for (String pluginName : registeredPluginsMap.keySet()) {
@@ -127,14 +99,14 @@ public final class PluginManagerService implements BeaconService {
         return pluginList;
     }
 
-    public static boolean isPluginRegistered(final String pluginName) throws BeaconException {
+    public boolean isPluginRegistered(final String pluginName) throws BeaconException {
         if (StringUtils.isBlank(pluginName)) {
             throw new BeaconException("pluginName cannot be null or empty");
         }
         return (registeredPluginsMap.get(pluginName.toUpperCase()) != null);
     }
 
-    static Plugin getPlugin(final String pluginName) throws BeaconException {
+    public C getPlugin(final String pluginName) throws BeaconException {
         if (isPluginRegistered(pluginName)) {
             return registeredPluginsMap.get(pluginName.toUpperCase());
         } else {
@@ -143,12 +115,4 @@ public final class PluginManagerService implements BeaconService {
 
     }
 
-    static PluginAction getActionType(final String actionType) throws BeaconException {
-        try {
-            return PluginAction.valueOf(actionType.toUpperCase());
-        } catch (IllegalArgumentException ex) {
-            LOG.error("Action of type: {} is not supported", actionType);
-            throw new BeaconException("Action of type: {} is not supported", actionType);
-        }
-    }
 }

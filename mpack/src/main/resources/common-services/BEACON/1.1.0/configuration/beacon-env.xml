@@ -370,7 +370,8 @@
     <value>com.hortonworks.beacon.scheduler.internal.StoreCleanupService,
       com.hortonworks.beacon.scheduler.internal.AdminJobService,
       com.hortonworks.beacon.scheduler.RecoveryService,
-      com.hortonworks.beacon.plugin.service.PluginManagerService,
+      com.hortonworks.beacon.plugin.service.MetaDataPluginManagerService,
+      com.hortonworks.dlmengine.DataPluginManagerService,
       com.hortonworks.beacon.service.PolicyRecoveryService
     </value>
     <description>Comma separated list of Beacon Services</description>

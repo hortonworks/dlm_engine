@@ -254,6 +254,12 @@
             </dependency>
 
             <dependency>
+                <groupId>com.hortonworks.beacon</groupId>
+                <artifactId>beacon-replication-hive</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>4.9</version>

@@ -53,6 +53,7 @@ from resource_management.core.logger import Logger
 from ambari_commons import OSConst
 from ambari_commons.os_family_impl import OsFamilyFuncImpl, OsFamilyImpl
 from resource_management.libraries.script.config_dictionary import UnknownConfiguration
+import beacon_utils
 
 import ranger_api_functions
 
@@ -70,17 +71,13 @@ def beacon(type, action = None, upgrade_type=None):
 
     if params.is_hive_installed:
       if not isinstance(params.hive_repl_cmrootdir, UnknownConfiguration):
-        params.HdfsResource(params.hive_repl_cmrootdir,
-                          type = "directory",
-                          action = "create_on_execute",
-                          owner = params.hive_user,
-                          mode = 01777)
+        beacon_utils.create_hdfs_directory(params.hive_repl_cmrootdir,
+                                           params.hive_user,
+                                           01777)
       if not isinstance(params.hive_repl_rootdir, UnknownConfiguration):
-        params.HdfsResource(params.hive_repl_rootdir,
-                          type = "directory",
-                          action = "create_on_execute",
-                          owner = params.hive_user,
-                          mode = 0700)
+        beacon_utils.create_hdfs_directory(params.hive_repl_rootdir,
+                                           params.hive_user,
+                                           0700)
 
 
     Directory(params.beacon_pid_dir,
@@ -317,11 +314,7 @@ def create_directory(directory, scheme = None):
               mode = 0755,
               cd_access = "a")
   elif scheme == 'hdfs':
-    params.HdfsResource(directory,
-                        type = "directory",
-                        action = "create_on_execute",
-                        owner = params.beacon_user,
-                        mode = 0775)
+    beacon_utils.create_hdfs_directory(directory, params.beacon_user, 0775)
     params.HdfsResource(None, action = "execute")
 
 def download_mysql_driver():

@@ -353,6 +353,11 @@
                 <version>${commons-io.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>commons-configuration</groupId>
+                <artifactId>commons-configuration</artifactId>
+                <version>${commons-configuration.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.mortbay.jetty</groupId>
@@ -990,6 +995,7 @@
         <commons-io.version>2.4</commons-io.version>
         <commons-http.version>3.1</commons-http.version>
         <commons-net.version>3.1</commons-net.version>
+        <commons-configuration.version>1.10</commons-configuration.version>
         <jetty.version>6.1.26</jetty.version>
         <derby.version>10.10.1.1</derby.version>
         <openjpa.version>2.4.1</openjpa.version>

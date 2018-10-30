@@ -82,7 +82,7 @@ public class HMSMetadataClient implements HiveMetadataClient {
     public List<String> listDatabases() throws BeaconException {
         try {
             return client.getAllDatabases();
-        } catch (MetaException e) {
+        } catch (TException e) {
             throw new BeaconException(e);
         }
     }

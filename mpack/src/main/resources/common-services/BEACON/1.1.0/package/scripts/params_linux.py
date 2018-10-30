@@ -40,9 +40,22 @@ from resource_management.libraries.functions.is_empty import is_empty
 from resource_management.libraries.resources.hdfs_resource import HdfsResource
 from resource_management.libraries.script import Script
 from resource_management.libraries.functions.get_stack_version import get_stack_version
+import beacon_utils
 
 # server configurations
-java_home = config['hostLevelParams']['java_home']
+is_ambari_2_6 = beacon_utils.is_ambari_2_6()
+if is_ambari_2_6:
+  java_home = config['hostLevelParams']['java_home']
+  jdk_location = config['hostLevelParams']['jdk_location']
+  dfs_type = default("/commandParams/dfs_type", "")
+  jdbc_jar_name = default("/hostLevelParams/custom_mysql_jdbc_name", None)
+  hostname = config["hostname"]
+else:
+  java_home = config['ambariLevelParams']['java_home']
+  jdk_location = config['ambariLevelParams']['jdk_location']
+  dfs_type = default("/clusterLevelParams/dfs_type", "")
+  jdbc_jar_name = default("/ambariLevelParams/custom_mysql_jdbc_name", None)
+  hostname = config['agentLevelParams']['hostname']
 ambari_cluster_name = config['clusterName']
 java_version = expect("/hostLevelParams/java_version", int)
 host_sys_prepped = default("/hostLevelParams/host_sys_prepped", False)
@@ -64,7 +77,6 @@ beacon_cluster_name = format('{ambari_cluster_name}')
 credential_store_enabled = False
 if 'credentialStoreEnabled' in config:
   credential_store_enabled = config['credentialStoreEnabled']
-jdk_location = config['hostLevelParams']['jdk_location']
 beacon_env = config['configurations']['beacon-env']
 user_group = config['configurations']['cluster-env']['user_group']
 
@@ -149,11 +161,9 @@ etc_prefix_dir = "/etc/beacon"
 hadoop_stack_version = default("/commandParams/version", None)
 
 security_enabled = config['configurations']['cluster-env']['security_enabled']
-hostname = config["hostname"]
 hdfs_user_keytab = config['configurations']['hadoop-env']['hdfs_user_keytab']
 hdfs_user = config['configurations']['hadoop-env']['hdfs_user']
 hdfs_principal_name = config['configurations']['hadoop-env']['hdfs_principal_name']
-dfs_type = default("/commandParams/dfs_type", "")
 kinit_path_local = get_kinit_path(default('/configurations/kerberos-env/executable_search_paths', None))
 hadoop_home_dir = stack_select.get_hadoop_dir("home")
 hadoop_bin_dir = stack_select.get_hadoop_dir("bin")
@@ -234,8 +244,6 @@ if not is_empty(service_name_value) and service_name_value != "{{repo_name}}":
 
 # mysql driver download properties
 download_mysql_driver = beacon_store_driver == "com.mysql.jdbc.Driver"
-jdk_location = config['hostLevelParams']['jdk_location']
-jdbc_jar_name = default("/hostLevelParams/custom_mysql_jdbc_name", None)
 driver_source = format("{jdk_location}/{jdbc_jar_name}")
 mysql_driver_target = os.path.join(beacon_webapp_dir, "beacon/WEB-INF/lib/mysql-connector-java.jar")
 

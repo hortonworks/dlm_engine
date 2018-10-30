@@ -31,6 +31,7 @@ from resource_management.libraries.script.script import Script
 from resource_management.libraries.functions.version import format_stack_version
 from resource_management.libraries.functions.stack_features import check_stack_feature
 from resource_management.libraries.functions import StackFeature
+import beacon_utils
 
 # a map of the Ambari role to the component name
 # for use with <stack-root>/current/<component>
@@ -43,7 +44,15 @@ component_directory = Script.get_component_from_role(SERVER_ROLE_DIRECTORY_MAP, 
 config = Script.get_config()
 stack_root = "/usr/dlm"
 
-stack_version_unformatted = config['hostLevelParams']['stack_version']
+is_ambari_2_6 = beacon_utils.is_ambari_2_6()
+if is_ambari_2_6:
+    stack_version_unformatted = config['hostLevelParams']['stack_version']
+    hostname = config['hostname']
+    stack_name = default("/hostLevelParams/stack_name", None)
+else:
+    stack_version_unformatted = config['clusterLevelParams']['stack_version']
+    hostname = config['agentLevelParams']['hostname']
+    stack_name = default("/clusterLevelParams/stack_name", None)
 stack_version_formatted = format_stack_version(stack_version_unformatted)
 
 beacon_pid_dir = config['configurations']['beacon-env']['beacon_pid_dir']
@@ -55,12 +64,10 @@ if stack_version_formatted and check_stack_feature(StackFeature.ROLLING_UPGRADE,
     beacon_conf_dir = format("{stack_root}/current/{component_directory}/conf")
 
   # Security related/required params
-hostname = config['hostname']
 security_enabled = config['configurations']['cluster-env']['security_enabled']
 kinit_path_local = get_kinit_path(default('/configurations/kerberos-env/executable_search_paths', None))
 tmp_dir = Script.get_tmp_dir()
 beacon_user = config['configurations']['beacon-env']['beacon_user']
 
-stack_name = default("/hostLevelParams/stack_name", None)
 hadoop_home_dir = stack_select.get_hadoop_dir("home")
 hadoop_bin_dir = stack_select.get_hadoop_dir("bin")

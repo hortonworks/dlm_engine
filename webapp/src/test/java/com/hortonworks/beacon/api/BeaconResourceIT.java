@@ -1511,6 +1511,8 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(clusterUpdateSupported, "true");
         String policyEdit = jsonObject.getString("policy_edit");
         assertEquals(policyEdit, "true");
+        String gcsReplicationSupported = jsonObject.getString("gcsReplicationSupported");
+        assertEquals(gcsReplicationSupported, "true");
     }
 
     @Test(dependsOnMethods = "testPairCluster")

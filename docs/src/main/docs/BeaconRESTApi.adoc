@@ -1682,6 +1682,7 @@ GET api/beacon/admin/status
     "clusterUpdateSupported": true,
     "cloudHosted": false,
     "wasbReplicationSupported": true,
+    "gcsReplicationSupported": true,
     "enableSnapshotBasedReplication": true
 
 }

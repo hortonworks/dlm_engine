@@ -107,6 +107,9 @@ public class AdminResource extends AbstractResourceManager {
         result.setEnableSnapshotBasedReplication(true);
         result.setFileListingFilterEnabled(true);
 
+        //Beacon DLM 1.3.0 features
+        result.setGcsReplicationSupported(true);
+
         return result;
     }
 }

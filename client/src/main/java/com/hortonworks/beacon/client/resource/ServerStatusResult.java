@@ -82,6 +82,9 @@ public class ServerStatusResult {
     private boolean wasbReplicationSupported;
 
     @XmlElement
+    private boolean gcsReplicationSupported;
+
+    @XmlElement
     private boolean enableSnapshotBasedReplication;
 
     @XmlElement
@@ -255,6 +258,14 @@ public class ServerStatusResult {
 
     public void setWasbReplicationSupported(boolean wasbReplicationSupported) {
         this.wasbReplicationSupported = wasbReplicationSupported;
+    }
+
+    public boolean isGcsReplicationSupported() {
+        return gcsReplicationSupported;
+    }
+
+    public void setGcsReplicationSupported(boolean gcsReplicationSupported) {
+        this.gcsReplicationSupported = gcsReplicationSupported;
     }
 
     @JsonProperty

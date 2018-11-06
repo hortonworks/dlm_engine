@@ -33,6 +33,7 @@ import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.notification.BeaconNotification;
+import com.hortonworks.beacon.util.ConfigurationFactory;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -88,7 +89,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
     }
 
     private void validateCustomSetup(Cluster entity) throws ValidationException {
-        Configuration defaultConf = new Configuration();
+        Configuration defaultConf = ConfigurationFactory.getINSTANCE().getConfiguration();
         BeaconNotification notification = new BeaconNotification();
         boolean isHA = StringUtils.isNotBlank(defaultConf.get(BeaconConstants.DFS_NAMESERVICES));
         if (ClusterHelper.isHDFSEnabled(entity)) {

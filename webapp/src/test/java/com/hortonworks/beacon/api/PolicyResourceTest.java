@@ -47,7 +47,6 @@ import org.testng.annotations.Test;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -65,7 +64,7 @@ import static org.testng.Assert.assertTrue;
  */
 public class PolicyResourceTest extends ResourceBaseTest {
 
-    public static final Logger LOG = LoggerFactory.getLogger(BeaconResourceIT.class);
+    public static final Logger LOG = LoggerFactory.getLogger(PolicyResourceTest.class);
 
     private Cluster sourceCluster;
 
@@ -598,11 +597,5 @@ public class PolicyResourceTest extends ResourceBaseTest {
     }
 
 
-    private void submitAndSchedulePolicy(String replicationPath, String policyName)
-            throws IOException, BeaconClientException {
-        targetFs.mkdirs(new Path(replicationPath));
-        testDataGenerator.createFSMocks(replicationPath);
-        ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
-    }
+
 }

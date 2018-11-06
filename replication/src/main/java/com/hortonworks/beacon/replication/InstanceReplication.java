@@ -333,27 +333,39 @@ public abstract class InstanceReplication implements BeaconJob {
         List<String> haConfigKeyList = new ArrayList<>();
         for (Map.Entry<Object, Object> property : sourceProperties.entrySet()) {
             if (property.getKey().toString().startsWith("dfs.")) {
-                haConfigsMap.put(property.getKey().toString(), property.getValue().toString());
+                addHAConfigIfNotNull(haConfigsMap, property.getKey().toString(), property.getValue().toString());
                 haConfigKeyList.add(property.getKey().toString());
             }
         }
         for (Map.Entry<Object, Object> property : targetProperties.entrySet()) {
             if (property.getKey().toString().startsWith("dfs.")) {
-                haConfigsMap.put(property.getKey().toString(), property.getValue().toString());
+                addHAConfigIfNotNull(haConfigsMap, property.getKey().toString(), property.getValue().toString());
                 haConfigKeyList.add(property.getKey().toString());
             }
         }
         String sourceHaNameservices = ClusterHelper.getHDFSNameservices(sourceProperties);
         String targetHaNameservices = ClusterHelper.getHDFSNameservices(targetProperties);
-        haConfigsMap.put(BeaconConstants.DFS_NAMESERVICES,
-                sourceHaNameservices + BeaconConstants.COMMA_SEPARATOR + targetHaNameservices);
+        //If target cluster is Non-HA.
+        if (targetHaNameservices == null) {
+            addHAConfigIfNotNull(haConfigsMap, BeaconConstants.DFS_NAMESERVICES,
+                    sourceHaNameservices);
+        } else {
+            addHAConfigIfNotNull(haConfigsMap, BeaconConstants.DFS_NAMESERVICES,
+                    sourceHaNameservices + BeaconConstants.COMMA_SEPARATOR + targetHaNameservices);
+        }
         haConfigKeyList.add(BeaconConstants.DFS_NAMESERVICES);
-        haConfigsMap.put(BeaconConstants.DFS_INTERNAL_NAMESERVICES, targetHaNameservices);
+        addHAConfigIfNotNull(haConfigsMap, BeaconConstants.DFS_INTERNAL_NAMESERVICES, targetHaNameservices);
         haConfigKeyList.add(BeaconConstants.DFS_INTERNAL_NAMESERVICES);
-        LOG.info("Hadoop Configuration for Distcp: [{}]", haConfigsMap.toString());
+        LOG.info("Hadoop HA Configuration for Distcp: [{}]", haConfigsMap.toString());
         String haConfigKeys = StringUtils.join(haConfigKeyList, BeaconConstants.COMMA_SEPARATOR);
         haConfigsMap.put(BeaconConstants.HA_CONFIG_KEYS, haConfigKeys);
         return haConfigsMap;
+    }
+
+    protected void addHAConfigIfNotNull(Map<String, String> haConfigsMap, String key, String value) {
+        if (key != null && value != null) {
+            haConfigsMap.put(key, value);
+        }
     }
 
     protected void setACLProperty() {

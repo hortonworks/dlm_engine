@@ -179,6 +179,9 @@ public abstract class FSDataSet extends DataSet {
             case WASB:
                 return new WASBFSDataSet(path, policy);
 
+            case GCS:
+                return new GCSFSDataSet(path, policy);
+
             default:
                 break;
         }

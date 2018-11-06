@@ -29,6 +29,7 @@ import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import com.hortonworks.dlmengine.DataSet;
+import com.hortonworks.dlmengine.fs.gcs.GCSFSDataSet;
 import com.hortonworks.dlmengine.fs.hdfs.HDFSDataSet;
 import com.hortonworks.dlmengine.fs.s3.S3FSDataSet;
 import com.hortonworks.dlmengine.fs.wasb.WASBFSDataSet;
@@ -190,6 +191,9 @@ public abstract class FSDataSet extends DataSet {
 
             case WASB:
                 return new WASBFSDataSet(path, cloudCred, policy);
+
+            case GCS:
+                return new GCSFSDataSet(path, cloudCred, policy);
 
             default:
                 break;

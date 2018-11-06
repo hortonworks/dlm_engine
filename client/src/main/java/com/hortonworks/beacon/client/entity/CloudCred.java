@@ -177,7 +177,12 @@ public class CloudCred extends Entity {
                 Provider.WASB, true),
         WASB_CONTAINER_NAME("wasb.container.name", null, Provider.WASB, false),
         WASB_SAS_TOKEN("wasb.sas.token", "fs.azure.sas.{wasb.container.name}.{wasb.account.name}.blob.core.windows.net",
-                Provider.WASB, true);
+                Provider.WASB, true),
+
+        //GCS related configs.
+        GCS_PRIVATE_KEY_ID("gcs.private.key.id", "fs.gs.auth.service.account.private.key.id", Provider.GCS, true),
+        GCS_PRIVATE_KEY("gcs.private.key", "fs.gs.auth.service.account.private.key", Provider.GCS, true),
+        GCS_CLIENT_EMAIL("gcs.client.email", "fs.gs.auth.service.account.email", Provider.GCS, true);
 
         private static final Map<String, Config> CONFIG_MAP = new HashMap<>();
 
@@ -236,7 +241,8 @@ public class CloudCred extends Entity {
      */
     public enum Provider {
         AWS("s3", "s3a"),
-        WASB("wasb", "wasbs");
+        WASB("wasb", "wasbs"),
+        GCS("gcs", "gs");
 
         private final String scheme;
 
@@ -274,7 +280,8 @@ public class CloudCred extends Entity {
         AWS_SESSIONKEY,
         AWS_INSTANCEPROFILE,
         WASB_ACCESSKEY(Config.WASB_ACCESS_KEY, Config.WASB_ACCOUNT_NAME),
-        WASB_SAS_TOKEN(Config.WASB_CONTAINER_NAME, Config.WASB_SAS_TOKEN, Config.WASB_ACCOUNT_NAME);
+        WASB_SAS_TOKEN(Config.WASB_CONTAINER_NAME, Config.WASB_SAS_TOKEN, Config.WASB_ACCOUNT_NAME),
+        GCS_PRIVATEKEY(Config.GCS_PRIVATE_KEY_ID, Config.GCS_PRIVATE_KEY, Config.GCS_CLIENT_EMAIL);
 
         private final List<Config> requiredConfigs;
 

@@ -41,6 +41,7 @@ import org.apache.hadoop.mapred.JobID;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobStatus;
+import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpOptions;
@@ -84,6 +85,12 @@ public abstract class FSReplication extends InstanceReplication {
         } catch (Exception e) {
             throw new BeaconException("Exception occurred in init: ", e);
         }
+    }
+
+    protected Configuration getBaseConfiguration() {
+        Configuration conf = new Configuration();
+        conf.set(MRJobConfig.MAPREDUCE_JOB_USER_CLASSPATH_FIRST, "true");
+        return conf;
     }
 
     protected Job performCopy(JobContext jobContext, DistCpOptions options, Configuration conf,

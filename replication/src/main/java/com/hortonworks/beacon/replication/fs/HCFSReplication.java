@@ -317,7 +317,7 @@ public class HCFSReplication extends FSReplication {
     }
 
     private Configuration getHAConfigOrDefault() {
-        Configuration conf = new Configuration();
+        Configuration conf = getBaseConfiguration();
         if (properties.containsKey(BeaconConstants.HA_CONFIG_KEYS)) {
             String haConfigKeys = properties.getProperty(BeaconConstants.HA_CONFIG_KEYS);
             for(String haConfigKey: haConfigKeys.split(BeaconConstants.COMMA_SEPARATOR)) {

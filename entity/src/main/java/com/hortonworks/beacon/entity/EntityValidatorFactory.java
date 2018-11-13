@@ -42,8 +42,6 @@ public final class EntityValidatorFactory {
         switch (entityType) {
             case CLUSTER:
                 return new ClusterValidator();
-            case REPLICATIONPOLICY:
-                return new PolicyValidator();
             case CLOUDCRED:
                 return new CloudCredValidator();
             default:

@@ -27,6 +27,7 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
+import com.hortonworks.beacon.entity.util.ClusterDao;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -40,7 +41,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+
+import static com.hortonworks.beacon.constants.BeaconConstants.ONE_MIN;
 
 /**
  * Main class that represents replication policy.
@@ -130,12 +134,33 @@ public abstract class BeaconReplicationPolicy<S extends DataSet, T extends DataS
 
     public void validate() throws BeaconException {
         validateAPIAllowed();
+        validateScheduleDate();
+        validateClusters();
+        validatePairing();
         validateDataSetConflict();
         validateSourceDatasetExists();
         deleteSourceSnapshots();
         validateEncryptionAndSnapshot();
         validateTargetExistsEmpty();
         validateTargetIsWritable();
+    }
+
+    protected abstract void validateClusters() throws BeaconException;
+
+    protected void clusterExists(String name) throws BeaconException {
+        new ClusterDao().getActiveCluster(name);
+    }
+
+    private void validateScheduleDate() throws ValidationException {
+        if (this.getStartTime().before(new Date(System.currentTimeMillis() - ONE_MIN))) {
+            throw new ValidationException("Start time cannot be earlier than current time.");
+        }
+        if (this.getEndTime() != null && this.getEndTime().before(this.getStartTime())) {
+            throw new ValidationException("End time cannot be earlier than start time.");
+        }
+        if (this.getEndTime() != null && this.getEndTime().before(new Date())) {
+            throw new ValidationException("End time cannot be earlier than current time.");
+        }
     }
 
     private void validateDataSetConflict() throws BeaconStoreException, ValidationException {

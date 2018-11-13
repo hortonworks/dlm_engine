@@ -139,6 +139,13 @@ public final class ReplicationPolicyBuilder {
                 throw new BeaconException(e);
             }
         }
+        Date start = DateUtil.parseDate(requestProperties.getPropertyIgnoreCase(
+                ReplicationPolicyProperties.STARTTIME.getName()));
+        if (start == null) {
+            start = new Date();
+        }
+        Date end = DateUtil.parseDate(requestProperties.getPropertyIgnoreCase(
+                ReplicationPolicyProperties.ENDTIME.getName()));
         if (isDryRun) {
             Properties customProps = EntityHelper.getCustomProperties(requestProperties,
                     ReplicationPolicyProperties.getPolicyElements());
@@ -149,15 +156,8 @@ public final class ReplicationPolicyBuilder {
             return new ReplicationPolicy.Builder(policyName, type, sourceDataset, targetDataset,
                     sourceCluster,
                     targetCluster,
-                    1).customProperties(customProps).retry(retry).build();
+                    1).startTime(start).endTime(end).customProperties(customProps).retry(retry).build();
         }
-        Date start = DateUtil.parseDate(requestProperties.getPropertyIgnoreCase(
-                ReplicationPolicyProperties.STARTTIME.getName()));
-        if (start == null) {
-            start = new Date();
-        }
-        Date end = DateUtil.parseDate(requestProperties.getPropertyIgnoreCase(
-                ReplicationPolicyProperties.ENDTIME.getName()));
         String tags = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TAGS.getName());
         String plugins = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.PLUGINS.getName());
         Integer frequencyInSec = Integer.parseInt(requestProperties.getPropertyIgnoreCase(

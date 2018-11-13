@@ -50,5 +50,10 @@ public class HDFSCloudReplication extends BeaconReplicationPolicy<HDFSDataSet, H
     protected Cluster getSchedulableCluster() {
         return getSourceDatasetV2().getCluster();
     }
+
+    @Override
+    protected void validateClusters() throws BeaconException{
+        clusterExists(this.getSourceCluster());
+    }
 }
 

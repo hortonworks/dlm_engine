@@ -50,6 +50,7 @@ import javax.persistence.Query;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Calendar;
 import java.util.HashMap;
 
 import static org.mockito.Mockito.doThrow;
@@ -515,6 +516,47 @@ public class PolicyResourceTest extends ResourceBaseTest {
             }
         });
         targetClient.deletePolicy(policyName, false);
+    }
+
+    @Test
+    public void testEndTimeBeforeStartTimeValidation() throws Exception {
+        final String policyName = testDataGenerator.getRandomString("FsPolicy");
+        String replicationPath = SOURCE_DIR + policyName;
+        boolean shouldThrow = false;
+        targetFs.mkdirs(new Path(replicationPath));
+        testDataGenerator.createFSMocks(replicationPath);
+        ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath);
+        shouldThrow = false;
+        try {
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DATE, -30);
+            policyRequest.setEndTime(calendar.getTime());
+            targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        } catch (BeaconClientException ex) {
+            shouldThrow = true;
+            assertTrue(ex.getMessage().contains("End time cannot be earlier than start time."));
+        }
+        assertTrue(shouldThrow);
+    }
+
+    @Test
+    public void testStartTimeBeforeCurrentTimeValidation() throws Exception {
+        final String policyName = testDataGenerator.getRandomString("FsPolicy");
+        String replicationPath = SOURCE_DIR + policyName;
+        boolean shouldThrow = false;
+        targetFs.mkdirs(new Path(replicationPath));
+        testDataGenerator.createFSMocks(replicationPath);
+        ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath);
+        try {
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DATE, -30);
+            policyRequest.setStartTime(calendar.getTime());
+            targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        } catch (BeaconClientException ex) {
+            shouldThrow = true;
+            assertTrue(ex.getMessage().contains("Start time cannot be earlier than current time."));
+        }
+        assertTrue(shouldThrow);
     }
 
     /**

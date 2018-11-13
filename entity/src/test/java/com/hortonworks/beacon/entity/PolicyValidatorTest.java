@@ -21,14 +21,10 @@
  */
 package com.hortonworks.beacon.entity;
 
-import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
-import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.util.FSUtils;
@@ -72,35 +68,6 @@ public class PolicyValidatorTest{
         PowerMockito.when(ClusterHelper.getLocalCluster()).thenReturn(cluster);
         PowerMockito.when(ClusterHelper.getActiveCluster(cluster.getName())).thenReturn(cluster);
         PowerMockito.when(FSUtils.isHCFS((Path) Mockito.any())).thenReturn(false);
-    }
-
-    @Test(expected = ValidationException.class)
-    public void testValidatePolicyStartDateBeforeNow() throws Exception {
-        final String name = "hdfsPolicy";
-        PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name,
-                "hdfs://localhost:54136/apps/dr", null, "backupCluster", "2016-11-26T23:54:50Z", null);
-        ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name, false);
-        new PolicyValidator().validate(policy);
-    }
-
-    @Test(expected = ValidationException.class)
-    public void testValidatePolicyEndDateBeforeStartDate() throws Exception {
-        final String name = "hdfsPolicy-2";
-        PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name,
-                "hdfs://localhost:54136/apps/dr",
-                null, "backupCluster", "2017-11-26T23:54:50Z", "2015-11-26T23:54:50Z");
-        ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name, false);
-        new PolicyValidator().validate(policy);
-    }
-
-    @Test(expected = ValidationException.class)
-    public void testValidatePolicyEndDateBeforeCurrent() throws Exception {
-        final String name = "hdfsPolicy-1";
-        PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name,
-                "hdfs://localhost:54136/apps/dr",
-                null, "backupCluster", null, "2015-11-26T23:54:50Z");
-        ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name, false);
-        new PolicyValidator().validate(policy);
     }
 
     @Test

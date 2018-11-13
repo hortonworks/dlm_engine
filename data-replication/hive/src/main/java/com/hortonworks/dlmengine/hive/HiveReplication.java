@@ -60,5 +60,11 @@ public class HiveReplication extends BeaconReplicationPolicy<HiveDBDataSet, Hive
     public void validatePairing() {
         ClusterHelper.areClustersPaired(getSourceDatasetV2().getCluster(), getTargetCluster());
     }
+
+    @Override
+    protected void validateClusters() throws BeaconException {
+        clusterExists(this.getSourceCluster());
+        clusterExists(this.getTargetCluster());
+    }
 }
 

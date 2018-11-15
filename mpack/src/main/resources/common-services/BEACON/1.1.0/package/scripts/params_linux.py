@@ -40,6 +40,7 @@ from resource_management.libraries.functions.is_empty import is_empty
 from resource_management.libraries.resources.hdfs_resource import HdfsResource
 from resource_management.libraries.script import Script
 from resource_management.libraries.functions.get_stack_version import get_stack_version
+from resource_management.libraries.functions.version import format_stack_version
 import beacon_utils
 
 # server configurations
@@ -256,3 +257,5 @@ ranger_atlas_service_name = str(config['clusterName']) + '_atlas'
 ranger_atlas_service_value = config['configurations']['ranger-atlas-security']['ranger.plugin.atlas.service.name']
 if not is_empty(ranger_atlas_service_value) and ranger_atlas_service_value != "{{repo_name}}":
   ranger_atlas_service_name = ranger_atlas_service_value
+
+is_stack_3_0_or_further = Script.is_stack_greater_or_equal(compare_to_version = format_stack_version("3.0"))

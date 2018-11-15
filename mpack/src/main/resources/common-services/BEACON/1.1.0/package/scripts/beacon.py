@@ -253,33 +253,57 @@ def beacon(type, action = None, upgrade_type=None):
             else:
               beacon_atlas_user_create_response_code = ranger_api_functions.create_user(ranger_admin_url, params.beacon_atlas_user, params.beacon_atlas_password, "ROLE_USER", format("{ranger_admin_user}:{ranger_admin_passwd}"))
 
-            # Get Ranger Atlas default policy for ENTITY resource
-            atlas_policy_response = ranger_api_functions.get_ranger_service_default_policy(ranger_admin_url, params.ranger_atlas_service_name, format("{ranger_admin_user}:{ranger_admin_passwd}"), ['entity'])
-
             if params.security_enabled:
               get_beacon_atlas_user = params.beacon_user
             else:
               get_beacon_atlas_user = params.beacon_atlas_user
 
-            if atlas_policy_response:
-              beacon_atlas_user_present = ranger_api_functions.check_user_policy(atlas_policy_response, get_beacon_atlas_user)
-              if not beacon_atlas_user_present:
-                # Updating beacon atlas user in Ranger Atlas default policy for entity resource
-                atlas_policy_id = atlas_policy_response['id']
-                beacon_atlas_user_policy_item = {'groups': [], 'conditions': [], 'users': [get_beacon_atlas_user], 'accesses': [{'type': 'read', 'isAllowed': True}, {'type': 'create', 'isAllowed': True}, {'type': 'update', 'isAllowed': True}, {'type':'delete', 'isAllowed': True}, {'type':'all', 'isAllowed': True}]}
-                atlas_policy_data = ranger_api_functions.update_policy_item(atlas_policy_response, beacon_atlas_user_policy_item)
-                atlas_update_policy_response = ranger_api_functions.update_policy(ranger_admin_url, atlas_policy_id, atlas_policy_data, format("{ranger_admin_user}:{ranger_admin_passwd}"))
+            if params.is_stack_3_0_or_further:
+              # Get Ranger Atlas default policy for ENTITY TYPE, ENTITY CLASSIFICATION and ENTITY ID resource
+              atlas_entity_policy_response = ranger_api_functions.get_ranger_service_default_policy(ranger_admin_url, params.ranger_atlas_service_name, format("{ranger_admin_user}:{ranger_admin_passwd}"), ['entity', 'entity-classification', 'entity-type'])
 
-            # Get Ranger Atlas default policy for OPERATION resource
-            atlas_operation_policy_response = ranger_api_functions.get_ranger_service_default_policy(ranger_admin_url, params.ranger_atlas_service_name, format("{ranger_admin_user}:{ranger_admin_passwd}"), ['operation'])
-            if atlas_operation_policy_response:
-              beacon_atlas_user_present = ranger_api_functions.check_user_policy(atlas_operation_policy_response, get_beacon_atlas_user)
-              if not beacon_atlas_user_present:
-                # Updating beacon atlas user in Ranger Atlas default policy for operation resource
-                atlas_operation_policy_id = atlas_operation_policy_response['id']
-                beacon_atlas_user_policy_item = {'groups': [], 'conditions': [], 'users': [get_beacon_atlas_user], 'accesses': [{'type': 'read', 'isAllowed': True}, {'type': 'create', 'isAllowed': True}, {'type': 'update', 'isAllowed': True}, {'type':'delete', 'isAllowed': True}, {'type':'all', 'isAllowed': True}]}
-                atlas_operation_policy_data = ranger_api_functions.update_policy_item(atlas_operation_policy_response, beacon_atlas_user_policy_item)
-                atlas_operation_policy_update_response = ranger_api_functions.update_policy(ranger_admin_url, atlas_operation_policy_id, atlas_operation_policy_data, format("{ranger_admin_user}:{ranger_admin_passwd}"))
+              if atlas_entity_policy_response:
+                beacon_atlas_user_present = ranger_api_functions.check_user_policy(atlas_entity_policy_response, get_beacon_atlas_user)
+                if not beacon_atlas_user_present:
+                  # Updating beacon atlas user in Ranger Atlas default policy for entity resource
+                  atlas_entity_policy_id = atlas_entity_policy_response['id']
+                  beacon_atlas_user_policy_item = {'groups': [], 'conditions': [], 'users': [get_beacon_atlas_user], 'accesses': [{'type': 'entity-read', 'isAllowed': True}]}
+                  atlas_entity_policy_data = ranger_api_functions.update_policy_item(atlas_entity_policy_response, beacon_atlas_user_policy_item)
+                  atlas_update_entity_policy_response = ranger_api_functions.update_policy(ranger_admin_url, atlas_entity_policy_id, atlas_entity_policy_data, format("{ranger_admin_user}:{ranger_admin_passwd}"))
+
+              # Get Ranger Atlas default policy for ATLAS SERVICE resource
+              atlas_service_policy_response = ranger_api_functions.get_ranger_service_default_policy(ranger_admin_url, params.ranger_atlas_service_name, format("{ranger_admin_user}:{ranger_admin_passwd}"), ['atlas-service'])
+              if atlas_service_policy_response:
+                beacon_atlas_user_present = ranger_api_functions.check_user_policy(atlas_service_policy_response, get_beacon_atlas_user)
+                if not beacon_atlas_user_present:
+                  # Updating beacon atlas user in Ranger Atlas default policy for service resource
+                  atlas_service_policy_id = atlas_service_policy_response['id']
+                  beacon_atlas_user_policy_item = {'groups': [], 'conditions': [], 'users': [get_beacon_atlas_user], 'accesses': [{'type': 'admin-export', 'isAllowed': True}, {'type': 'admin-import', 'isAllowed': True}]}
+                  atlas_service_policy_data = ranger_api_functions.update_policy_item(atlas_service_policy_response, beacon_atlas_user_policy_item)
+                  atlas_service_policy_update_response = ranger_api_functions.update_policy(ranger_admin_url, atlas_service_policy_id, atlas_service_policy_data, format("{ranger_admin_user}:{ranger_admin_passwd}"))
+            else:
+              # Get Ranger Atlas default policy for ENTITY resource
+              atlas_policy_response = ranger_api_functions.get_ranger_service_default_policy(ranger_admin_url, params.ranger_atlas_service_name, format("{ranger_admin_user}:{ranger_admin_passwd}"), ['entity'])
+
+              if atlas_policy_response:
+                beacon_atlas_user_present = ranger_api_functions.check_user_policy(atlas_policy_response, get_beacon_atlas_user)
+                if not beacon_atlas_user_present:
+                  # Updating beacon atlas user in Ranger Atlas default policy for entity resource
+                  atlas_policy_id = atlas_policy_response['id']
+                  beacon_atlas_user_policy_item = {'groups': [], 'conditions': [], 'users': [get_beacon_atlas_user], 'accesses': [{'type': 'read', 'isAllowed': True}, {'type': 'create', 'isAllowed': True}, {'type': 'update', 'isAllowed': True}, {'type':'delete', 'isAllowed': True}, {'type':'all', 'isAllowed': True}]}
+                  atlas_policy_data = ranger_api_functions.update_policy_item(atlas_policy_response, beacon_atlas_user_policy_item)
+                  atlas_update_policy_response = ranger_api_functions.update_policy(ranger_admin_url, atlas_policy_id, atlas_policy_data, format("{ranger_admin_user}:{ranger_admin_passwd}"))
+
+              # Get Ranger Atlas default policy for OPERATION resource
+              atlas_operation_policy_response = ranger_api_functions.get_ranger_service_default_policy(ranger_admin_url, params.ranger_atlas_service_name, format("{ranger_admin_user}:{ranger_admin_passwd}"), ['operation'])
+              if atlas_operation_policy_response:
+                beacon_atlas_user_present = ranger_api_functions.check_user_policy(atlas_operation_policy_response, get_beacon_atlas_user)
+                if not beacon_atlas_user_present:
+                  # Updating beacon atlas user in Ranger Atlas default policy for operation resource
+                  atlas_operation_policy_id = atlas_operation_policy_response['id']
+                  beacon_atlas_user_policy_item = {'groups': [], 'conditions': [], 'users': [get_beacon_atlas_user], 'accesses': [{'type': 'read', 'isAllowed': True}, {'type': 'create', 'isAllowed': True}, {'type': 'update', 'isAllowed': True}, {'type':'delete', 'isAllowed': True}, {'type':'all', 'isAllowed': True}]}
+                  atlas_operation_policy_data = ranger_api_functions.update_policy_item(atlas_operation_policy_response, beacon_atlas_user_policy_item)
+                  atlas_operation_policy_update_response = ranger_api_functions.update_policy(ranger_admin_url, atlas_operation_policy_id, atlas_operation_policy_data, format("{ranger_admin_user}:{ranger_admin_passwd}"))
       except:
         show_logs(params.beacon_log_dir, params.beacon_user)
         raise

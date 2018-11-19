@@ -43,6 +43,12 @@ Beacon supports replication of HDFS/Hive data between underlying HDFS and cloud 
 * Supported cloud storages:
 ** WASB
 
+=== GCS
+* Supported authentication types:
+** Service account email, private key id, and private key based
+* Supported cloud storages:
+** GCS
+
 
 
 == Cloud Credentials
@@ -73,6 +79,16 @@ provider=WASB
 wasb.account.name=<wasb account name>
 wasb.access.key=<wasb access key like AKIAJ2B5WGGW2QZKJQQA>
 authtype=WASB_ACCESSKEY
+
+* Service account config based GCS cloud credential properties:
+[source, properties]
+name=access-key-gcs-cred
+provider=GCS
+gcs.private.key.id=<private key id of gcs service account>
+gcs.private.key=<private key of gcs service account>
+gcs.client.email=<email id of gcs service account>
+authtype=GCS_PRIVATEKEY
+
 
 Refer to link:BeaconRESTApi.adoc[REST API Documentation] for more details.
 
@@ -140,8 +156,8 @@ hive.metastore.warehouse.dir and hive.repl.replica.functions.root.dir should be 
 Update these properties in the default config of hive through ambari and restart hive.
 Sync the target cluster using DLM UI.
 [source, properties]
-hive.metastore.warehouse.dir=<cloud storage path like wasb://wasb-hive@dummy-wasb-account.blob.core.windows.net/apps/hive/warehouse or s3a://dummy-s3-bucket/apps/hive/warehouse>
-hive.repl.replica.functions.root.dir=<cloud storage path like wasb://wasb-hive@dummy-wasb-account.blob.core.windows.net/apps/hive/repl or s3a://dummy-s3-bucket/apps/hive/repl>
+hive.metastore.warehouse.dir=<cloud storage path> like wasb://wasb-hive@dummy-wasb-account.blob.core.windows.net/apps/hive/warehouse or s3a://dummy-s3-bucket/apps/hive/warehouse or gs://dummy-gcs-bucket/apps/hive/warehouse>
+hive.repl.replica.functions.root.dir=<cloud storage path like wasb://wasb-hive@dummy-wasb-account.blob.core.windows.net/apps/hive/repl or s3a://dummy-s3-bucket/apps/hive/repl or gs://dummy-gcs-bucket/apps/hive/repl>
 hive.warehouse.subdir.inherit.perms=false
 
 
@@ -153,6 +169,12 @@ access the cloud storage. This can be setup with one of the following configurat
 * https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_cloud-data-access/content/s3-temp-session.html[S3 Session token]
 * https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_cloud-data-access/content/authentication-wasb.html[Wasb Account and access key]
 * For IAAS clusters, setup instance profiles
+* For GCS based hive warehouse, setup the following cloud credential configurations in core-site.xml:
+  fs.gs.working.dir=/
+  fs.gs.path.encoding=uri-path
+  fs.gs.auth.service.account.email=<email id of gcs service account>
+  fs.gs.auth.service.account.private.key.id=<private key id of gcs service account>
+  fs.gs.auth.service.account.private.key=<private key of gcs service account>
 
 3. Cloud encryption configurations - If the bucket is encrypted, setup the https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_cloud-data-access/content/per-bucket-encryption.html[bucket encryption details]
 

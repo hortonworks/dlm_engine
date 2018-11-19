@@ -25,11 +25,8 @@ package com.hortonworks.beacon.api;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.BeaconWebClient;
-import com.hortonworks.beacon.client.entity.CloudCred;
-import com.hortonworks.beacon.client.entity.CloudCred.Config;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.resource.APIResult;
-import com.hortonworks.beacon.client.resource.CloudCredList;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.ServerVersionResult;
@@ -1511,8 +1508,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(clusterUpdateSupported, "true");
         String policyEdit = jsonObject.getString("policy_edit");
         assertEquals(policyEdit, "true");
-        String gcsReplicationSupported = jsonObject.getString("gcsReplicationSupported");
-        assertEquals(gcsReplicationSupported, "true");
     }
 
     @Test(dependsOnMethods = "testPairCluster")
@@ -1574,176 +1569,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
         //delete policy at the end
         targetClient.deletePolicy(policyName, false);
-    }
-
-    @Test
-    public void testSubmitCloudCred() throws Exception {
-        Map<Config, String> configs = new HashMap<>();
-        configs.put(Config.AWS_ACCESS_KEY, "access.key.value");
-        configs.put(Config.AWS_SECRET_KEY, "secret.key.value");
-
-        CloudCred cloudCred = buildCloudCred("cloud-cred-submit", CloudCred.Provider.AWS,
-                CloudCred.AuthType.AWS_ACCESSKEY, configs);
-        BeaconClient client = new BeaconWebClient(getSourceBeaconServer());
-        String entityId = client.submitCloudCred(cloudCred);
-        Assert.assertNotNull(entityId);
-    }
-
-    @Test
-    public void testUpdateCloudCred() throws Exception {
-        Map<Config, String> configs = new HashMap<>();
-        configs.put(Config.AWS_ACCESS_KEY, "access.key.value");
-        configs.put(Config.AWS_SECRET_KEY, "secret.key.value");
-        configs.put(Config.VERSION, "1");
-
-        CloudCred cloudCred = buildCloudCred("cloud-cred-update", CloudCred.Provider.AWS,
-                CloudCred.AuthType.AWS_ACCESSKEY, configs);
-        BeaconClient client = new BeaconWebClient(getSourceBeaconServer());
-        String entityId = client.submitCloudCred(cloudCred);
-        Assert.assertNotNull(entityId);
-
-        configs.clear();
-        configs.put(Config.AWS_ACCESS_KEY, "access.key.update");
-        configs.put(Config.AWS_SECRET_KEY, "secret.key.update");
-        configs.put(Config.VERSION, "2");
-        CloudCred updateCloudCred = buildCloudCred(cloudCred.getName(), cloudCred.getProvider(),
-                cloudCred.getAuthType(), configs);
-        client.updateCloudCred(entityId, updateCloudCred);
-        CloudCred serverCloudCred = client.getCloudCred(entityId);
-        assertEquals(serverCloudCred.getConfigs().get(Config.VERSION), "2");
-
-        //Update the auth type
-        configs.clear();
-        configs.put(Config.VERSION, "3");
-        updateCloudCred = buildCloudCred(cloudCred.getName(), cloudCred.getProvider(),
-                CloudCred.AuthType.AWS_INSTANCEPROFILE, configs);
-        client.updateCloudCred(entityId, updateCloudCred);
-        serverCloudCred = client.getCloudCred(entityId);
-        assertEquals(serverCloudCred.getAuthType(), CloudCred.AuthType.AWS_INSTANCEPROFILE);
-        assertEquals(serverCloudCred.getConfigs().get(Config.VERSION), "3");
-    }
-
-    @Test(dependsOnMethods = "testSubmitCluster")
-    public void testDeleteCloudCred() throws Exception {
-        Map<Config, String> configs = new HashMap<>();
-        configs.put(Config.AWS_ACCESS_KEY, "access.key.value");
-        configs.put(Config.AWS_SECRET_KEY, "secret.key.value");
-
-        CloudCred cloudCred = buildCloudCred("cloud-cred-delete", CloudCred.Provider.AWS,
-                CloudCred.AuthType.AWS_ACCESSKEY, configs);
-        BeaconClient client = new BeaconWebClient(getSourceBeaconServer());
-        String entityId = client.submitCloudCred(cloudCred);
-        Assert.assertNotNull(entityId);
-        String credProviderPath = BeaconConfig.getInstance().getEngine().getCloudCredProviderPath();
-        credProviderPath = credProviderPath + entityId + BeaconConstants.JCEKS_EXT;
-        String[] credPath = credProviderPath.split(BeaconConstants.JCEKS_HDFS_FILE_REGEX);
-        assertTrue(srcDfsCluster.getFileSystem().exists(new Path(credPath[1])));
-        client.deleteCloudCred(entityId);
-        assertFalse(srcDfsCluster.getFileSystem().exists(new Path(credPath[1])));
-    }
-
-    @Test
-    public void testGetCloudCred() throws Exception {
-        Map<Config, String> configs = new HashMap<>();
-        configs.put(Config.AWS_ACCESS_KEY, "access.key.value");
-        configs.put(Config.AWS_SECRET_KEY, "secret.key.value");
-        configs.put(Config.VERSION, "1");
-
-        CloudCred cloudCred = buildCloudCred("cloud-cred-get", CloudCred.Provider.AWS,
-                CloudCred.AuthType.AWS_ACCESSKEY, configs);
-        BeaconClient client = new BeaconWebClient(getSourceBeaconServer());
-        String entityId = client.submitCloudCred(cloudCred);
-        Assert.assertNotNull(entityId);
-
-        CloudCred clientCloudCred = client.getCloudCred(entityId);
-        assertEquals(clientCloudCred.getId(), entityId);
-        assertEquals(clientCloudCred.getConfigs().size(), 1);
-        assertEquals(clientCloudCred.getConfigs().get(Config.VERSION), "1");
-
-        //Fail if required configs are missing
-        configs.clear();
-        String credName = getRandomString("cred");
-        cloudCred = buildCloudCred(credName, CloudCred.Provider.AWS, CloudCred.AuthType.AWS_ACCESSKEY,
-                configs);
-        try {
-            client.submitCloudCred(cloudCred);
-            fail("Expected BeaconClientException");
-        } catch (BeaconClientException e) {
-            assertEquals(e.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
-        }
-
-        //Create AWS_INSTANCEPROFILE based credential
-        configs.clear();
-        configs.put(Config.VERSION, "2");
-        cloudCred = buildCloudCred(credName, CloudCred.Provider.AWS, CloudCred.AuthType.AWS_INSTANCEPROFILE,
-                configs);
-        entityId = client.submitCloudCred(cloudCred);
-        Assert.assertNotNull(entityId);
-
-        clientCloudCred = client.getCloudCred(entityId);
-        assertEquals(clientCloudCred.getId(), entityId);
-        assertEquals(clientCloudCred.getConfigs().size(), 1);
-        assertEquals(clientCloudCred.getConfigs().get(Config.VERSION), "2");
-
-        //Fail if there are extra password configs which are not required
-        configs.clear();
-        configs.put(Config.AWS_ACCESS_KEY, "accesskey");
-        cloudCred = buildCloudCred(getRandomString("cred"), CloudCred.Provider.AWS,
-                CloudCred.AuthType.AWS_INSTANCEPROFILE, configs);
-        try {
-            client.submitCloudCred(cloudCred);
-            fail("Expected BeaconClientException");
-        } catch (BeaconClientException e) {
-            assertEquals(e.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
-        }
-
-        //Test delete cloud cred and then get should fail
-        client.deleteCloudCred(entityId);
-        try {
-            client.getCloudCred(entityId);
-            fail("Expected BeaconClientException");
-        } catch (BeaconClientException e) {
-            assertEquals(e.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
-        }
-    }
-
-    @Test
-    public void testListCloudCred() throws Exception {
-        BeaconClient client = new BeaconWebClient(getSourceBeaconServer());
-        CloudCredList cloudCredList = client.listCloudCred("provider=AWS", null, null, null, null);
-        int initialLen = cloudCredList.getResults();
-        int expectedLen = initialLen + 2;
-        Map<Config, String> configs = new HashMap<>();
-        configs.put(Config.AWS_ACCESS_KEY, "access.key.value");
-        configs.put(Config.AWS_SECRET_KEY, "secret.key.value");
-
-        CloudCred cloudCred1 = buildCloudCred(getRandomString("cred_1"), CloudCred.Provider.AWS,
-                CloudCred.AuthType.AWS_ACCESSKEY, configs);
-        CloudCred cloudCred2 = buildCloudCred(getRandomString("cred_2"), CloudCred.Provider.AWS,
-                CloudCred.AuthType.AWS_ACCESSKEY, configs);
-        String entityId1 = client.submitCloudCred(cloudCred1);
-        Assert.assertNotNull(entityId1);
-
-        String entityId2 = client.submitCloudCred(cloudCred2);
-        Assert.assertNotNull(entityId2);
-
-        cloudCredList = client.listCloudCred("provider=AWS", null, "DESC", null, null);
-        assertEquals(cloudCredList.getResults(), expectedLen);
-        assertEquals(cloudCredList.getTotalResults(), expectedLen);
-        CloudCred[] elements = cloudCredList.getCloudCreds();
-        assertEquals(elements.length, expectedLen);
-        assertEquals(elements[1].getId(), entityId1);
-        assertEquals(elements[0].getId(), entityId2);
-    }
-
-    private CloudCred buildCloudCred(String name, CloudCred.Provider provider, CloudCred.AuthType authType,
-                                     Map<Config, String> configs) {
-        CloudCred cloudCred = new CloudCred();
-        cloudCred.setName(name);
-        cloudCred.setAuthType(authType);
-        cloudCred.setProvider(provider);
-        cloudCred.setConfigs(configs);
-        return cloudCred;
     }
 
     private void verifyPolicyCompletionStatus(String response, String expectedResponse) throws JSONException {

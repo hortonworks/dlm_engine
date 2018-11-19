@@ -1682,7 +1682,6 @@ GET api/beacon/admin/status
     "clusterUpdateSupported": true,
     "cloudHosted": false,
     "wasbReplicationSupported": true,
-    "gcsReplicationSupported": true,
     "enableSnapshotBasedReplication": true
 
 }
@@ -1738,6 +1737,16 @@ wasb.account.name=<wasb account name>
 wasb.container.name=<wasb container name>
 wasb.sas.token=jYe/fQ6wOi9ebIr5FM7emBHafx3JMzNgjxGmpZMD
 authtype=WASB_SAS_TOKEN
+
+Supported configurations for GCS:
+
+[source, properties]
+name=cloud-cred
+provider=GCS
+gcs.private.key.id=<private key id of gcs service account>
+gcs.private.key=<private key of gcs service account>
+gcs.client.email=<email id of gcs service account>
+authtype=GCS_PRIVATEKEY
 
 *Response:*
 

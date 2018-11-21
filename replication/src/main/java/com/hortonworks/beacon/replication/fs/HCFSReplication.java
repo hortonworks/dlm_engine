@@ -24,19 +24,17 @@ package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.ExecutionType;
 import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
-import com.hortonworks.beacon.entity.entityNeo.DataSet;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
-import com.hortonworks.beacon.entity.util.PolicyDao;
-import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.FSUtils;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
+import com.hortonworks.dlmengine.fs.CloudHDFSReplication;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -77,8 +75,8 @@ public class HCFSReplication extends FSReplication {
     private boolean isPushRepl;
     private PermissionMetaFileOperator permissionMetaFileOperator;
 
-    public HCFSReplication(ReplicationJobDetails details) {
-        super(details);
+    public HCFSReplication(ReplicationJobDetails details, BeaconReplicationPolicy replicationPolicy) {
+        super(details, replicationPolicy);
         permissionMetaFileOperator =  new PermissionMetaFileOperator();
     }
 
@@ -269,31 +267,13 @@ public class HCFSReplication extends FSReplication {
 
     private Configuration getHCFSConfiguration() throws BeaconException {
         Configuration conf = getConfiguration();
-        String policyName = properties.getProperty(ReplicationPolicy.ReplicationPolicyFields.NAME.getName());
-        ReplicationPolicy policy = new PolicyDao().getActivePolicy(policyName);
-        String cloudPath = getCloudPath(policy);
         Configuration fsConf;
-        DataSet dataSet = null;
-        try {
-            dataSet = DataSet.create(cloudPath, null, policy);
-            fsConf = dataSet.getHadoopConf();
-        } finally {
-            if (dataSet != null) {
-                dataSet.close();
-            }
+        if (beaconReplicationPolicy instanceof CloudHDFSReplication) {
+            fsConf = beaconReplicationPolicy.getSourceDatasetV2().getHadoopConf();
+        } else  {
+            fsConf = beaconReplicationPolicy.getTargetDatasetV2().getHadoopConf();
         }
         return merge(conf, fsConf);
-    }
-
-    private String getCloudPath(ReplicationPolicy policy) throws BeaconException {
-        String cloudPath;
-        String sourcePath = policy.getSourceDataset();
-        if (PolicyHelper.isDatasetHCFS(sourcePath)) {
-            cloudPath = sourcePath;
-        } else {
-            cloudPath = policy.getTargetDataset();
-        }
-        return cloudPath;
     }
 
     private Configuration getConfiguration() {

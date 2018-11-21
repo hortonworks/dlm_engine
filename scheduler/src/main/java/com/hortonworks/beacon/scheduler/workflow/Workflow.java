@@ -21,9 +21,9 @@
  */
 package com.hortonworks.beacon.scheduler.workflow;
 
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
 
 import java.util.List;
 
@@ -33,5 +33,5 @@ import java.util.List;
  * TODO : We can add Graph<ReplicationJobDetails> to execute a DAG instead of a linkedlist.
  */
 public interface Workflow {
-    List<ReplicationJobDetails> createChainedWorkflow(ReplicationPolicy policy) throws BeaconException;
+    List<ReplicationJobDetails> createChainedWorkflow(BeaconReplicationPolicy policy) throws BeaconException;
 }

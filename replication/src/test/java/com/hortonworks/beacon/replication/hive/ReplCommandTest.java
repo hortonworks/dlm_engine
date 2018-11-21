@@ -28,6 +28,7 @@ import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.entity.util.hive.ReplCommand;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,7 +104,7 @@ public class ReplCommandTest {
         ReplCommand replLoad = new ReplCommand(database);
         Assert.assertEquals(replLoad.getReplLoad(DUMP_DIRECTORY),
                 "REPL LOAD `testDB` FROM '" +DUMP_DIRECTORY+"'");
-        String configParams = HiveDRUtils.setConfigParameters(hiveJobDetails.getProperties());
+        String configParams = HiveDRUtils.getConfigParameters(hiveJobDetails.getProperties(), new Configuration());
         String user = UserGroupInformation.getLoginUser().getShortUserName();
         String actual = replLoad.getReplLoad(DUMP_DIRECTORY) + " WITH ("+configParams+")";
         String expected = "REPL LOAD `testDB` FROM '" +DUMP_DIRECTORY+"' WITH ("

@@ -35,6 +35,7 @@ import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.FSUtils;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -67,8 +68,8 @@ public class HDFSReplication extends FSReplication {
     private static final Logger LOG = LoggerFactory.getLogger(HDFSReplication.class);
     private static final String RAW_NAMESPACE_PATH = "/.reserved/raw";
 
-    public HDFSReplication(ReplicationJobDetails details) {
-        super(details);
+    public HDFSReplication(ReplicationJobDetails details, BeaconReplicationPolicy replicationPolicy) {
+        super(details, replicationPolicy);
     }
 
     @Override

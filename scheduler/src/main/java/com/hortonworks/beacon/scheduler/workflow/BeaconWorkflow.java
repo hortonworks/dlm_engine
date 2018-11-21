@@ -22,7 +22,6 @@
 package com.hortonworks.beacon.scheduler.workflow;
 
 import com.hortonworks.beacon.RequestContext;
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.nodes.NodeGenerator;
@@ -30,6 +29,7 @@ import com.hortonworks.beacon.plugin.service.PluginJobBuilder;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +55,7 @@ public final class BeaconWorkflow implements Workflow {
 
 
     @Override
-    public List<ReplicationJobDetails> createChainedWorkflow(ReplicationPolicy policy) throws BeaconException {
+    public List<ReplicationJobDetails> createChainedWorkflow(BeaconReplicationPolicy policy) throws BeaconException {
         JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
 
         // final set of jobs.

@@ -81,6 +81,7 @@ public abstract class FSDataSet extends DataSet {
         this(path, conf, null);
     }
 
+
     public abstract String resolvePath(String path, ReplicationPolicy policy);
 
     protected abstract Configuration getHadoopConf(String path, ReplicationPolicy policy) throws BeaconException;
@@ -231,9 +232,9 @@ public abstract class FSDataSet extends DataSet {
     public abstract boolean isEncrypted(Path path) throws BeaconException;
 
     @VisibleForTesting
-    public static FSDataSet create(FileSystem fileSystem, String path) throws BeaconException {
+    public static FSDataSet create(FileSystem fileSystem, String path, String clusterName) throws BeaconException {
         if (fileSystem != null && path != null) {
-            return new HDFSDataSet(fileSystem, path);
+            return new HDFSDataSet(fileSystem, path, clusterName);
         }
         throw new IllegalStateException("Unhandled dataset " + path);
     }

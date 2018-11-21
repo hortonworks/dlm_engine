@@ -34,6 +34,7 @@ import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 
 
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +56,7 @@ public class PluginJobBuilder extends JobBuilder {
     private static final String JOB_TYPE = ReplicationType.PLUGIN.name();
 
     @Override
-    public List<ReplicationJobDetails> buildJob(ReplicationPolicy policy) throws BeaconException {
+    public List<ReplicationJobDetails> buildJob(BeaconReplicationPolicy policy) throws BeaconException {
         List<ReplicationJobDetails> jobList = new ArrayList<>();
         MetaDataPluginManagerService pluginManagerService = Services.get()
                 .getService(MetaDataPluginManagerService.class);

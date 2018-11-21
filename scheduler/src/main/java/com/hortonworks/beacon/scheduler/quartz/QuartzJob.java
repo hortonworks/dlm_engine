@@ -51,6 +51,7 @@ import com.hortonworks.beacon.scheduler.SchedulerCache;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.util.StringFormat;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
 import org.apache.commons.lang.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.InterruptableJob;
@@ -87,6 +88,7 @@ public class QuartzJob implements InterruptableJob {
     public void execute(JobExecutionContext context) throws JobExecutionException {
 
         JobKey jobKey = null;
+        BeaconReplicationPolicy beaconReplicationPolicy = null;
         final String methodName = this.getClass().getSimpleName() + '.'
                 + Thread.currentThread().getStackTrace()[1].getMethodName();
         RequestContext requestContext = RequestContext.get();
@@ -113,10 +115,11 @@ public class QuartzJob implements InterruptableJob {
             LOG.info("Job [instance: {}, offset: {}, type: {}] execution started.", jobContext.getJobInstanceId(),
                     jobContext.getOffset(), jobDetail.getType());
 
+            beaconReplicationPolicy = BeaconReplicationPolicy.create(jobDetail.getName());
             // TODO : fix Property doesn't get set in case of pairing is suspended, but retry params are accessed.
-            jobDetail.setProperties(buildProperties(jobDetail));
+            jobDetail.setProperties(buildProperties(jobDetail, beaconReplicationPolicy));
 
-            replicationJob = BeaconJobImplFactory.getBeaconJobImpl(jobDetail);
+            replicationJob = BeaconJobImplFactory.getBeaconJobImpl(jobDetail, beaconReplicationPolicy);
 
             checkInterruption(jobKey, "before init");
             replicationJob.init(jobContext);
@@ -183,6 +186,9 @@ public class QuartzJob implements InterruptableJob {
                 } catch (Throwable t) {
                     LOG.warn("Ignoring cleanup failure", t);
                 }
+            }
+            if (beaconReplicationPolicy != null) {
+                beaconReplicationPolicy.close();
             }
             timer.stop();
             logTimers();
@@ -266,7 +272,8 @@ public class QuartzJob implements InterruptableJob {
                 executionDetails.toJsonString());
     }
 
-    private Properties buildProperties(ReplicationJobDetails details) throws BeaconException {
+    private Properties buildProperties(ReplicationJobDetails details, BeaconReplicationPolicy beaconReplicationPolicy)
+            throws BeaconException {
         ReplicationPolicy policy = policyDao.getActivePolicy(details.getName());
         boolean policyHCFS = PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset());
         if (!policyHCFS) {
@@ -276,15 +283,16 @@ public class QuartzJob implements InterruptableJob {
         Properties localProperties;
         switch (replicationType) {
             case FS:
-                localProperties = FSPolicyHelper.buildFSReplicationProperties(policy);
+                localProperties = FSPolicyHelper.buildFSReplicationProperties(beaconReplicationPolicy);
                 break;
             case HIVE:
                 if (details.getProperties().containsKey(HiveDRProperties.JOB_ACTION_TYPE.getName())) {
                     String hiveJobType = details.getProperties().getProperty(
                             HiveDRProperties.JOB_ACTION_TYPE.getName());
-                    localProperties = HivePolicyHelper.buildHiveReplicationProperties(policy, hiveJobType);
+                    localProperties = HivePolicyHelper
+                            .buildHiveReplicationProperties(beaconReplicationPolicy, hiveJobType);
                 } else {
-                    localProperties = HivePolicyHelper.buildHiveReplicationProperties(policy);
+                    localProperties = HivePolicyHelper.buildHiveReplicationProperties(beaconReplicationPolicy);
                 }
                 break;
             case PLUGIN:

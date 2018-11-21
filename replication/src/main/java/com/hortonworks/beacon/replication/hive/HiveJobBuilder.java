@@ -31,6 +31,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.HiveActionType;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +47,7 @@ public class HiveJobBuilder extends JobBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(HiveJobBuilder.class);
 
-    public List<ReplicationJobDetails> buildJob(ReplicationPolicy policy) throws BeaconException {
+    public List<ReplicationJobDetails> buildJob(BeaconReplicationPolicy policy) throws BeaconException {
         List<ReplicationJobDetails> replicationJobDetailsList = new ArrayList<>();
         ReplicationJobDetails exportJobDetails = exportReplicationJob(policy);
         ReplicationJobDetails importJobDetails = importReplicationJob(policy);
@@ -60,7 +61,7 @@ public class HiveJobBuilder extends JobBuilder {
         return replicationJobDetailsList;
     }
 
-    private ReplicationJobDetails exportReplicationJob(ReplicationPolicy policy) throws BeaconException {
+    private ReplicationJobDetails exportReplicationJob(BeaconReplicationPolicy policy) throws BeaconException {
         Properties hiveDRProperties = HivePolicyHelper.buildHiveReplicationProperties(policy,
                 HiveActionType.EXPORT.name());
         HivePolicyHelper.validateHiveReplicationProperties(hiveDRProperties);
@@ -71,7 +72,7 @@ public class HiveJobBuilder extends JobBuilder {
         return new ReplicationJobDetails(type, name, type, hiveDRProperties);
     }
 
-    private ReplicationJobDetails importReplicationJob(ReplicationPolicy policy) throws BeaconException {
+    private ReplicationJobDetails importReplicationJob(BeaconReplicationPolicy policy) throws BeaconException {
         Properties hiveDRProperties = HivePolicyHelper.buildHiveReplicationProperties(policy,
                 HiveActionType.IMPORT.name());
         HivePolicyHelper.validateHiveReplicationProperties(hiveDRProperties);

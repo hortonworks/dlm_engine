@@ -34,6 +34,7 @@ import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.entity.util.ReplicationDistCpOption;
 import com.hortonworks.beacon.util.DateUtil;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
@@ -47,13 +48,14 @@ public final class HivePolicyHelper {
 
     private HivePolicyHelper() {
     }
-    public static Properties buildHiveReplicationProperties(final ReplicationPolicy policy) throws BeaconException {
+    public static Properties buildHiveReplicationProperties(final BeaconReplicationPolicy policy)
+            throws BeaconException {
         return  buildHiveReplicationProperties(policy, "");
     }
 
     // Should not have any properties coming cluster entity.
     // Cluster endpoints (properties) will be fetched by replication job.
-    public static Properties buildHiveReplicationProperties(final ReplicationPolicy policy,
+    public static Properties buildHiveReplicationProperties(final BeaconReplicationPolicy policy,
                                                             String hiveActionType) throws BeaconException {
         Cluster sourceCluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
         BeaconCluster beaconSourceCluster = new BeaconCluster(sourceCluster);
@@ -117,7 +119,7 @@ public final class HivePolicyHelper {
         if (StringUtils.isNotBlank(hiveActionType)) {
             map.put(HiveDRProperties.JOB_ACTION_TYPE.getName(), hiveActionType);
         }
-        if (ClusterHelper.isCloudEncryptionEnabled(policy.getTargetDataset(), targetCluster, policy)) {
+        if (policy.getTargetDatasetV2().isEncrypted()) {
             map.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(),
                     beaconTargetCluster.getHiveCloudEncryptionAlgorithm());
             map.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), beaconTargetCluster.getHiveCloudEncryptionKey());
@@ -125,6 +127,7 @@ public final class HivePolicyHelper {
             map.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(), policy.getCloudEncryptionAlgorithm());
             map.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), policy.getCloudEncryptionKey());
         }
+
         map.putAll(getDistcpOptions(policy.getCustomProperties()));
         Properties prop = new Properties();
         for (Map.Entry<String, String> entry : map.entrySet()) {

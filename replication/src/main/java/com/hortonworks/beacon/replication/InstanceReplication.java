@@ -47,6 +47,7 @@ import com.hortonworks.beacon.metrics.ProgressUnit;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
 import com.hortonworks.beacon.util.HiveActionType;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
@@ -82,6 +83,8 @@ public abstract class InstanceReplication implements BeaconJob {
     protected Properties properties;
     private InstanceExecutionDetails instanceExecutionDetails;
 
+    protected BeaconReplicationPolicy beaconReplicationPolicy;
+
     protected FileSystem sourceFs;
     protected FileSystem targetFs;
 
@@ -90,6 +93,14 @@ public abstract class InstanceReplication implements BeaconJob {
         this.properties = details.getProperties();
         this.instanceExecutionDetails = new InstanceExecutionDetails();
     }
+
+    public InstanceReplication(ReplicationJobDetails details, BeaconReplicationPolicy replicationPolicy) {
+        this.details = details;
+        this.properties = details.getProperties();
+        this.beaconReplicationPolicy = replicationPolicy;
+        this.instanceExecutionDetails = new InstanceExecutionDetails();
+    }
+
 
     public Properties getProperties() {
         return properties;

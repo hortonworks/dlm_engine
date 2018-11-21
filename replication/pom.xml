@@ -48,6 +48,22 @@
             <groupId>com.hortonworks.beacon</groupId>
             <artifactId>beacon-metrics</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>beacon-replication-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>beacon-replication-fs</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>beacon-replication-hive</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
             <artifactId>beacon-entity</artifactId>

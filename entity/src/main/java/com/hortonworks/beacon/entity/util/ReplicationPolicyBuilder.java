@@ -35,7 +35,6 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
-import com.hortonworks.beacon.entity.entityNeo.WASBFSDataSet;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
@@ -300,7 +299,7 @@ public final class ReplicationPolicyBuilder {
                 String wasbAccount = cloudCred.getConfigs().get(CloudCred.Config.WASB_ACCOUNT_NAME);
                 URI uri = filePath.toUri();
                 String authority = uri.getAuthority();
-                return dataset.replace(authority, authority + "@" + wasbAccount + WASBFSDataSet.WASB_ENDPOINT);
+                return dataset.replace(authority, authority + "@" + wasbAccount + ".blob.core.windows.net");
             default:
                 throw new BeaconException("Cloud scheme not supported.");
         }

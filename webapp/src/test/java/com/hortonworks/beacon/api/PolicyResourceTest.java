@@ -102,7 +102,27 @@ public class PolicyResourceTest extends ResourceBaseTest {
         ReplicationPolicy replicationPolicy = testDataGenerator.getPolicy();
         PropertiesIgnoreCase policyRequest = replicationPolicy.asProperties();
         policyRequest.put("id", testDataGenerator.getRandomString("SyncId"));
-        sourceClient.syncPolicy(replicationPolicy.getName(), policyRequest, false);
+        targetClient.syncPolicy(replicationPolicy.getName(), policyRequest, false);
+    }
+
+    @Test
+    public void testUpdateSchedulePolicy() throws Exception {
+        final String policyName = testDataGenerator.getRandomString("FsPolicyUpdate");
+        String replicationPath = SOURCE_DIR + policyName;
+        targetFs.mkdirs(new Path(replicationPath));
+        testDataGenerator.createFSMocks(replicationPath);
+        ReplicationPolicy replicationPolicy = testDataGenerator.getPolicy(policyName, replicationPath);
+        targetClient.submitAndScheduleReplicationPolicy(policyName, replicationPolicy.asProperties());
+        PolicyList oldDef = targetClient.getPolicy(policyName);
+        assertEquals(120, (long) oldDef.getElements()[0].frequencyInSec);
+
+        ReplicationPolicy updatedPolicy = new ReplicationPolicy();
+        updatedPolicy.setFrequencyInSec(60);
+        PropertiesIgnoreCase properties = updatedPolicy.asProperties();
+        targetClient.updatePolicy(policyName, properties);
+        PolicyList newDef = targetClient.getPolicy(policyName);
+        assertEquals(60, (long) newDef.getElements()[0].frequencyInSec);
+        targetClient.deletePolicy(policyName, false);
     }
 
     @Test

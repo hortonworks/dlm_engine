@@ -36,6 +36,7 @@ import com.hortonworks.beacon.util.HiveActionType;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.util.StringFormat;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
 
 import java.util.Properties;
 
@@ -47,13 +48,14 @@ public final class BeaconJobImplFactory {
     private BeaconJobImplFactory() {
     }
 
-    public static BeaconJob getBeaconJobImpl(ReplicationJobDetails details) {
+    public static BeaconJob getBeaconJobImpl(ReplicationJobDetails details,
+                                             BeaconReplicationPolicy beaconReplicationPolicy) {
         ReplicationType replType = ReplicationHelper.getReplicationType(details.getType());
         switch (replType) {
             case FS:
-                return getFSReplication(details);
+                return getFSReplication(details, beaconReplicationPolicy);
             case HIVE:
-                return getHiveReplication(details);
+                return getHiveReplication(details, beaconReplicationPolicy);
             case PLUGIN:
                 return new PluginJobManager(details);
             case START:
@@ -65,23 +67,25 @@ public final class BeaconJobImplFactory {
         }
     }
 
-    private static BeaconJob getFSReplication(ReplicationJobDetails details) {
+    private static BeaconJob getFSReplication(ReplicationJobDetails details,
+                                              BeaconReplicationPolicy beaconReplicationPolicy) {
         Properties properties = details.getProperties();
         String executionType = properties.getProperty(FSDRProperties.EXECUTION_TYPE.getName());
         switch (executionType) {
             case "FS":
             case "FS_SNAPSHOT":
-                return new HDFSReplication(details);
+                return new HDFSReplication(details, beaconReplicationPolicy);
             case "FS_HCFS":
             case "FS_HCFS_SNAPSHOT":
-                return new HCFSReplication(details);
+                return new HCFSReplication(details, beaconReplicationPolicy);
             default:
                 throw new IllegalArgumentException(
                         StringFormat.format("FS execution type: {} is not supported.", executionType));
         }
     }
 
-    private static BeaconJob getHiveReplication(ReplicationJobDetails details) {
+    private static BeaconJob getHiveReplication(ReplicationJobDetails details,
+                                                BeaconReplicationPolicy replicationPolicy) {
         HiveActionType type = HiveActionType.valueOf(details.getProperties().getProperty(
                 HiveDRProperties.JOB_ACTION_TYPE.getName()
         ));
@@ -89,10 +93,10 @@ public final class BeaconJobImplFactory {
         BeaconJob hiveJob;
         switch (type) {
             case EXPORT:
-                hiveJob = new HiveExport(details);
+                hiveJob = new HiveExport(details, replicationPolicy);
                 break;
             case IMPORT:
-                hiveJob = new HiveImport(details);
+                hiveJob = new HiveImport(details, replicationPolicy);
                 break;
             default:
                 throw new IllegalArgumentException(

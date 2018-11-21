@@ -24,9 +24,13 @@ package com.hortonworks.beacon.replication.fs;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.Notification;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.client.entity.Retry;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterDao;
+import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
@@ -34,6 +38,8 @@ import com.hortonworks.beacon.service.BeaconStoreService;
 import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.tools.BeaconDBSetup;
 import com.hortonworks.beacon.util.ReplicationType;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
+import com.hortonworks.dlmengine.DataPluginManagerService;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
@@ -46,7 +52,9 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -75,6 +83,7 @@ public class FSTDEReplicationTest {
     private PropertiesIgnoreCase sourceClusterProps = new PropertiesIgnoreCase();
     private PropertiesIgnoreCase targetClusterProps = new PropertiesIgnoreCase();
     private Properties fsReplProps = new Properties();
+    private PolicyDao policyDao = new PolicyDao();
     private ClusterDao clusterDao = new ClusterDao();
 
 
@@ -94,11 +103,11 @@ public class FSTDEReplicationTest {
 
     };
 
-
-
     @BeforeClass
     public void init() throws Exception {
-        ServiceManager.getInstance().initialize(Collections.singletonList(BeaconStoreService.class.getName()), null);
+        List<String> dependentServices = Arrays.asList(DataPluginManagerService.class.getName());
+        ServiceManager.getInstance().initialize(Collections.singletonList(BeaconStoreService.class.getName()),
+                dependentServices);
         for (String[] sourceAttr : sourceAttrs) {
             sourceClusterProps.setProperty(sourceAttr[0], sourceAttr[1]);
         }
@@ -116,6 +125,19 @@ public class FSTDEReplicationTest {
 
         Cluster targetCluster = ClusterBuilder.buildCluster(targetClusterProps, TARGET);
         clusterDao.submitCluster(targetCluster);
+
+        ReplicationPolicy replicationPolicy = new ReplicationPolicy();
+        replicationPolicy.setName("test-tde-fs");
+        replicationPolicy.setType("fs");
+        replicationPolicy.setFrequencyInSec(60);
+        replicationPolicy.setSourceDataset(replicationDir.toString());
+        replicationPolicy.setTargetDataset(replicationDir.toString());
+        replicationPolicy.setTargetCluster(targetCluster.getName());
+        replicationPolicy.setSourceCluster(sourceCluster.getName());
+        replicationPolicy.setCustomProperties(new Properties());
+        replicationPolicy.setRetry(new Retry());
+        replicationPolicy.setNotification(new Notification("type", "to"));
+        policyDao.persistPolicy(replicationPolicy);
         RequestContext.get().commitTransaction();
 
         String[][] fsTdeReplAttrs = {
@@ -172,14 +194,22 @@ public class FSTDEReplicationTest {
         String type = fsReplProps.getProperty(FSDRProperties.JOB_TYPE.getName());
         String identifier = name + "-" + type;
         ReplicationJobDetails jobDetails = new ReplicationJobDetails(identifier, name, type, fsReplProps);
+        BeaconReplicationPolicy beaconReplicationPolicy = null;
+        try {
+            beaconReplicationPolicy = BeaconReplicationPolicy.create(name);
+            HDFSReplication fsImpl = new HDFSReplication(jobDetails, beaconReplicationPolicy);
+            JobContext jobContext = new JobContext();
+            jobContext.setJobInstanceId("/source/source/dummyRepl/0//00001@1");
+            fsImpl.init(jobContext);
+            fsImpl.performCopy(jobContext, name, ReplicationMetrics.JobType.MAIN);
+            String outputData = DFSTestUtil.readFile(tgtDFS, srcfilePath);
+            Assert.assertEquals(inputData, outputData);
+        } finally {
+            if (beaconReplicationPolicy != null) {
+                beaconReplicationPolicy.close();
+            }
+        }
 
-        HDFSReplication fsImpl = new HDFSReplication(jobDetails);
-        JobContext jobContext = new JobContext();
-        jobContext.setJobInstanceId("/source/source/dummyRepl/0//00001@1");
-        fsImpl.init(jobContext);
-        fsImpl.performCopy(jobContext, name, ReplicationMetrics.JobType.MAIN);
-        String outputData = DFSTestUtil.readFile(tgtDFS, srcfilePath);
-        Assert.assertEquals(inputData, outputData);
     }
 
     @Test
@@ -195,14 +225,21 @@ public class FSTDEReplicationTest {
         String type = fsReplProps.getProperty(FSDRProperties.JOB_TYPE.getName());
         String identifier = name + "-" + type;
         ReplicationJobDetails jobDetails = new ReplicationJobDetails(identifier, name, type, fsReplProps);
-
-        HDFSReplication fsImpl = new HDFSReplication(jobDetails);
-        JobContext jobContext = new JobContext();
-        jobContext.setJobInstanceId("/source/source/dummyRepl/0//00001@1");
-        fsImpl.init(jobContext);
-        fsImpl.performCopy(jobContext, name, ReplicationMetrics.JobType.MAIN);
-        String outputData = DFSTestUtil.readFile(tgtDFS, srcfilePath);
-        Assert.assertEquals(inputData, outputData);
+        BeaconReplicationPolicy beaconReplicationPolicy = null;
+        try {
+            beaconReplicationPolicy = BeaconReplicationPolicy.create(name);
+            HDFSReplication fsImpl = new HDFSReplication(jobDetails, beaconReplicationPolicy);
+            JobContext jobContext = new JobContext();
+            jobContext.setJobInstanceId("/source/source/dummyRepl/0//00001@1");
+            fsImpl.init(jobContext);
+            fsImpl.performCopy(jobContext, name, ReplicationMetrics.JobType.MAIN);
+            String outputData = DFSTestUtil.readFile(tgtDFS, srcfilePath);
+            Assert.assertEquals(inputData, outputData);
+        } finally {
+            if (beaconReplicationPolicy != null) {
+                beaconReplicationPolicy.close();
+            }
+        }
     }
 
     @AfterClass

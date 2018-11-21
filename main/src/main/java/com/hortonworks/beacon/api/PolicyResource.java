@@ -40,7 +40,6 @@ import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.StatusResult;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
-import com.hortonworks.beacon.entity.entityNeo.DataSet;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
@@ -70,6 +69,7 @@ import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.util.StringFormat;
 import com.hortonworks.dlmengine.BeaconReplicationPolicy;
+import com.hortonworks.dlmengine.DataSet;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +85,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -142,17 +141,22 @@ public class PolicyResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     @Timed(absolute = true, name="api.beacon.policy.update")
     public APIResult update(@PathParam("policy-name") String policyName, PropertiesIgnoreCase properties) {
+        BeaconReplicationPolicy beaconReplicationPolicy = null;
         try {
             LOG.info("Request for policy update is received. Policy-name: [{}]", policyName);
-            ReplicationPolicy policy = policyDao.getActivePolicy(policyName);
-            BeaconLogUtils.prefixPolicy(policyName, policy.getPolicyId());
-            ValidationUtil.validatePolicyOnUpdate(policy,  properties);
-            updatePolicy(policyName, properties);
+            beaconReplicationPolicy = BeaconReplicationPolicy.create(policyName);
+            BeaconLogUtils.prefixPolicy(policyName, beaconReplicationPolicy.getPolicyId());
+            ValidationUtil.validatePolicyOnUpdate(beaconReplicationPolicy,  properties);
+            updatePolicy(beaconReplicationPolicy, properties);
             return new APIResult(APIResult.Status.SUCCEEDED, "Policy [{}] update request succeeded.", policyName);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        } finally {
+            if (beaconReplicationPolicy != null) {
+                beaconReplicationPolicy.close();
+            }
         }
     }
 
@@ -336,6 +340,7 @@ public class PolicyResource extends AbstractResourceManager {
                                 @QueryParam("update") boolean update,
                                 PropertiesIgnoreCase requestProperties) {
         BeaconLogUtils.prefixPolicy(policyName);
+        BeaconReplicationPolicy beaconReplicationPolicy = null;
         try {
             BeaconLogUtils.prefixPolicy(
                     policyName,
@@ -352,8 +357,9 @@ public class PolicyResource extends AbstractResourceManager {
             requestProperties.remove(ReplicationPolicy.ReplicationPolicyFields.EXECUTIONTYPE.getName());
             ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName,
                     false);
+            beaconReplicationPolicy = BeaconReplicationPolicy.buildReplicationPolicy(replicationPolicy);
             modifyDBReplProperty(replicationPolicy, AlterDBProperty.SET);
-            APIResult result = syncPolicy(policyName, requestProperties, id, executionType, update);
+            APIResult result = syncPolicy(beaconReplicationPolicy, requestProperties, id, executionType, update);
             if (APIResult.Status.SUCCEEDED == result.getStatus()) {
                 LOG.info("Request for policy sync is processed successfully. Policy-name: [{}]", policyName);
             }
@@ -362,6 +368,10 @@ public class PolicyResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable);
+        } finally {
+            if (beaconReplicationPolicy != null) {
+                beaconReplicationPolicy.close();
+            }
         }
     }
 
@@ -483,16 +493,16 @@ public class PolicyResource extends AbstractResourceManager {
         LOG.info("Request for submit policy is processed successfully. Policy-name: [{}]", policy.getName());
     }
 
-    private synchronized APIResult updatePolicy(String policyName, PropertiesIgnoreCase properties)
-            throws BeaconException {
+    private synchronized APIResult updatePolicy(BeaconReplicationPolicy replicationPolicy,
+                                                PropertiesIgnoreCase properties) throws BeaconException {
         try {
-            ReplicationPolicy policy = policyDao.getActivePolicy(policyName);
-            boolean requireReschedule = requireJobReschedule(policy, properties);
-            updateSubmittedPolicy(policy, properties, true);
+            boolean requireReschedule = requireJobReschedule(replicationPolicy, properties);
+            updateSubmittedPolicy(replicationPolicy, properties, true);
             if (requireReschedule) {
-                rescheduleJob(policy, properties);
+                rescheduleJob(replicationPolicy, properties);
             }
-            return new APIResult(APIResult.Status.SUCCEEDED, "Update policy successful ({})", policyName);
+            return new APIResult(APIResult.Status.SUCCEEDED, "Update policy successful ({})",
+                    replicationPolicy.getName());
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         }
@@ -514,7 +524,7 @@ public class PolicyResource extends AbstractResourceManager {
         return false;
     }
 
-    private APIResult updateSubmittedPolicy(ReplicationPolicy policy, PropertiesIgnoreCase properties,
+    private APIResult updateSubmittedPolicy(BeaconReplicationPolicy policy, PropertiesIgnoreCase properties,
                                             boolean syncWithPeer) throws BeaconException {
         try {
             RequestContext.get().startTransaction();
@@ -530,7 +540,7 @@ public class PolicyResource extends AbstractResourceManager {
         }
     }
 
-    private void updatePolicyInternal(ReplicationPolicy policy, PropertiesIgnoreCase properties,
+    private void updatePolicyInternal(BeaconReplicationPolicy policy, PropertiesIgnoreCase properties,
                                       boolean syncWithPeer) throws BeaconException {
         // Prepare policy objects for existing and updated request.
         ReplicationPolicy updatedPolicy = ReplicationPolicyBuilder.buildPolicyWithPartialData(
@@ -544,7 +554,7 @@ public class PolicyResource extends AbstractResourceManager {
         PropertiesIgnoreCase newProps = new PropertiesIgnoreCase();
         findUpdatedAndNewCustomProps(updatedPolicy, policy, updatedProps, newProps);
         boolean snapshotsWasEnabled = Boolean.parseBoolean(policy.getEnableSnapshotBasedReplication());
-        ReplicationPolicy modifiedExistingPolicy = policy;
+        BeaconReplicationPolicy modifiedExistingPolicy = policy;
         addNewPropsAndUpdateOlderPropsValue(modifiedExistingPolicy, updatedPolicy, newProps, updatedProps);
         // persist policy update information
         policyDao.persistUpdatedPolicy(modifiedExistingPolicy, updatedProps, newProps);
@@ -565,56 +575,34 @@ public class PolicyResource extends AbstractResourceManager {
 
     }
 
-    private void deleteExistingAndDisallowSnapshots(ReplicationPolicy policy)
+    private void deleteExistingAndDisallowSnapshots(BeaconReplicationPolicy policy)
             throws BeaconException {
-        try {
-            String snapshotNamePrefix = FSSnapshotUtils.getSnapshotNamePrefix(policy.getName());
-            boolean isSourceClusterLocal = true;
-            boolean isHCFS = PolicyHelper.isPolicyHCFS(policy);
-            if (isHCFS) {
-                if (policy.getSourceCluster() != null) {
-                    isSourceClusterLocal = true;
-                } else {
-                    isSourceClusterLocal = false;
-                }
+        String snapshotNamePrefix = FSSnapshotUtils.getSnapshotNamePrefix(policy.getName());
+        boolean isSourceClusterLocal = true;
+        boolean isHCFS = PolicyHelper.isPolicyHCFS(policy);
+        if (isHCFS) {
+            if (policy.getSourceCluster() != null) {
+                isSourceClusterLocal = true;
             } else {
-                Cluster srcCluster = clusterDao.getActiveCluster(policy.getSourceCluster());
-                isSourceClusterLocal = srcCluster.isLocal();
+                isSourceClusterLocal = false;
             }
-            if (isSourceClusterLocal) {
-                String sourceDataset = policy.getSourceDataset();
-                DataSet srcDataSet = null;
-                try {
-                    srcDataSet = DataSet.create(sourceDataset, policy.getSourceCluster(), policy);
-                    deleteExistingSnapshots(policy.getName(), policy.getSourceCluster(), srcDataSet,
-                            snapshotNamePrefix);
-                    disallowSnapshots(policy.getName(), policy.getSourceCluster(), srcDataSet);
-                } finally {
-                    if (srcDataSet != null) {
-                        srcDataSet.close();
-                    }
-                }
-            } else {
-                String targetDataset = policy.getTargetDataset();
-                DataSet tgtDataSet = null;
-                try {
-                    tgtDataSet = DataSet.create(targetDataset, policy.getTargetCluster(), policy);
-                    deleteExistingSnapshots(policy.getName(), policy.getTargetCluster(), tgtDataSet,
-                            snapshotNamePrefix);
-                    disallowSnapshots(policy.getName(), policy.getTargetCluster(), tgtDataSet);
-                } finally {
-                    if (targetDataset != null) {
-                        tgtDataSet.close();
-                    }
-                }
-            }
-        } catch (IOException ex) {
-            throw new BeaconException(ex);
+        } else {
+            Cluster srcCluster = clusterDao.getActiveCluster(policy.getSourceCluster());
+            isSourceClusterLocal = srcCluster.isLocal();
+        }
+        if (isSourceClusterLocal) {
+            deleteExistingSnapshots(policy.getName(), policy.getSourceCluster(), policy.getSourceDatasetV2(),
+                    snapshotNamePrefix);
+            disallowSnapshots(policy.getName(), policy.getSourceCluster(), policy.getSourceDatasetV2());
+        } else {
+            deleteExistingSnapshots(policy.getName(), policy.getTargetCluster(), policy.getTargetDatasetV2(),
+                    snapshotNamePrefix);
+            disallowSnapshots(policy.getName(), policy.getTargetCluster(), policy.getTargetDatasetV2());
         }
     }
 
     private void deleteExistingSnapshots(String policyName, String clusterName, DataSet dataSet,
-                                         String snapshotNamePrefix) throws IOException {
+                                         String snapshotNamePrefix) throws BeaconException {
         if (dataSet.isSnapshottable()) {
             LOG.info("Deleting existing snapshot(s) for dataset [{}]", dataSet);
             dataSet.deleteAllSnapshots(snapshotNamePrefix);
@@ -623,18 +611,16 @@ public class PolicyResource extends AbstractResourceManager {
         }
     }
 
-    private void disallowSnapshots(String policyName, String clusterName, DataSet dataSet)
-            throws BeaconException, IOException {
+    private void disallowSnapshots(String policyName, String clusterName, DataSet dataSet) {
         try {
             boolean datasetInRepl = isDataSetInReplication(dataSet.toString(), policyName);
             if (!datasetInRepl) {
-                Cluster cluster = clusterDao.getActiveCluster(clusterName);
-                FSSnapshotUtils.disallowSnapshot(cluster, dataSet);
+                dataSet.disallowSnapshot();
                 LOG.info("Disallowed snapshots for dataset[{}]", dataSet.toString());
             } else {
                 LOG.info("Active policies are using the datasource [{}], so can not disallow snapshots", dataSet);
             }
-        } catch (org.apache.hadoop.hdfs.protocol.SnapshotException ex) {
+        } catch (BeaconException ex) {
             //Just log the exception and ignore
             LOG.warn("Couldn't disallow the snapshots on dataset {}, exception message - {}", dataSet.toString(),
                     ex.getMessage());
@@ -683,22 +669,31 @@ public class PolicyResource extends AbstractResourceManager {
                 policy.getFrequencyInSec());
     }
 
-    private APIResult syncPolicy(String policyName, PropertiesIgnoreCase requestProperties, String id,
-                                 String executionType, boolean update) throws BeaconException {
-        String message = null;
-        ReplicationPolicy policy = null;
+    private APIResult syncPolicy(BeaconReplicationPolicy replicationPolicy, PropertiesIgnoreCase requestProperties,
+                                 String id, String executionType, boolean update) throws BeaconException {
+        String message;
+        ReplicationPolicy policy;
+
         if (update) {
-            policy = policyDao.getActivePolicy(policyName);
-            updateSubmittedPolicy(policy, requestProperties, false);
-            message = "Update and sync policy successful ({})";
+            BeaconReplicationPolicy oldPolicy = null;
+            try {
+                oldPolicy = BeaconReplicationPolicy.create(replicationPolicy.getName());
+                updateSubmittedPolicy(oldPolicy, requestProperties, false);
+                message = "Update and sync policy successful ({})";
+            } finally {
+                if (oldPolicy != null) {
+                    oldPolicy.close();
+                }
+            }
+
         } else {
-            policy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName, false);
+            policy = ReplicationPolicyBuilder.buildPolicy(requestProperties, replicationPolicy.getName(), false);
             policy.setPolicyId(id);
             policy.setExecutionType(executionType);
             submit(policy, false);
             message = "Submit and sync policy successful ({})";
         }
-        return new APIResult(APIResult.Status.SUCCEEDED, message, policyName);
+        return new APIResult(APIResult.Status.SUCCEEDED, message, replicationPolicy.getName());
     }
 
     private void findUpdatedAndNewCustomProps(ReplicationPolicy updatedPolicy, ReplicationPolicy existingPolicy,

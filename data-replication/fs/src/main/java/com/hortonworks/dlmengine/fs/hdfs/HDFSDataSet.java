@@ -53,8 +53,9 @@ public class HDFSDataSet extends FSDataSet {
         this.beaconCluster = new BeaconCluster(clusterName);
     }
 
-    public HDFSDataSet(FileSystem fileSystem, String path) throws BeaconException {
+    public HDFSDataSet(FileSystem fileSystem, String path, String clusterName) throws BeaconException {
         super(fileSystem, path);
+        this.beaconCluster = new BeaconCluster(clusterName);
     }
 
     @Override
@@ -144,7 +145,7 @@ public class HDFSDataSet extends FSDataSet {
             dfs.allowSnapshot(path);
             SnapshotListing.get().updateListing(beaconCluster, Path.SEPARATOR);
         } catch (IOException e) {
-            throw new BeaconException(e);
+            throw new BeaconException("Unable to mark dataset as snapshottable:", e);
         }
     }
 

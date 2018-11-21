@@ -25,14 +25,14 @@ package com.hortonworks.beacon.replication.fs;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.Notification;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.client.entity.Retry;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
-import com.hortonworks.beacon.entity.entityNeo.DataSet;
-import com.hortonworks.beacon.entity.entityNeo.FSDataSet;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterDao;
-import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
@@ -42,6 +42,10 @@ import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.tools.BeaconDBSetup;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationType;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
+import com.hortonworks.dlmengine.DataPluginManagerService;
+import com.hortonworks.dlmengine.DataSet;
+import com.hortonworks.dlmengine.fs.FSDataSet;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
@@ -91,6 +95,7 @@ public class HDFSReplicationTest {
     private Properties fsSnapshotReplProps = new Properties();
     private Properties fsReplProps;
     private ClusterDao clusterDao = new ClusterDao();
+    private PolicyDao policyDao = new PolicyDao();
 
 
     private String[][] sourceAttrs = {
@@ -111,8 +116,9 @@ public class HDFSReplicationTest {
 
     @BeforeClass
     public void init() throws Exception {
-        RequestContext.setInitialValue();
-        ServiceManager.getInstance().initialize(Collections.singletonList(BeaconStoreService.class.getName()), null);
+        List<String> dependentServices = Arrays.asList(DataPluginManagerService.class.getName());
+        ServiceManager.getInstance().initialize(Collections.singletonList(BeaconStoreService.class.getName()),
+                dependentServices);
         for (String[] sourceAttr : sourceAttrs) {
             sourceClusterProps.setProperty(sourceAttr[0], sourceAttr[1]);
         }
@@ -123,12 +129,19 @@ public class HDFSReplicationTest {
 
         // Empty table creation, not actual data is populated.
         BeaconDBSetup.setupDB();
+        RequestContext.setInitialValue();
         RequestContext.get().startTransaction();
         Cluster sourceCluster = ClusterBuilder.buildCluster(sourceClusterProps, SOURCE);
         clusterDao.submitCluster(sourceCluster);
 
         Cluster targetCluster = ClusterBuilder.buildCluster(targetClusterProps, TARGET);
         clusterDao.submitCluster(targetCluster);
+        ReplicationPolicy fsReplPolicy = createReplicationPolicy("testFSReplication", sourceDir.toString(),
+                targetDir.toString(), sourceCluster.getName(), targetCluster.getName());
+        ReplicationPolicy fsSnapshotPolicy = createReplicationPolicy("testFSSnapshot", sourceSnapshotDir.toString(),
+                targetSnapshotDir.toString(), sourceCluster.getName(), targetCluster.getName());
+        policyDao.persistPolicy(fsReplPolicy);
+        policyDao.persistPolicy(fsSnapshotPolicy);
         RequestContext.get().commitTransaction();
 
         String[][] fsSnapshotReplAttrs = {
@@ -178,6 +191,22 @@ public class HDFSReplicationTest {
         }
     }
 
+    private ReplicationPolicy createReplicationPolicy(String name, String source, String dest,
+                                                      String srcCluster, String tgtCluster) {
+        ReplicationPolicy replicationPolicy = new ReplicationPolicy();
+        replicationPolicy.setName(name);
+        replicationPolicy.setType("fs");
+        replicationPolicy.setFrequencyInSec(60);
+        replicationPolicy.setSourceDataset(source);
+        replicationPolicy.setTargetDataset(dest);
+        replicationPolicy.setTargetCluster(srcCluster);
+        replicationPolicy.setSourceCluster(tgtCluster);
+        replicationPolicy.setCustomProperties(new Properties());
+        replicationPolicy.setRetry(new Retry());
+        replicationPolicy.setNotification(new Notification("type", "to"));
+        return replicationPolicy;
+    }
+
     @AfterClass
     public void teardown() {
         RequestContext.get().clear();
@@ -194,11 +223,11 @@ public class HDFSReplicationTest {
         Assert.assertEquals(miniDfs.exists(new Path(targetDataset)), false);
         Configuration conf = new Configuration();
         conf.set(BeaconConstants.FS_DEFAULT_NAME_KEY, FS_ENDPOINT);
-        DataSet dataSet = FSDataSet.create(miniDfs, targetDataset);
+        DataSet dataSet = FSDataSet.create(miniDfs, targetDataset, TARGET);
         FSSnapshotUtils.createFSDirectory(miniDfs, fsStatus.getPermission(),
                 fsStatus.getOwner(), fsStatus.getGroup(), targetDataset);
         if (isSourceDirSnapshottable) {
-            FSSnapshotUtils.allowSnapshot(ClusterHelper.getActiveCluster(TARGET), dataSet);
+            dataSet.allowSnapshot();
         }
         Assert.assertEquals(miniDfs.exists(new Path(targetDataset)), true);
         isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(TARGET, targetDataset);
@@ -275,21 +304,29 @@ public class HDFSReplicationTest {
         String type = fsReplProps.getProperty(FSDRProperties.JOB_TYPE.getName());
         String identifier = name + "-" + type;
         ReplicationJobDetails jobDetails = new ReplicationJobDetails(identifier, name, type, fsReplProps);
+        BeaconReplicationPolicy beaconReplicationPolicy = null;
+        try {
+            beaconReplicationPolicy = BeaconReplicationPolicy.create(name);
+            HDFSReplication fsImpl = new HDFSReplication(jobDetails, beaconReplicationPolicy);
+            JobContext jobContext = new JobContext();
+            jobContext.setJobInstanceId("/source/source/dummyRepl/0//00001@1");
+            fsImpl.init(jobContext);
+            List<String> directoryPath = Arrays.asList(".dir1", "_temporary", "test");
+            // create dir(s), invoke copy, check file in target
+            for (String dir: directoryPath) {
+                Path path = new Path(sourceDir, dir);
+                miniDfs.mkdir(path, fsPermission);
+            }
+            fsImpl.performCopy(jobContext, name, ReplicationMetrics.JobType.MAIN);
+            Assert.assertTrue(miniDfs.exists(new Path(targetDir, "test")));
+            Assert.assertFalse(miniDfs.exists(new Path(targetDir, ".dir1")));
+            Assert.assertFalse(miniDfs.exists(new Path(targetDir, "_temporary")));
 
-        HDFSReplication fsImpl = new HDFSReplication(jobDetails);
-        JobContext jobContext = new JobContext();
-        jobContext.setJobInstanceId("/source/source/dummyRepl/0//00001@1");
-        fsImpl.init(jobContext);
-        List<String> directoryPath = Arrays.asList(".dir1", "_temporary", "test");
-        // create dir(s), invoke copy, check file in target
-        for (String dir: directoryPath) {
-            Path path = new Path(sourceDir, dir);
-            miniDfs.mkdir(path, fsPermission);
+        } finally {
+            if (beaconReplicationPolicy != null) {
+                beaconReplicationPolicy.close();
+            }
         }
-        fsImpl.performCopy(jobContext, name, ReplicationMetrics.JobType.MAIN);
-        Assert.assertTrue(miniDfs.exists(new Path(targetDir, "test")));
-        Assert.assertFalse(miniDfs.exists(new Path(targetDir, ".dir1")));
-        Assert.assertFalse(miniDfs.exists(new Path(targetDir, "_temporary")));
 
     }
 
@@ -300,34 +337,42 @@ public class HDFSReplicationTest {
         String identifier = name + "-" + type;
         ReplicationJobDetails jobDetails = new ReplicationJobDetails(identifier, name, type, fsSnapshotReplProps);
 
-        HDFSReplication fsImpl = new HDFSReplication(jobDetails);
-        JobContext jobContext = new JobContext();
-        jobContext.setJobInstanceId("/source/source/dummyRepl/0/1495688249800/00001@1");
-        fsImpl.init(jobContext);
-        // create dir1, create snapshot, invoke copy, check file in target, create snapshot on target
-        Path dir1 = new Path(sourceSnapshotDir, "dir1");
-        miniDfs.mkdir(dir1, fsPermission);
-        miniDfs.createSnapshot(sourceSnapshotDir, "snapshot1");
-        fsImpl.performCopy(jobContext, "snapshot1", ReplicationMetrics.JobType.MAIN);
-        miniDfs.createSnapshot(targetSnapshotDir, "snapshot1");
-        Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
+        BeaconReplicationPolicy beaconReplicationPolicy = null;
+        try {
+            beaconReplicationPolicy = BeaconReplicationPolicy.create(name);
+            HDFSReplication fsImpl = new HDFSReplication(jobDetails, beaconReplicationPolicy);
+            JobContext jobContext = new JobContext();
+            jobContext.setJobInstanceId("/source/source/dummyRepl/0/1495688249800/00001@1");
+            fsImpl.init(jobContext);
+            // create dir1, create snapshot, invoke copy, check file in target, create snapshot on target
+            Path dir1 = new Path(sourceSnapshotDir, "dir1");
+            miniDfs.mkdir(dir1, fsPermission);
+            miniDfs.createSnapshot(sourceSnapshotDir, "snapshot1");
+            fsImpl.performCopy(jobContext, "snapshot1", ReplicationMetrics.JobType.MAIN);
+            miniDfs.createSnapshot(targetSnapshotDir, "snapshot1");
+            Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
 
-        // create dir2, create snapshot, invoke copy, check dir in target, create snapshot on target
-        Path dir2 = new Path(sourceSnapshotDir, "dir2");
-        miniDfs.mkdir(dir2, fsPermission);
-        miniDfs.createSnapshot(sourceSnapshotDir, "snapshot2");
-        fsImpl.performCopy(jobContext,  "snapshot2", ReplicationMetrics.JobType.MAIN);
-        miniDfs.createSnapshot(targetSnapshotDir, "snapshot2");
-        Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
-        Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir2")));
+            // create dir2, create snapshot, invoke copy, check dir in target, create snapshot on target
+            Path dir2 = new Path(sourceSnapshotDir, "dir2");
+            miniDfs.mkdir(dir2, fsPermission);
+            miniDfs.createSnapshot(sourceSnapshotDir, "snapshot2");
+            fsImpl.performCopy(jobContext, "snapshot2", ReplicationMetrics.JobType.MAIN);
+            miniDfs.createSnapshot(targetSnapshotDir, "snapshot2");
+            Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
+            Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir2")));
 
-        // delete dir1, create snapshot, invoke copy, check file not in target
-        miniDfs.delete(dir1, true);
-        miniDfs.createSnapshot(sourceSnapshotDir, "snapshot3");
-        fsImpl.performCopy(jobContext,  "snapshot3", ReplicationMetrics.JobType.MAIN);
-        miniDfs.createSnapshot(targetSnapshotDir, "snapshot3");
-        Assert.assertFalse(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
-        Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir2")));
+            // delete dir1, create snapshot, invoke copy, check file not in target
+            miniDfs.delete(dir1, true);
+            miniDfs.createSnapshot(sourceSnapshotDir, "snapshot3");
+            fsImpl.performCopy(jobContext, "snapshot3", ReplicationMetrics.JobType.MAIN);
+            miniDfs.createSnapshot(targetSnapshotDir, "snapshot3");
+            Assert.assertFalse(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
+            Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir2")));
+        } finally {
+            if (beaconReplicationPolicy != null) {
+                beaconReplicationPolicy.close();
+            }
+        }
 
     }
 

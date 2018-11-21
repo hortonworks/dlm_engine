@@ -39,6 +39,7 @@ import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.HiveActionType;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -67,8 +68,8 @@ public class HiveExport extends InstanceReplication {
     private Statement sourceStatement = null;
     private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
 
-    public HiveExport(ReplicationJobDetails details) {
-        super(details);
+    public HiveExport(ReplicationJobDetails details, BeaconReplicationPolicy replicationPolicy) {
+        super(details, replicationPolicy);
         database = properties.getProperty(HiveDRProperties.SOURCE_DATASET.getName());
     }
 

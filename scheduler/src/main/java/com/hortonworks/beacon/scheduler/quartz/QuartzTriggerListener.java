@@ -24,7 +24,6 @@ package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
@@ -35,6 +34,7 @@ import com.hortonworks.beacon.scheduler.StoreHelper;
 import com.hortonworks.beacon.scheduler.workflow.BeaconWorkflow;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.bean.PolicyBean;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -64,6 +64,7 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
 
     @Override
     public void triggerFired(Trigger trigger, JobExecutionContext context) {
+        BeaconReplicationPolicy beaconReplicationPolicy = null;
         try {
             RequestContext.setInitialValue();
             JobKey jobKey = trigger.getJobKey();
@@ -83,15 +84,15 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
             SchedulerCache cache = SchedulerCache.get();
             synchronized (cache) {
                 // Check the parallel for the START node only.
+                beaconReplicationPolicy = BeaconReplicationPolicy.create(policyBean.getName());
                 if (BeaconQuartzScheduler.START_NODE_GROUP.equals(jobKey.getGroup())) {
                     boolean exist = cache.exists(jobKey.getName());
                     if (exist) {
                         LOG.info("Setting the parallel flag for job: [{}]", jobKey);
                         context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.IS_PARALLEL.getValue(), true);
                     } else {
-                        PolicyDao policyDao = new PolicyDao();
-                        List<ReplicationJobDetails> workflowList = BeaconWorkflow.get().createChainedWorkflow(policyDao
-                                .getReplicationPolicy(policyBean));
+                        List<ReplicationJobDetails> workflowList = BeaconWorkflow
+                                .get().createChainedWorkflow(beaconReplicationPolicy);
                         BeaconQuartzScheduler.get().linkWorkflow(workflowList, trigger.getJobKey().getName());
                         setJobCount(context, workflowList.size() + 1);
                         cache.insert(jobKey.getName(), new InstanceSchedulerDetail());
@@ -102,6 +103,9 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
             LOG.error("Exception in trigger fired", e);
             trigger.getJobDataMap().put(QuartzDataMapEnum.TRIGGER_FIRE_FAILED.getValue(), true);
         } finally {
+            if (beaconReplicationPolicy != null) {
+                beaconReplicationPolicy.close();
+            }
             RequestContext.get().closeEntityManager();
         }
     }

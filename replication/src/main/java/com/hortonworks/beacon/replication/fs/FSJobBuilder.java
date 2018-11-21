@@ -26,6 +26,7 @@ import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
 
 import java.util.Arrays;
 import java.util.List;
@@ -37,7 +38,7 @@ import java.util.Properties;
 
 public class FSJobBuilder extends JobBuilder {
 
-    public List<ReplicationJobDetails> buildJob(ReplicationPolicy policy) throws BeaconException {
+    public List<ReplicationJobDetails> buildJob(BeaconReplicationPolicy policy) throws BeaconException {
         // Add any default plugin relates jobs first
 
 

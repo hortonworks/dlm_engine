@@ -25,7 +25,6 @@ package com.hortonworks.beacon.entity.util;
 import com.hortonworks.beacon.HiveServerAuthenticationType;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Cluster.ClusterFields;
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
@@ -33,7 +32,6 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.BeaconCluster;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.HiveDRProperties;
-import com.hortonworks.beacon.entity.entityNeo.DataSet;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.HiveActionType;
 import com.hortonworks.beacon.util.KnoxTokenUtils;
@@ -129,7 +127,7 @@ public final class HiveDRUtils {
         }
     }
 
-    public static String setConfigParameters(Properties properties) throws BeaconException {
+    public static String getConfigParameters(Properties properties, Configuration fsConf) throws BeaconException {
         StringBuilder builder = new StringBuilder();
         String queryId = generateQueryId(properties);
         properties.setProperty(HIVE_QUERY_ID, queryId);
@@ -178,20 +176,6 @@ public final class HiveDRUtils {
 
             String cloudCredId = properties.getProperty(ReplicationPolicyFields.CLOUDCRED.getName());
             if (StringUtils.isNotBlank(cloudCredId)) {
-                String policyName = properties.getProperty(ReplicationPolicyFields.NAME.getName());
-                PolicyDao policyDao = new PolicyDao();
-                ReplicationPolicy replicationPolicy = policyDao.getActivePolicy(policyName);
-                Configuration fsConf;
-                DataSet dataSet = null;
-                try {
-                    dataSet = DataSet.create(replicationPolicy.getTargetDataset(), replicationPolicy.getTargetCluster(),
-                            replicationPolicy);
-                    fsConf = dataSet.getHadoopConf();
-                } finally {
-                    if (dataSet != null) {
-                        dataSet.close();
-                    }
-                }
                 appendConfig(builder, fsConf);
             }
             setHMSKerberosProperties(builder, properties);

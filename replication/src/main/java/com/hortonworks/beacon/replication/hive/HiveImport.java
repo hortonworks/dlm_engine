@@ -41,6 +41,7 @@ import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.util.HiveActionType;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hive.jdbc.HiveStatement;
 import org.slf4j.Logger;
@@ -64,8 +65,8 @@ public class HiveImport extends InstanceReplication {
     private Statement targetStatement = null;
     private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
 
-    public HiveImport(ReplicationJobDetails details) {
-        super(details);
+    public HiveImport(ReplicationJobDetails details, BeaconReplicationPolicy replicationPolicy) {
+        super(details, replicationPolicy);
         this.database = properties.getProperty(HiveDRProperties.TARGET_DATASET.getName());
     }
 
@@ -122,7 +123,8 @@ public class HiveImport extends InstanceReplication {
         LOG.info("Performing import for database: {}", database);
         ReplCommand replCommand = new ReplCommand(database);
         String replLoad = replCommand.getReplLoad(dumpDirectory);
-        String configParams = HiveDRUtils.setConfigParameters(properties);
+        String configParams = HiveDRUtils.getConfigParameters(properties,
+                beaconReplicationPolicy.getTargetDatasetV2().getHadoopConf());
         if (StringUtils.isNotBlank(configParams)) {
             replLoad += " WITH (" + configParams + ")";
         }

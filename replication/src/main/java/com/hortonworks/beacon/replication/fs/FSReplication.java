@@ -34,6 +34,7 @@ import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.util.FSUtils;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
@@ -66,8 +67,8 @@ public abstract class FSReplication extends InstanceReplication {
     protected Job job;
     private PolicyDao policyDao = new PolicyDao();
 
-    FSReplication(ReplicationJobDetails details) {
-        super(details);
+    FSReplication(ReplicationJobDetails details, BeaconReplicationPolicy replicationPolicy) {
+        super(details, replicationPolicy);
         isSnapshot = false;
     }
 

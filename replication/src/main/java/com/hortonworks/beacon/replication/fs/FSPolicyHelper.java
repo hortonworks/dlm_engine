@@ -32,10 +32,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hortonworks.beacon.Destination;
 import com.hortonworks.beacon.SchemeType;
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.entity.entityNeo.FSDataSet;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.util.FSUtils;
+import com.hortonworks.dlmengine.BeaconReplicationPolicy;
+import com.hortonworks.dlmengine.fs.FSDataSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
@@ -62,7 +63,7 @@ public final class FSPolicyHelper {
 
     // Should not have any properties coming cluster entity.
     // Cluster endpoints (properties) will be fetched by replication job.
-    public static Properties buildFSReplicationProperties(final ReplicationPolicy policy) throws BeaconException {
+    public static Properties buildFSReplicationProperties(final BeaconReplicationPolicy policy) throws BeaconException {
         Map<String, String> map = new HashMap<>();
         map.put(FSDRProperties.SOURCE_CLUSTER_NAME.getName(), policy.getSourceCluster());
         map.put(FSDRProperties.TARGET_CLUSTER_NAME.getName(), policy.getTargetCluster());
@@ -76,24 +77,10 @@ public final class FSPolicyHelper {
         map.put(FSDRProperties.JOB_FREQUENCY.getName(), String.valueOf(policy.getFrequencyInSec()));
         map.put(FSDRProperties.START_TIME.getName(), DateUtil.formatDate(policy.getStartTime()));
         map.put(FSDRProperties.END_TIME.getName(), DateUtil.formatDate(policy.getEndTime()));
-        FSDataSet sourceDataSet = null;
-        FSDataSet targetDataSet = null;
-        try {
-            sourceDataSet = FSDataSet.create(policy.getSourceDataset(), policy.getSourceCluster(), policy);
-            map.put(FSDRProperties.SOURCE_DATASET.getName(), sourceDataSet.getResolvedPath());
-        } finally {
-            if (sourceDataSet != null) {
-                sourceDataSet.close();
-            }
-        }
-        try {
-            targetDataSet = FSDataSet.create(policy.getTargetDataset(), policy.getTargetCluster(), policy);
-            map.put(FSDRProperties.TARGET_DATASET.getName(), targetDataSet.getResolvedPath());
-        } finally {
-            if (targetDataSet != null) {
-                targetDataSet.close();
-            }
-        }
+        FSDataSet srcDataSet = (FSDataSet) policy.getSourceDatasetV2();
+        map.put(FSDRProperties.SOURCE_DATASET.getName(), srcDataSet.getPath().toString());
+        FSDataSet targetDataSet = (FSDataSet) policy.getTargetDatasetV2();
+        map.put(FSDRProperties.TARGET_DATASET.getName(), targetDataSet.getPath().toString());
         Properties customProp = policy.getCustomProperties();
         map.put(FSDRProperties.DISTCP_MAX_MAPS.getName(),
                 customProp.getProperty(FSDRProperties.DISTCP_MAX_MAPS.getName()));

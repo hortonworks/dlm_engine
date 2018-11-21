@@ -108,6 +108,7 @@ def init_server(webapp_dir):
     # Expand war for jars in WEB-INF/lib
     create_app_dir(webapp_dir, app_dir, 'beacon' + '.war')
     cp = [conf, os.path.join(app_dir, 'WEB-INF', 'lib', 'beacon-distcp.jar'),os.path.join(app_dir, 'WEB-INF', 'lib', 'javax.servlet-3.0.0.v201112011016.jar'),
+          '/etc/hadoop/conf/',
           get_hadoop_classpath(),
           os.path.join(app_dir, 'WEB-INF', 'classes'),
           os.path.join(app_dir, 'WEB-INF', 'lib', '*')]
@@ -150,8 +151,8 @@ def get_hadoop_classpath():
     global base_dir
 
     # Get hadoop class path from hadoop command
-    hadoop_cmd = get_hadoop_command()
-    #hadoop_cmd = None      #uncomment to run local
+    # hadoop_cmd = get_hadoop_command()
+    hadoop_cmd = None      #uncomment to run local
     if hadoop_cmd:
         p = subprocess.Popen([hadoop_cmd, 'classpath'], stdout=subprocess.PIPE)
         output = p.communicate()[0]

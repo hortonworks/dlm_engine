@@ -178,7 +178,11 @@ public abstract class BeaconReplicationPolicy<S extends DataSet, T extends DataS
     private void validateDataSetConflict() throws BeaconStoreException, ValidationException {
         BeaconNotification notification = new BeaconNotification();
         // Source dataset conflict validation.
-        boolean sourceDataConflictAndTgtClusterConflict = isSourceDataConflictAndTgtClusterConflict();
+        boolean sourceDataConflictAndTgtClusterConflict = false;
+        if (this.getTargetCluster() != null) {
+            // if not cloud dataset
+            sourceDataConflictAndTgtClusterConflict = isSourceDataConflictAndTgtClusterConflict();
+        }
         if (sourceDataConflictAndTgtClusterConflict) {
             notification.addError(StringFormat.format("Source dataset {} already in replication"
                             + " on same target cluster {}",

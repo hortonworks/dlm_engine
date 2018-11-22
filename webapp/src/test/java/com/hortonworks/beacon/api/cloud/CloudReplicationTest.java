@@ -511,6 +511,47 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
     }
 
     @Test
+    public void hdfsCloudOneToManyReplicationTest() throws Exception {
+        CloudCred cloudCred = getCloudCred();
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName1 = testDataGenerator.getRandomString("HDFSCloudPolicy");
+        final String policyName2 = testDataGenerator.getRandomString("HDFSCloudPolicy");
+
+        String srcDataSet = SOURCE_DIR + policyName1;
+        String tgtDataSet1 = getCloudDataSet();
+        String tgtDataSet2 = getCloudDataSet();
+
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        ReplicationPolicy policy1 = testDataGenerator.getPolicy(policyName1, srcDataSet, tgtDataSet1, "FS", 60,
+                sourceCluster.getName(), null, cloudProps);
+        testDataGenerator.createFSMocks(srcDataSet);
+
+        targetClient.submitAndScheduleReplicationPolicy(policyName1, policy1.asProperties());
+        waitOnCondition(50000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName1);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+
+        ReplicationPolicy policy2 = testDataGenerator.getPolicy(policyName2, srcDataSet, tgtDataSet2, "FS", 60,
+                sourceCluster.getName(), null, cloudProps);
+        targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties());
+        waitOnCondition(50000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName2);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        targetClient.deletePolicy(policyName1, false);
+        targetClient.deletePolicy(policyName2, false);
+    }
+
+    @Test
     public void testSubmitCloudCred() throws Exception {
         CloudCred cloudCred = getCloudCred();
         String cloudCredId = targetClient.submitCloudCred(cloudCred);

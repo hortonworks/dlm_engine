@@ -38,6 +38,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
+import static com.hortonworks.beacon.constants.BeaconConstants.HDP_VERSION;
+
 /**
  * Beacon admin resource management operations as REST API. Root resource (exposed at "myresource" path).
  */
@@ -86,6 +88,9 @@ public class AdminResource extends AbstractResourceManager {
         }
         result.setRangerCreateDenyPolicy(PropertiesUtil.getInstance().
                 getBooleanProperty("beacon.ranger.plugin.create.denypolicy", true));
+
+        // HDP Version to be used to verify cluster compatibility for replication.
+        result.setHdpVersion(System.getenv(HDP_VERSION));
 
         //Beacon 1.1 features
         result.setReplicationTDE(true);

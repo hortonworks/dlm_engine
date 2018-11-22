@@ -92,5 +92,5 @@ public final class BeaconConstants {
     public static final String ERROR_CODE = "ERROR_CODE";
     public static final String DATASET_BOOTSTRAP = "DATASET_BOOTSTRAP";
     public static final String DATABASE_BOOTSTRAP = "bootstrap";
-
+    public static final String HDP_VERSION = "HDP_VERSION";
 }

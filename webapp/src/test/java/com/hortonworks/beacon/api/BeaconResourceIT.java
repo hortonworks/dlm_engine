@@ -77,6 +77,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
+import static com.hortonworks.beacon.test.ProcessHelper.HDP_DEFAULT_VERSION;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
@@ -1508,6 +1509,8 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(clusterUpdateSupported, "true");
         String policyEdit = jsonObject.getString("policy_edit");
         assertEquals(policyEdit, "true");
+        String hdpVersion = jsonObject.getString("hdpVersion");
+        assertEquals(hdpVersion, HDP_DEFAULT_VERSION);
     }
 
     @Test(dependsOnMethods = "testPairCluster")

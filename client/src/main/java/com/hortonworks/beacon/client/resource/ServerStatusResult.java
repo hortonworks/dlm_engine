@@ -49,6 +49,9 @@ public class ServerStatusResult {
     private String security;
 
     @XmlElement
+    private String hdpVersion;
+
+    @XmlElement
     private boolean wireEncryption;
 
     @XmlElement
@@ -283,6 +286,14 @@ public class ServerStatusResult {
 
     public void setCloudHosted(boolean cloudHosted) {
         this.cloudHosted = cloudHosted;
+    }
+
+    public String getHdpVersion() {
+        return hdpVersion;
+    }
+
+    public void setHdpVersion(String hdpVersion) {
+        this.hdpVersion = hdpVersion;
     }
 
     public ServerStatusResult() {

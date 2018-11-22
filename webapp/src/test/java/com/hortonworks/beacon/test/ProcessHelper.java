@@ -30,6 +30,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.hortonworks.beacon.constants.BeaconConstants.HDP_VERSION;
+
 /**
  * Launch beacon server as process.
  */
@@ -37,6 +39,8 @@ public final class ProcessHelper {
 
     private ProcessHelper() {
     }
+
+    public static final String HDP_DEFAULT_VERSION = "2.6.5.1050";
 
     private static final Logger LOG = LoggerFactory.getLogger(ProcessHelper.class);
 
@@ -63,6 +67,7 @@ public final class ProcessHelper {
         command.addAll(Arrays.asList(arguments));
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
+        processBuilder.environment().put(HDP_VERSION, HDP_DEFAULT_VERSION);
         processBuilder.inheritIO();
         return processBuilder;
     }

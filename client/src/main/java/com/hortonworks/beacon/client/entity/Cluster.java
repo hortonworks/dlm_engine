@@ -69,6 +69,7 @@ public class Cluster extends Entity {
         HIVE_WAREHOUSE("hive.metastore.warehouse.dir"),
         HIVE_METASTORE_PRINCIPAL("hive.metastore.kerberos.principal"),
         HIVE_INHERIT_PERMS("hive.warehouse.subdir.inherit.perms"),
+        HIVE_DML_EVENTS("hive.metastore.dml.events"),
         HIVE_FUNCTIONS_DIR("hive.repl.replica.functions.root.dir"),
         HIVE_SERVER_AUTHENTICATION("hive.server2.authentication"),
         CLOUDDATALAKE("cloudDataLake"),

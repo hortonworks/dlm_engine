@@ -40,6 +40,7 @@ public class S3CloudReplicationTest extends CloudReplicationTest {
                 testDataGenerator.getRandomString("s3://dummy/warehouse"));
         customProps.setProperty("hive.metastore.uris", "jdbc:hive2://local-" + ClusterType.TARGET);
         customProps.setProperty("hive.warehouse.subdir.inherit.perms", "false");
+        customProps.setProperty("hive.metastore.dml.events", "false");
         customProps.setProperty("hive.repl.replica.functions.root.dir", "s3://dummy/warehouse-root");
         return customProps;
     }

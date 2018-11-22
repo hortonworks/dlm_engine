@@ -134,27 +134,45 @@ class BEACON110ServiceAdvisor(service_advisor.ServiceAdvisor):
       if 'HDFS' in servicesList and 'core-site' in services['configurations']:
         putHdfsCoreSiteProperty('hadoop.proxyuser.{0}.hosts'.format(hive_user), '*')
 
-      if not self.is_cloud_warehouse(hive_site['hive.metastore.warehouse.dir']):
-        putHiveSiteProperty('hive.metastore.dml.events', 'true')
-        putHiveSiteProperty('hive.repl.cm.enabled', 'true')
+      if self.is_cloud_warehouse(hive_site['hive.metastore.warehouse.dir']):
+        putHiveSiteProperty('hive.metastore.dml.events', 'false')
+        putHiveSiteProperty('hive.repl.cm.enabled', 'false')
+        putHiveSiteProperty('hive.warehouse.subdir.inherit.perms', 'false')
         services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.metastore.dml.events'})
         services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.repl.cm.enabled'})
-        # split existing values, append new one and merge back
-        listeners_delimiter = ","
-        listeners_values = set(['org.apache.hive.hcatalog.listener.DbNotificationListener'])
-        if hive_site and 'hive.metastore.transactional.event.listeners' in hive_site and hive_site['hive.metastore.transactional.event.listeners'] is not None:
-          listeners_values.update(
-            [item.strip() for item in hive_site['hive.metastore.transactional.event.listeners'].split(listeners_delimiter)
-             if item.strip() != ""]
-          )
-        listeners_property_value = listeners_delimiter.join(listeners_values)
-        putHiveSiteProperty('hive.metastore.transactional.event.listeners', listeners_property_value)
+        services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.warehouse.subdir.inherit.perms'})
+        putHiveSiteProperty('hive.metastore.transactional.event.listeners', ' ')
+        putHiveSiteProperty('hive.metastore.pre.event.listeners', ' ')
         services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.metastore.transactional.event.listeners'})
+        services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.metastore.pre.event.listeners'})
 
         if hive_site:
           hive_home_folder = os.path.dirname(hive_site['hive.metastore.warehouse.dir'])
-          putHiveSiteProperty('hive.repl.cmrootdir', os.path.join(hive_home_folder, 'cmroot'))
-          putHiveSiteProperty('hive.repl.rootdir', os.path.join(hive_home_folder, 'repl'))
+          putHiveSiteProperty('hive.repl.replica.functions.root.dir',os.path.join(hive_home_folder, 'replfunctions'))
+          services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.repl.replica.functions.root.dir'})
+      else:
+          putHiveSiteProperty('hive.metastore.dml.events', 'true')
+          putHiveSiteProperty('hive.repl.cm.enabled', 'true')
+          services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.metastore.dml.events'})
+          services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.repl.cm.enabled'})
+          # split existing values, append new one and merge back
+          listeners_delimiter = ","
+          listeners_values = set(['org.apache.hive.hcatalog.listener.DbNotificationListener'])
+          if hive_site and 'hive.metastore.transactional.event.listeners' in hive_site and hive_site['hive.metastore.transactional.event.listeners'] is not None:
+            listeners_values.update(
+            [item.strip() for item in hive_site['hive.metastore.transactional.event.listeners'].split(listeners_delimiter)
+             if item.strip() != ""]
+            )
+          listeners_property_value = listeners_delimiter.join(listeners_values)
+          putHiveSiteProperty('hive.metastore.transactional.event.listeners', listeners_property_value)
+          services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.metastore.transactional.event.listeners'})
+
+          if hive_site:
+            hive_home_folder = os.path.dirname(hive_site['hive.metastore.warehouse.dir'])
+            putHiveSiteProperty('hive.repl.cmrootdir', os.path.join(hive_home_folder, 'cmroot'))
+            putHiveSiteProperty('hive.repl.rootdir', os.path.join(hive_home_folder, 'repl'))
+            services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.repl.cmrootdir'})
+            services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.repl.rootdir'})
 
   def getOldPropertyValue(self, services, configType, propertyName):
     if services:
@@ -200,7 +218,12 @@ class BEACON110ServiceAdvisor(service_advisor.ServiceAdvisor):
     return first_parts_of_connection_string.get(databaseType.upper())
 
   def is_cloud_warehouse(self, hive_warehouse_dir):
-    pat = re.compile(r's3.?://')
-    m = pat.match(hive_warehouse_dir)
-    return m is not None
+    pat_s3a = re.compile(r's3.?://')
+    pat_wasb = re.compile(r'wasb.?://')
+    pat_gcs = re.compile(r'gs.?://')
+    is_s3a=pat_s3a.match(hive_warehouse_dir) is not None
+    is_wasb=pat_wasb.match(hive_warehouse_dir) is not None
+    is_gcs=pat_gcs.match(hive_warehouse_dir) is not None
+    is_cloud_warehouse = is_s3a or is_wasb or is_gcs
+    return is_cloud_warehouse
 

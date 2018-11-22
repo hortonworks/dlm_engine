@@ -68,6 +68,11 @@ public final class HiveDRUtils {
     public static final String JDBC_PREFIX = "jdbc:";
     private static final String PATTERN_ZOOKEEPER_DISCOVERY = "^(.*?)serviceDiscoveryMode=zooKeeper[;]?(.*)$";
     private static final String PATTERN_ZOOKEEPER_NAMESPACE = "^(.*?)zooKeeperNamespace=[0-9a-zA-z]+[;]?(.*)$";
+    private static final ClusterFields[] HIVE_DATA_LAKE_CONFIGS = { ClusterFields.HMSENDPOINT,
+                                                                    ClusterFields.HIVE_WAREHOUSE,
+                                                                    ClusterFields.HIVE_INHERIT_PERMS,
+                                                                    ClusterFields.HIVE_FUNCTIONS_DIR,
+                                                                    ClusterFields.HIVE_DML_EVENTS, };
 
     private HiveDRUtils() {}
 
@@ -169,10 +174,7 @@ public final class HiveDRUtils {
         appendConfig(builder, BeaconConstants.HIVE_DISTCP_DOAS, user);
 
         if (isDataLake) {
-            appendConfig(properties, builder, ClusterFields.HMSENDPOINT.getName());
-            appendConfig(properties, builder, ClusterFields.HIVE_WAREHOUSE.getName());
-            appendConfig(properties, builder, ClusterFields.HIVE_INHERIT_PERMS.getName());
-            appendConfig(properties, builder, ClusterFields.HIVE_FUNCTIONS_DIR.getName());
+            addHiveDataLakeConfigs(properties, builder);
 
             String cloudCredId = properties.getProperty(ReplicationPolicyFields.CLOUDCRED.getName());
             if (StringUtils.isNotBlank(cloudCredId)) {
@@ -195,6 +197,12 @@ public final class HiveDRUtils {
             setHMSKerberosProperties(builder, properties);
         }
         return  setDistcpOptions(builder, properties);
+    }
+
+    private static void addHiveDataLakeConfigs(Properties properties, StringBuilder builder) {
+        for (ClusterFields clusterField : HIVE_DATA_LAKE_CONFIGS) {
+            appendConfig(properties, builder, clusterField.getName());
+        }
     }
 
     public static void setHMSKerberosProperties(StringBuilder builder, Properties properties) {

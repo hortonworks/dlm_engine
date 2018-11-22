@@ -47,6 +47,7 @@ public class GCSCloudReplicationTest extends CloudReplicationTest {
                 testDataGenerator.getRandomString("gcs://dummy/warehouse"));
         customProps.setProperty("hive.metastore.uris", "jdbc:hive2://local-" + ClusterType.TARGET);
         customProps.setProperty("hive.warehouse.subdir.inherit.perms", "false");
+        customProps.setProperty("hive.metastore.dml.events", "false");
         customProps.setProperty("hive.repl.replica.functions.root.dir", "gcs://dummy/warehouse-root");
         return customProps;
     }

@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import static com.hortonworks.beacon.constants.BeaconConstants.ONE_MIN;
 
@@ -55,6 +56,7 @@ public abstract class BeaconReplicationPolicy<S extends DataSet, T extends DataS
         extends ReplicationPolicy implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(BeaconReplicationPolicy.class);
     public static final String SNAPSHOT_PREFIX = "beacon-snapshot-";
+    private static final PolicyDao POLICY_DAO = new PolicyDao();
 
     private S sourceDataset;
     private T targetDataset;
@@ -134,6 +136,7 @@ public abstract class BeaconReplicationPolicy<S extends DataSet, T extends DataS
 
     public void validate() throws BeaconException {
         validateAPIAllowed();
+        validatePolicyDoesNotExists();
         validateScheduleDate();
         validateClusters();
         validatePairing();
@@ -160,6 +163,15 @@ public abstract class BeaconReplicationPolicy<S extends DataSet, T extends DataS
         }
         if (this.getEndTime() != null && this.getEndTime().before(new Date())) {
             throw new ValidationException("End time cannot be earlier than current time.");
+        }
+    }
+
+    private void validatePolicyDoesNotExists() throws BeaconException{
+        try {
+            ReplicationPolicy policy = POLICY_DAO.getActivePolicy(this.getName());
+            throw new BeaconException("Policy already exists with name {}", policy.getName());
+        } catch (NoSuchElementException ex) {
+            //ignore the exception
         }
     }
 

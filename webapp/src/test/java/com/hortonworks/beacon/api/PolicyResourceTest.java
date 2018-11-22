@@ -289,6 +289,40 @@ public class PolicyResourceTest extends ResourceBaseTest {
     }
 
     @Test
+    public void testValidateExistingPolicy() throws Exception {
+        final String policyName = testDataGenerator.getRandomString("FsPolicy");
+        String replicationPath1 = SOURCE_DIR + policyName;
+        String replicationPath2 = SOURCE_DIR + testDataGenerator.getRandomString("someRandomPath");
+        submitAndSchedulePolicy(replicationPath1, policyName);
+        waitOnCondition(20000, "First Instance Success ", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instanceElement = getFirstInstance(targetClient, policyName);
+                return instanceElement != null && instanceElement.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+        boolean shouldThrowUp = false;
+        try {
+            validatePolicy(replicationPath2, policyName);
+        } catch (BeaconClientException ex) {
+            if (ex.getMessage().contains("Policy already exists with name")) {
+                shouldThrowUp = true;
+            }
+        }
+        assertTrue(shouldThrowUp);
+        // submit API should also fail
+        shouldThrowUp = false;
+        try {
+            submitAndSchedulePolicy(replicationPath2, policyName);
+        } catch (BeaconClientException ex) {
+            if (ex.getMessage().contains("Policy already exists with name")) {
+                shouldThrowUp = true;
+            }
+        }
+        assertTrue(shouldThrowUp);
+    }
+
+    @Test
     public void testOneToManyReplication() throws Exception {
         final String policyName1 = testDataGenerator.getRandomString("FsPolicy1");
         final String policyName2 = testDataGenerator.getRandomString("FsPolicy2");

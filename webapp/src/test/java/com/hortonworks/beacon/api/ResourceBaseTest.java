@@ -151,4 +151,12 @@ public abstract class ResourceBaseTest {
         ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath);
         targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
     }
+
+    protected void validatePolicy(String replicationPath, String policyName)
+            throws IOException, BeaconClientException {
+        targetFs.mkdirs(new Path(replicationPath));
+        testDataGenerator.createFSMocks(replicationPath);
+        ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath);
+        targetClient.dryrunPolicy(policyName, policyRequest.asProperties());
+    }
 }

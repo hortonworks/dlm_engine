@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.api;
 
+import com.hortonworks.beacon.BeaconClientFactory;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.entity.Cluster;
@@ -29,6 +30,7 @@ import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
+import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.StatusResult;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
 import com.hortonworks.beacon.entity.util.hive.HiveServerClient;
@@ -611,6 +613,29 @@ public class PolicyResourceTest extends ResourceBaseTest {
             assertTrue(ex.getMessage().contains("Start time cannot be earlier than current time."));
         }
         assertTrue(shouldThrow);
+    }
+
+    @Test
+    public void testPolicySubmissionOnSourceHDP3() throws Exception {
+        ServerStatusResult serverStatusResult = new ServerStatusResult();
+        serverStatusResult.setHdpVersion(HDP_VERSION3);
+        LocalBeaconClient localClient = mock(LocalBeaconClient.class);
+        when(localClient.getServiceStatus()).thenReturn(serverStatusResult);
+        BeaconClientFactory.setBeaconClient(localClient);
+
+        final String policyName = testDataGenerator.getRandomString("HivePolicy");
+        String replicationPath = policyName;
+        testDataGenerator.createHiveMocks(replicationPath);
+        ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath, "HIVE");
+        String exceptionMessage = null;
+        String expectedMessage = "Replication from HDP 3 cluster isn't supported yet!";
+        try {
+            targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        } catch (BeaconClientException e) {
+            exceptionMessage = e.getMessage();
+        }
+        assertTrue(expectedMessage.contains(expectedMessage));
+        BeaconClientFactory.setBeaconClient(sourceClient);
     }
 
     /**

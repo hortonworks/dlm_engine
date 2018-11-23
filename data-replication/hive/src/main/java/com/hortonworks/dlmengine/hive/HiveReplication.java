@@ -23,6 +23,8 @@
 package com.hortonworks.dlmengine.hive;
 
 import com.hortonworks.beacon.ExecutionType;
+import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
@@ -65,6 +67,31 @@ public class HiveReplication extends BeaconReplicationPolicy<HiveDBDataSet, Hive
     protected void validateClusters() throws BeaconException {
         clusterExists(this.getSourceCluster());
         clusterExists(this.getTargetCluster());
+    }
+
+    /**
+     * Validate if policy is compatible to be ran in the current setup.
+     *
+     * Restricted:
+     *  HDP 3.0 to any target
+     *  HDP 2.6.5 to HDP 3.0 Cloud
+     * @throws BeaconException
+     */
+    @Override
+    protected void validateClusterCompatibility() throws BeaconException {
+        try {
+            BeaconClient sourceClient = getSourceDatasetV2().getCluster().getBeaconClient();
+            BeaconClient targetClient = getTargetDatasetV2().getCluster().getBeaconClient();
+            String sourceHDPVersion = sourceClient.getServiceStatus().getHdpVersion();
+            String targetHDPVersion = targetClient.getServiceStatus().getHdpVersion();
+            if (this.getTargetDatasetV2().isHCFSDataset() && targetHDPVersion.startsWith("3")) {
+                throw new BeaconException("Hive Cloud Replication from on prem to HDP 3 cluster isn't supported yet!");
+            } else if (sourceHDPVersion.startsWith("3")) {
+                throw new BeaconException("Hive Replication from HDP 3 cluster isn't supported yet!");
+            }
+        } catch (BeaconClientException e) {
+            throw new BeaconException(e);
+        }
     }
 }
 

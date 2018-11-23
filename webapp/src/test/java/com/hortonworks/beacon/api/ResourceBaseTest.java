@@ -48,6 +48,8 @@ public abstract class ResourceBaseTest {
     private static final String SOURCE_CLUSTER_NAME = "cluster-src";
     private static final String TARGET_CLUSTER_NAME = "cluster-tgt";
 
+    protected static final String HDP_VERSION3 = "3.0";
+
     protected TestDataGenerator testDataGenerator;
 
     protected BeaconClient sourceClient;

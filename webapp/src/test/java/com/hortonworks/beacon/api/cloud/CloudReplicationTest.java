@@ -22,6 +22,8 @@
 
 package com.hortonworks.beacon.api.cloud;
 
+import com.hortonworks.beacon.BeaconClientFactory;
+import com.hortonworks.beacon.BeaconServerInfo;
 import com.hortonworks.beacon.api.PropertiesIgnoreCase;
 import com.hortonworks.beacon.api.ResourceBaseTest;
 import com.hortonworks.beacon.client.BeaconClientException;
@@ -45,6 +47,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import static com.hortonworks.beacon.test.ProcessHelper.HDP_DEFAULT_VERSION;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -119,6 +122,60 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
             }
         });
         targetClient.deletePolicy(policyName, false);
+    }
+
+    @Test
+    public void testOnPremToCloudReplicationWithHDP3() throws Exception{
+        CloudCred cloudCred = getCloudCred();
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName = testDataGenerator.getRandomString("HDFSCloudPolicy");
+        String sourceDataSet = SOURCE_DIR + policyName;
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        ReplicationPolicy policy = testDataGenerator.getPolicy(policyName, sourceDataSet,
+                getCloudDataSet(), "FS", 60,
+                sourceCluster.getName(), null, cloudProps);
+        testDataGenerator.createFSMocks(sourceDataSet);
+        String exceptionMessage = null;
+        String expectedMessage = "HDFS to Cloud Replication disabled for HDP 3.0";
+        BeaconServerInfo.getInstance().setHdpVersion(HDP_VERSION3);
+        try {
+            targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        } catch (BeaconClientException e) {
+            exceptionMessage = e.getMessage();
+
+        }
+        assertTrue(exceptionMessage.contains(expectedMessage));
+        BeaconServerInfo.getInstance().setHdpVersion(HDP_DEFAULT_VERSION);
+        BeaconClientFactory.setBeaconClient(sourceClient);
+    }
+
+    @Test
+    public void testCloudToOnPremReplicationWithHDP3() throws Exception{
+        CloudCred cloudCred = getCloudCred();
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName = testDataGenerator.getRandomString("CloudHDFSPolicy");
+        String targetDataSet = SOURCE_DIR + policyName;
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        String sourceDataSet = getCloudDataSet();
+        ReplicationPolicy policy = testDataGenerator.getPolicy(policyName,
+                sourceDataSet, targetDataSet, "FS", 15,
+                null, sourceCluster.getName(), cloudProps);
+
+        String exceptionMessage = null;
+        String expectedMessage = "Cloud to HDFS Replication disabled for HDP 3.0";
+        BeaconServerInfo.getInstance().setHdpVersion(HDP_VERSION3);
+        try {
+            targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        } catch (BeaconClientException e) {
+            exceptionMessage = e.getMessage();
+        }
+        assertTrue(exceptionMessage.contains(expectedMessage));
+        BeaconServerInfo.getInstance().setHdpVersion(HDP_DEFAULT_VERSION);
+        BeaconClientFactory.setBeaconClient(sourceClient);
     }
 
     @Test
@@ -648,6 +705,35 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         targetClient.updatePolicy(policyName, updatedPolicy.asProperties());
 
         targetClient.deletePolicy(policyName, false);
+    }
+
+    @Test(enabled = false)
+    public void testHivePolicySubmissionOnTargetHDP3() throws Exception {
+
+        BeaconServerInfo.getInstance().setHdpVersion(HDP_VERSION3);
+
+        CloudCred cloudCred = getCloudCred();
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName = testDataGenerator.getRandomString("HiveS3Policy");
+        String sourceDataSet = policyName;
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put("cloudCred", cloudCredId);
+        ReplicationPolicy policy = testDataGenerator.getPolicy(policyName, sourceDataSet,
+                testDataGenerator.getRandomString("HiveTestDb"), "HIVE", 60,
+                sourceCluster.getName(), targetCluster.getName(), cloudProps);
+        testDataGenerator.createHiveMocks(sourceDataSet);
+
+        String exceptionMessage = null;
+        String expectedMessage = "Hive Cloud Replication from on prem to HDP 3 cluster isn't supported yet!";
+        try {
+            targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        } catch (BeaconClientException e) {
+            exceptionMessage = e.getMessage();
+        }
+        assertTrue(exceptionMessage.contains(expectedMessage));
+        BeaconServerInfo.getInstance().setHdpVersion(HDP_DEFAULT_VERSION);
+        BeaconClientFactory.setBeaconClient(sourceClient);
     }
 
 }

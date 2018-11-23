@@ -22,6 +22,7 @@
 
 package com.hortonworks.dlmengine.fs;
 
+import com.hortonworks.beacon.BeaconServerInfo;
 import com.hortonworks.beacon.ExecutionType;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
@@ -54,6 +55,13 @@ public class HDFSCloudReplication extends BeaconReplicationPolicy<HDFSDataSet, H
     @Override
     protected void validateClusters() throws BeaconException{
         clusterExists(this.getSourceCluster());
+    }
+
+    @Override
+    protected void validateClusterCompatibility() throws BeaconException {
+        if (!BeaconServerInfo.getInstance().isCloudReplicationEnabled()) {
+            throw new BeaconException("HDFS to Cloud Replication disabled for HDP 3.0");
+        }
     }
 }
 

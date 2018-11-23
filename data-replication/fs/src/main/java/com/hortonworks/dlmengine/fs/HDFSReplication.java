@@ -61,5 +61,10 @@ public class HDFSReplication extends BeaconReplicationPolicy<HDFSDataSet, HDFSDa
         clusterExists(this.getSourceCluster());
         clusterExists(this.getTargetCluster());
     }
+
+    @Override
+    protected void validateClusterCompatibility() throws BeaconException {
+        // Do nothing.
+    }
 }
 

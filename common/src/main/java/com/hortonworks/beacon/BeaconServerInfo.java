@@ -19,21 +19,24 @@
  *    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
  *    OR LOSS OR CORRUPTION OF DATA.
  */
-
-package com.hortonworks.beacon.main;
+package com.hortonworks.beacon;
 
 import com.amazonaws.util.EC2MetadataUtils;
+import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Server class that maintains beacon server status for now.
- */
-public class BeaconServer {
+import static com.hortonworks.beacon.constants.BeaconConstants.HDP_VERSION;
 
-    private static final BeaconServer INSTANCE = new BeaconServer();
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconServer.class);
+/**
+ * BeaconServerInfo class maintains beacon server status, hdp version, cloud hosted etc.
+ */
+public final class BeaconServerInfo {
+
+    private static final BeaconServerInfo INSTANCE = new BeaconServerInfo();
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconServerInfo.class);
     private boolean cloudHosted = false;
+    private String hdpVersion;
 
     static {
         try {
@@ -44,11 +47,35 @@ public class BeaconServer {
         }
     }
 
-    public static final BeaconServer getInstance() {
+    private BeaconServerInfo() {
+    }
+
+    public static BeaconServerInfo getInstance() {
         return INSTANCE;
     }
 
     public boolean isCloudHosted() {
         return cloudHosted;
+    }
+
+
+    public String getHdpVersion() {
+        if (hdpVersion != null) {
+            return hdpVersion;
+        }
+        return System.getenv(HDP_VERSION);
+    }
+
+    public boolean isHDP3() {
+        return getHdpVersion().startsWith("3");
+    }
+
+    public boolean isCloudReplicationEnabled() {
+        return !isHDP3();
+    }
+
+    @VisibleForTesting
+    public void setHdpVersion(String hdpVersion) {
+        BeaconServerInfo.getInstance().hdpVersion = hdpVersion;
     }
 }

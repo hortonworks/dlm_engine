@@ -139,6 +139,7 @@ public abstract class BeaconReplicationPolicy<S extends DataSet, T extends DataS
         validatePolicyDoesNotExists();
         validateScheduleDate();
         validateClusters();
+        validateClusterCompatibility();
         validatePairing();
         validateDataSetConflict();
         validateSourceDatasetExists();
@@ -147,6 +148,13 @@ public abstract class BeaconReplicationPolicy<S extends DataSet, T extends DataS
         validateTargetExistsEmpty();
         validateTargetIsWritable();
     }
+
+    /**
+     * This method checks if the policy can be scheduled based on the cluster config compatibility.
+     * For eg: Replication from Hive 3.X to any cluster is disabled.
+     * @throws BeaconException
+     */
+    protected abstract void validateClusterCompatibility() throws BeaconException;
 
     protected abstract void validateClusters() throws BeaconException;
 

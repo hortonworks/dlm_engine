@@ -24,6 +24,7 @@ package com.hortonworks.beacon;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.hortonworks.beacon.api.LocalBeaconClient;
+import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.entity.util.HdfsAdminFactory;
 import com.hortonworks.beacon.api.ResourceBaseTest;
 import com.hortonworks.beacon.client.BeaconClient;
@@ -76,6 +77,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+import static com.hortonworks.beacon.test.ProcessHelper.HDP_DEFAULT_VERSION;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -117,6 +119,11 @@ public class LocalTestDataGenerator extends TestDataGenerator {
         RemoteIterator<EncryptionZone> remoteIterator = mock(EncryptionZoneIterator.class);
         when(remoteIterator.hasNext()).thenReturn(false);
         when(hdfsAdmin.listEncryptionZones()).thenReturn(remoteIterator);
+        BeaconServerInfo.getInstance().setHdpVersion(HDP_DEFAULT_VERSION);
+        ServerStatusResult serverStatusResult = new ServerStatusResult();
+        serverStatusResult.setHdpVersion(HDP_DEFAULT_VERSION);
+        when(localBeaconClient.getServiceStatus()).thenReturn(serverStatusResult);
+        BeaconClientFactory.setBeaconClient(localBeaconClient);
         DistCp distCp = mock(DistCp.class);
         final Job job = mock(Job.class);
         when(distCp.createAndSubmitJob()).thenReturn(job);

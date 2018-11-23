@@ -32,6 +32,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.StringFormat;
 import com.hortonworks.dlmengine.DataSet;
 import com.hortonworks.dlmengine.fs.FSDataSet;
+import com.hortonworks.dlmengine.fs.HCFSDataset;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
@@ -163,5 +164,9 @@ public class HiveDBDataSet extends DataSet {
 
     public Path getLocation(String name) throws BeaconException {
         return metadataClient.getDatabaseLocation(name);
+    }
+
+    public boolean isHCFSDataset() {
+        return warehouseDataset instanceof HCFSDataset;
     }
 }

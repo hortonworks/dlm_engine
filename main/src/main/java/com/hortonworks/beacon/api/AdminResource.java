@@ -23,11 +23,11 @@
 package com.hortonworks.beacon.api;
 
 import com.codahale.metrics.annotation.Timed;
+import com.hortonworks.beacon.BeaconServerInfo;
 import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.ServerVersionResult;
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.main.BeaconServer;
 import com.hortonworks.beacon.plugin.service.MetaDataPluginManagerService;
 import com.hortonworks.beacon.service.Services;
 import org.apache.commons.lang3.StringUtils;
@@ -37,8 +37,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
-
-import static com.hortonworks.beacon.constants.BeaconConstants.HDP_VERSION;
 
 /**
  * Beacon admin resource management operations as REST API. Root resource (exposed at "myresource" path).
@@ -90,17 +88,19 @@ public class AdminResource extends AbstractResourceManager {
                 getBooleanProperty("beacon.ranger.plugin.create.denypolicy", true));
 
         // HDP Version to be used to verify cluster compatibility for replication.
-        result.setHdpVersion(System.getenv(HDP_VERSION));
+        result.setHdpVersion(BeaconServerInfo.getInstance().getHdpVersion());
+
+        boolean isCloudReplicationEnabled = BeaconServerInfo.getInstance().isCloudReplicationEnabled();
 
         //Beacon 1.1 features
         result.setReplicationTDE(true);
-        result.setReplicationCloudFS(true);
-        result.setReplicationCloudHiveWithCluster(true);
+        result.setReplicationCloudFS(isCloudReplicationEnabled);
+        result.setReplicationCloudHiveWithCluster(isCloudReplicationEnabled);
         result.setEnableSourceSnapshottable(true);
         result.setKnoxProxyingSupported(true);
         result.setKnoxProxyingEnabled(config.getEngine().isKnoxProxyEnabled());
 
-        result.setCloudHosted(BeaconServer.getInstance().isCloudHosted());
+        result.setCloudHosted(BeaconServerInfo.getInstance().isCloudHosted());
 
         //Beacon DLM-Jun18 features
         result.setPolicyEditSupported(true);
@@ -108,12 +108,12 @@ public class AdminResource extends AbstractResourceManager {
         result.setClusterUpdateSupported(true);
 
         //Beacon DLM 1.1.3 features
-        result.setWasbReplicationSupported(true);
+        result.setWasbReplicationSupported(isCloudReplicationEnabled);
         result.setEnableSnapshotBasedReplication(true);
         result.setFileListingFilterEnabled(true);
 
         //Beacon DLM 1.3.0 features
-        result.setGcsReplicationSupported(true);
+        result.setGcsReplicationSupported(isCloudReplicationEnabled);
 
         return result;
     }

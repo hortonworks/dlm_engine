@@ -55,6 +55,8 @@ public class LocalBeaconClient implements BeaconClient {
 
     private CloudCredResource cloudCredResource = new CloudCredResource();
 
+    private AdminResource adminResource = new AdminResource();
+
     @Override
     public void submitCluster(final String clusterName, final PropertiesIgnoreCase properties)
             throws BeaconClientException {
@@ -316,7 +318,12 @@ public class LocalBeaconClient implements BeaconClient {
 
     @Override
     public ServerStatusResult getServiceStatus() throws BeaconClientException {
-        return null;
+        return new ClientResource<ServerStatusResult>() {
+            @Override
+            ServerStatusResult api() throws BeaconWebException {
+                return adminResource.getServerStatus();
+            }
+        }.call();
     }
 
     @Override

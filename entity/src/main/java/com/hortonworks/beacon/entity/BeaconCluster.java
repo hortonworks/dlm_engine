@@ -22,6 +22,9 @@
 
 package com.hortonworks.beacon.entity;
 
+import com.hortonworks.beacon.BeaconClientFactory;
+import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.util.ClusterDao;
@@ -96,5 +99,9 @@ public class BeaconCluster extends Cluster {
             return FileSystemClientFactory.get().createFileSystem(conf);
         }
         return null;
+    }
+
+    public BeaconClient getBeaconClient() throws BeaconClientException {
+        return BeaconClientFactory.getBeaconClient(getBeaconEndpoint(), getKnoxGatewayURL());
     }
 }

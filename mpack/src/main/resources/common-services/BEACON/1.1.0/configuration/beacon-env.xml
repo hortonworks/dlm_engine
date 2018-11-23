@@ -576,7 +576,7 @@
   </property>
   <property>
     <name>atlas_client_read_timeout</name>
-    <value>120</value>
+    <value>7200</value>
     <description>Atlas http client read timeout (in seconds)</description>
     <display-name>Atlas http client read timeout (in seconds)</display-name>
   </property>

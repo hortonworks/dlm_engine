@@ -58,6 +58,11 @@
     </property>
 
     <property>
+        <name>mapred.map.child.java.opts</name>
+        <value>-Xmx820m</value>
+    </property>
+
+    <property>
         <name>mapred.job.reduce.memory.mb</name>
         <value>1024</value>
     </property>

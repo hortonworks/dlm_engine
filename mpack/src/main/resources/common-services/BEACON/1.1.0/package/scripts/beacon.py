@@ -281,6 +281,18 @@ def beacon(type, action = None, upgrade_type=None):
                   beacon_atlas_user_policy_item = {'groups': [], 'conditions': [], 'users': [get_beacon_atlas_user], 'accesses': [{'type': 'admin-export', 'isAllowed': True}, {'type': 'admin-import', 'isAllowed': True}]}
                   atlas_service_policy_data = ranger_api_functions.update_policy_item(atlas_service_policy_response, beacon_atlas_user_policy_item)
                   atlas_service_policy_update_response = ranger_api_functions.update_policy(ranger_admin_url, atlas_service_policy_id, atlas_service_policy_data, format("{ranger_admin_user}:{ranger_admin_passwd}"))
+
+              # Get Ranger Atlas default policy for TYPE CATEGORY and TYPE resource
+              atlas_type_category_policy_response = ranger_api_functions.get_ranger_service_default_policy(ranger_admin_url, params.ranger_atlas_service_name, format("{ranger_admin_user}:{ranger_admin_passwd}"), ['type', 'type-category'])
+
+              if atlas_type_category_policy_response:
+                beacon_atlas_user_present = ranger_api_functions.check_user_policy(atlas_type_category_policy_response, get_beacon_atlas_user)
+                if not beacon_atlas_user_present:
+                  # Updating beacon atlas user in Ranger Atlas default policy for type category and type resource
+                  atlas_type_category_policy_id = atlas_type_category_policy_response['id']
+                  beacon_atlas_user_policy_item = {'groups': [], 'conditions': [], 'users': [get_beacon_atlas_user], 'accesses': [{'type': 'type-create', 'isAllowed': True}, {'type': 'type-update', 'isAllowed': True}, {'type': 'type-delete', 'isAllowed': True}]}
+                  atlas_type_category_policy_data = ranger_api_functions.update_policy_item(atlas_type_category_policy_response, beacon_atlas_user_policy_item)
+                  atlas_update_type_category_policy_response = ranger_api_functions.update_policy(ranger_admin_url, atlas_type_category_policy_id, atlas_type_category_policy_data, format("{ranger_admin_user}:{ranger_admin_passwd}"))
             else:
               # Get Ranger Atlas default policy for ENTITY resource
               atlas_policy_response = ranger_api_functions.get_ranger_service_default_policy(ranger_admin_url, params.ranger_atlas_service_name, format("{ranger_admin_user}:{ranger_admin_passwd}"), ['entity'])

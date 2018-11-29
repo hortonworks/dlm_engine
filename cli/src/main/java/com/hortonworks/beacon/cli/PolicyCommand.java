@@ -209,7 +209,7 @@ public class PolicyCommand extends CommandBase {
     }
 
     private void submitAndSchedule(String configFile) throws BeaconClientException {
-        client.submitAndScheduleReplicationPolicy(policyName, getProperties(configFile));
+        client.submitAndScheduleReplicationPolicy(policyName, getProperties(configFile), true);
         printResult("Submit and schedule of policy " + policyName);
     }
 

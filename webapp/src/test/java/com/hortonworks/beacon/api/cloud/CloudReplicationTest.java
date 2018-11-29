@@ -51,6 +51,8 @@ import static com.hortonworks.beacon.test.ProcessHelper.HDP_DEFAULT_VERSION;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
@@ -112,7 +114,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
                 getCloudDataSet(), "FS", 60,
                 sourceCluster.getName(), null, cloudProps);
         testDataGenerator.createFSMocks(sourceDataSet);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties(), true);
 
         waitOnCondition(50000, "First Instance Success ", new Condition() {
             @Override
@@ -141,7 +143,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         String expectedMessage = "HDFS to Cloud Replication disabled for HDP 3.0";
         BeaconServerInfo.getInstance().setHdpVersion(HDP_VERSION3);
         try {
-            targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+            targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties(), false);
         } catch (BeaconClientException e) {
             exceptionMessage = e.getMessage();
 
@@ -169,7 +171,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         String expectedMessage = "Cloud to HDFS Replication disabled for HDP 3.0";
         BeaconServerInfo.getInstance().setHdpVersion(HDP_VERSION3);
         try {
-            targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+            targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties(), false);
         } catch (BeaconClientException e) {
             exceptionMessage = e.getMessage();
         }
@@ -191,7 +193,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
                 getCloudDataSet(), "FS", 60,
                 sourceCluster.getName(), null, cloudProps);
         testDataGenerator.createFSMocks(sourceDataSet);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties(), true);
         waitOnCondition(20000, "Get jobs for policy ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -216,7 +218,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
                 getCloudDataSet(), "FS", 60,
                 sourceCluster.getName(), null, cloudProps);
         testDataGenerator.createFSMocks(sourceDataSet);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties(), true);
         waitOnCondition(20000, "Get jobs for policy ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -242,7 +244,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
                 sourceDataSet, targetDataSet, "FS", 60,
                 null, sourceCluster.getName(), cloudProps);
         testDataGenerator.createFSMocks(sourceDataSet);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties(), true);
         waitOnCondition(50000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -266,7 +268,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
                 getCloudDataSet(), "FS", 15,
                 sourceCluster.getName(), null, cloudProps);
         testDataGenerator.createFSMocks(sourceDataSet);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties(), true);
         waitOnCondition(50000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -302,7 +304,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
                 sourceDataSet, targetDataSet, "FS", 15,
                 null, sourceCluster.getName(), cloudProps);
         testDataGenerator.createFSMocks(sourceDataSet);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties(), true);
         waitOnCondition(50000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -337,7 +339,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
                 getCloudDataSet(), targetDataSet, "FS", 60,
                 null, sourceCluster.getName(), cloudProps);
         testDataGenerator.createFSMocks(getCloudDataSet());
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties(), true);
         waitOnCondition(20000, "Get jobs for policy ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -362,7 +364,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
                 testDataGenerator.getRandomString("HiveTestDb"), "HIVE", 60,
                 sourceCluster.getName(), targetCluster.getName(), cloudProps);
         testDataGenerator.createHiveMocks(sourceDataSet);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties(), true);
         waitOnCondition(10000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -388,7 +390,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
                 sourceCluster.getName(), targetCluster.getName(), cloudProps);
         testDataGenerator.createHiveMocks(sourceDataSet);
         testDataGenerator.createFSMocks(tgtDataSet);
-        targetClient.submitAndScheduleReplicationPolicy(policyName1, policy1.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName1, policy1.asProperties(), true);
         waitOnCondition(10000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -402,7 +404,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
                 sourceCluster.getName(), targetCluster.getName(), cloudProps);
         boolean exceptionThrown = false;
         try {
-            targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties());
+            targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties(), true);
         } catch (BeaconClientException ex) {
             exceptionThrown = true;
             assertTrue(ex.getMessage()
@@ -426,7 +428,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
                 sourceCluster.getName(), targetCluster.getName(), cloudProps);
         testDataGenerator.createFSMocks(targetDataSet);
         testDataGenerator.createHiveMocks(sourceDataSet);
-        targetClient.submitAndScheduleReplicationPolicy(policyName1, policy1.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName1, policy1.asProperties(), true);
         waitOnCondition(10000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -439,7 +441,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
                 sourceCluster.getName(), targetCluster.getName(), cloudProps);
         boolean exceptionThrown = false;
         try {
-            targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties());
+            targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties(), true);
         } catch (BeaconClientException ex) {
             assertTrue(ex.getMessage().contains("Target dataset already in replication"));
             exceptionThrown = true;
@@ -462,7 +464,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
                 sourceCluster.getName(), targetCluster.getName(), cloudProps);
         testDataGenerator.createFSMocks(sourceDataSet);
         testDataGenerator.createHiveMocks(sourceDataSet);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties(), true);
         waitOnCondition(10000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -525,6 +527,60 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         assertTrue(shouldThrowup);
     }
 
+    /**
+     * Test to support encrypted to non-encrypted replication.
+     * @throws Exception
+     */
+    @Test
+    public void testEncryptedToNonEncryptedHDFSReplication() throws Exception {
+        CloudCred cloudCred = getCloudCred();
+        String cloudCredId = targetClient.submitCloudCred(cloudCred);
+        assertNotNull(cloudCredId);
+        final String policyName = testDataGenerator.getRandomString("CloudEncryptedHdfsPolicy");
+        String targetDataSet = SOURCE_DIR + policyName;
+        Map<String, String> cloudProps = new HashMap<>();
+        cloudProps.put(FSDRProperties.CLOUD_CRED.getName(), cloudCredId);
+        cloudProps.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(),
+                EncryptionAlgorithmType.AWS_SSES3.toString());
+        ReplicationPolicy policy = testDataGenerator.getPolicy(policyName, getCloudDataSet(),
+                targetDataSet, "FS", 60,
+                null, sourceCluster.getName(), cloudProps);
+        testDataGenerator.createFSMocks(targetDataSet);
+        when(targetFs.create(any(Path.class))).thenReturn(mock(FSDataOutputStream.class));
+        boolean shouldThrowup = false;
+        // Show warning if user wants to create encrypted to non-encrypted replication.
+        try {
+            targetClient.dryrunPolicy(policyName, policy.asProperties());
+        } catch (BeaconClientException ex) {
+            shouldThrowup = true;
+            assertTrue(ex.getMessage().contains("Source is encrypted but target is not encrypted"));
+            assertEquals(ex.getStatus(), Response.Status.PRECONDITION_FAILED.getStatusCode());
+        }
+        assertTrue(shouldThrowup);
+        shouldThrowup = false;
+        /**
+         * Throw error if user wants to create encrypted to non-encrypted replication and
+         * user doesn't set suppressWarning flag.
+         */
+        try {
+            targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties(), false);
+        } catch (BeaconClientException ex) {
+            shouldThrowup = true;
+            assertTrue(ex.getMessage().contains("Source is encrypted but target is not encrypted"));
+            assertEquals(ex.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
+        }
+        assertTrue(shouldThrowup);
+        shouldThrowup = false;
+        /**
+         * Allow replication when user wants to create encrypted to non-encrypted replication and
+         * user set suppressWarning flag.
+         */
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties(), true);
+        assertFalse(shouldThrowup);
+        targetClient.deletePolicy(policyName, false);
+
+    }
+
     @Test
     public void hdfsCloudOneToManyReplicationSrcTgtSrcTest() throws Exception {
         CloudCred cloudCred = getCloudCred();
@@ -544,7 +600,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         testDataGenerator.createFSMocks(srcDataSet1);
         testDataGenerator.createFSMocks(srcDataSet2);
 
-        targetClient.submitAndScheduleReplicationPolicy(policyName1, policy1.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName1, policy1.asProperties(), true);
         waitOnCondition(50000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -555,7 +611,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
 
         ReplicationPolicy policy2 = testDataGenerator.getPolicy(policyName2, tgtDataSet, srcDataSet2, "FS", 60,
                 null, sourceCluster.getName(), cloudProps);
-        targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties(), true);
         waitOnCondition(50000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -585,7 +641,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
                 sourceCluster.getName(), null, cloudProps);
         testDataGenerator.createFSMocks(srcDataSet);
 
-        targetClient.submitAndScheduleReplicationPolicy(policyName1, policy1.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName1, policy1.asProperties(), true);
         waitOnCondition(50000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -596,7 +652,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
 
         ReplicationPolicy policy2 = testDataGenerator.getPolicy(policyName2, srcDataSet, tgtDataSet2, "FS", 60,
                 sourceCluster.getName(), null, cloudProps);
-        targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName2, policy2.asProperties(), true);
         waitOnCondition(50000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -658,7 +714,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
                 sourceDataSet, targetDataSet, "FS", 60,
                 null, sourceCluster.getName(), cloudProps);
         testDataGenerator.createFSMocks(sourceDataSet);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties(), true);
         /**
          * deleting the cloud cred with any active policy should fail.
          */
@@ -692,7 +748,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
                 testDataGenerator.getRandomString("HiveTestDb"), "HIVE", 60,
                 sourceCluster.getName(), targetCluster.getName(), cloudProps);
         testDataGenerator.createHiveMocks(sourceDataSet);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties(), true);
         waitOnCondition(10000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -727,7 +783,7 @@ public abstract class CloudReplicationTest extends ResourceBaseTest {
         String exceptionMessage = null;
         String expectedMessage = "Hive Cloud Replication from on prem to HDP 3 cluster isn't supported yet!";
         try {
-            targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties());
+            targetClient.submitAndScheduleReplicationPolicy(policyName, policy.asProperties(), false);
         } catch (BeaconClientException e) {
             exceptionMessage = e.getMessage();
         }

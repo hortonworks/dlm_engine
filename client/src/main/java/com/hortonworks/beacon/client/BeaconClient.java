@@ -58,8 +58,8 @@ public interface BeaconClient {
     void updateCluster(String clusterName, PropertiesIgnoreCase properties) throws BeaconClientException;
 
     //Policy operations
-    void submitAndScheduleReplicationPolicy(String policyName, PropertiesIgnoreCase properties)
-            throws BeaconClientException;
+    void submitAndScheduleReplicationPolicy(String policyName, PropertiesIgnoreCase properties,
+                                            boolean suppressWarnings) throws BeaconClientException;
 
     void dryrunPolicy(String policyName, PropertiesIgnoreCase properties) throws BeaconClientException;
 

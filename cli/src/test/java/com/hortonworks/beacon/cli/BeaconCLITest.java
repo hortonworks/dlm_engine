@@ -104,7 +104,7 @@ public class BeaconCLITest {
         String file = getTempPropertiesFile();
         cli.processCommand(("-policy firstpolicy -submitSchedule -config " + file).split(" "));
         PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
-        verify(beaconClient).submitAndScheduleReplicationPolicy("firstpolicy", properties);
+        verify(beaconClient).submitAndScheduleReplicationPolicy("firstpolicy", properties, true);
 
         cli.processCommand(("-policy firstpolicy -dryrun -config " + file).split(" "));
         verify(beaconClient).dryrunPolicy("firstpolicy", properties);

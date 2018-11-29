@@ -35,6 +35,8 @@ public class BeaconNotification {
 
     private List<String> errors = new ArrayList<>();
 
+    private List<String> warnings = new ArrayList<>();
+
     public boolean hasErrors() {
         return !errors.isEmpty();
     }
@@ -50,4 +52,17 @@ public class BeaconNotification {
     public String errorMessage() {
         return errorMessage(BeaconConstants.NEW_LINE);
     }
+
+    public void addWarning(String message) {
+        warnings.add(message);
+    }
+
+    public boolean hasWarnings() {
+        return !warnings.isEmpty();
+    }
+
+    public String warningMessage() {
+        return StringUtils.join(warnings, BeaconConstants.NEW_LINE);
+    }
+
 }

@@ -151,7 +151,7 @@ public abstract class ResourceBaseTest {
         targetFs.mkdirs(new Path(replicationPath));
         testDataGenerator.createFSMocks(replicationPath);
         ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties(), true);
     }
 
     protected void validatePolicy(String replicationPath, String policyName)

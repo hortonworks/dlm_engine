@@ -322,7 +322,8 @@ public class BeaconWebClient implements BeaconClient {
     }
 
     @Override
-    public void submitAndScheduleReplicationPolicy(String policyName, PropertiesIgnoreCase properties)
+    public void submitAndScheduleReplicationPolicy(String policyName, PropertiesIgnoreCase properties,
+                                                   boolean suppressWarnings)
             throws BeaconClientException {
         ClientResponse clientResponse = new ResourceBuilder().path(API.POLICY_SUBMITANDSCHEDULE.path, policyName)
                 .call(API.POLICY_SUBMITANDSCHEDULE, properties);

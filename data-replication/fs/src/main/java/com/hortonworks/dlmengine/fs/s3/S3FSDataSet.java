@@ -80,6 +80,10 @@ public class S3FSDataSet extends HCFSDataset {
         if (policy != null) {
             return !EncryptionAlgorithmType.NONE.equals(PolicyHelper.getCloudEncryptionAlgorithm(policy));
         } else {
+            /**
+             * This part of the code doesn't work in case of directories so
+             * we have to set cloud.encryptionAlgorithm during policy creation even if target is encrypted.
+             */
             try {
                 String encAlgo = ((S3AFileSystem) fileSystem).getObjectMetadata(myPath).getSSEAlgorithm();
                 return StringUtils.isNotBlank(encAlgo);

@@ -134,7 +134,7 @@ public abstract class BeaconReplicationPolicy<S extends DataSet, T extends DataS
         return targetDataset;
     }
 
-    public void validate() throws BeaconException {
+    public BeaconNotification validate() throws BeaconException {
         validateAPIAllowed();
         validatePolicyDoesNotExists();
         validateScheduleDate();
@@ -147,6 +147,23 @@ public abstract class BeaconReplicationPolicy<S extends DataSet, T extends DataS
         validateEncryptionAndSnapshot();
         validateTargetExistsEmpty();
         validateTargetIsWritable();
+        BeaconNotification beaconNotification = new BeaconNotification();
+        validateEncryptionSourceTarget(beaconNotification);
+        return beaconNotification;
+    }
+
+    /**
+     * Encryption compatibility check between source and target dataset.
+     * @param notification
+     * @throws BeaconException
+     */
+    public void validateEncryptionSourceTarget(BeaconNotification notification) throws BeaconException {
+        boolean isSrcEncrypted = this.sourceDataset.isEncrypted();
+        boolean isTgtEncrypted = this.targetDataset.isEncrypted();
+        if (isSrcEncrypted && !isTgtEncrypted) {
+            notification.addWarning("Source is encrypted but target is not encrypted");
+        }
+
     }
 
     /**

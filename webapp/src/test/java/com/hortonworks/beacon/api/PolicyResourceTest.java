@@ -114,7 +114,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetFs.mkdirs(new Path(replicationPath));
         testDataGenerator.createFSMocks(replicationPath);
         ReplicationPolicy replicationPolicy = testDataGenerator.getPolicy(policyName, replicationPath);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, replicationPolicy.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, replicationPolicy.asProperties(), true);
         PolicyList oldDef = targetClient.getPolicy(policyName);
         assertEquals(120, (long) oldDef.getElements()[0].frequencyInSec);
 
@@ -170,7 +170,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetFs.mkdirs(new Path(replicationPath));
         testDataGenerator.createFSMocks(replicationPath);
         ReplicationPolicy replicationPolicy = testDataGenerator.getPolicy(policyName, replicationPath);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, replicationPolicy.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, replicationPolicy.asProperties(), true);
         PolicyList oldDef = targetClient.getPolicy(policyName);
         assertEquals(120, (long) oldDef.getElements()[0].frequencyInSec);
 
@@ -212,7 +212,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetFs.mkdirs(new Path(replicationPath));
         testDataGenerator.createFSMocks(replicationPath);
         ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties(), true);
         waitOnCondition(5000, "Policy Running ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -237,7 +237,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetFs.mkdirs(new Path(replicationPath));
         testDataGenerator.createFSMocks(replicationPath);
         ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties(), true);
         StatusResult statusResult = targetClient.getPolicyStatus(policyName);
         assertEquals(Entity.EntityStatus.RUNNING, statusResult.getStatus());
         targetClient.suspendPolicy(policyName);
@@ -258,7 +258,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetFs.mkdirs(new Path(replicationPath));
         testDataGenerator.createFSMocks(replicationPath);
         ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties(), true);
         waitOnCondition(5000, "Policy Running ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -299,7 +299,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetFs.mkdirs(new Path(replicationPath));
         testDataGenerator.createFSMocks(replicationPath);
         ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties(), true);
         waitOnCondition(20000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -352,7 +352,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetFs.mkdirs(new Path(replicationPath));
         testDataGenerator.createFSMocks(replicationPath);
         ReplicationPolicy policyRequest1 = testDataGenerator.getPolicy(policyName1, replicationPath);
-        targetClient.submitAndScheduleReplicationPolicy(policyName1, policyRequest1.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName1, policyRequest1.asProperties(), true);
         waitOnCondition(20000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -366,7 +366,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         policyRequest2.setTargetDataset(TARGET_DIR);
         boolean exceptionThrown = false;
         try {
-            targetClient.submitAndScheduleReplicationPolicy(policyName2, policyRequest2.asProperties());
+            targetClient.submitAndScheduleReplicationPolicy(policyName2, policyRequest2.asProperties(), true);
         } catch (BeaconClientException ex) {
             exceptionThrown = true;
             assertTrue(ex.getMessage()
@@ -384,7 +384,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetFs.mkdirs(new Path(replicationPath));
         testDataGenerator.createFSMocks(replicationPath);
         ReplicationPolicy policyRequest1 = testDataGenerator.getPolicy(policyName1, replicationPath);
-        targetClient.submitAndScheduleReplicationPolicy(policyName1, policyRequest1.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName1, policyRequest1.asProperties(), true);
         waitOnCondition(20000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -397,7 +397,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         ReplicationPolicy policyRequest2 = testDataGenerator.getPolicy(policyName2, replicationPath);
         boolean exceptionThrown = false;
         try {
-            targetClient.submitAndScheduleReplicationPolicy(policyName2, policyRequest2.asProperties());
+            targetClient.submitAndScheduleReplicationPolicy(policyName2, policyRequest2.asProperties(), true);
         } catch (BeaconClientException bex) {
             assertTrue(bex.getMessage().contains("Target dataset already in replication"));
             exceptionThrown = true;
@@ -415,7 +415,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         HashMap<String, String> custProps = new HashMap<>();
         custProps.put(ReplicationPolicy.ReplicationPolicyFields.ENABLE_SNAPSHOTBASEDREPLICATION.getName(), "true");
         ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath, custProps);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties(), true);
         waitOnCondition(20000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -435,7 +435,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         HashMap<String, String> custProps = new HashMap<>();
         custProps.put(ReplicationPolicy.ReplicationPolicyFields.ENABLE_SNAPSHOTBASEDREPLICATION.getName(), "true");
         ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath, custProps);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties(), true);
         waitOnCondition(20000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -455,7 +455,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         boolean exThrown = false;
         policyRequest = testDataGenerator.getPolicy(policyName1, replicationPath, custProps);
         try {
-            targetClient.submitAndScheduleReplicationPolicy(policyName1, policyRequest.asProperties());
+            targetClient.submitAndScheduleReplicationPolicy(policyName1, policyRequest.asProperties(), true);
         } catch (BeaconClientException bEx) {
             exThrown = true;
         }
@@ -470,7 +470,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         testDataGenerator.createFSMocks(replicationPath);
         ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath);
         policyRequest.setFrequencyInSec(15);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties(), true);
         waitOnCondition(20000, "First Instance Success ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -501,7 +501,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetFs.mkdirs(new Path(replicationPath));
         testDataGenerator.createFSMocks(replicationPath);
         ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName1, replicationPath);
-        targetClient.submitAndScheduleReplicationPolicy(policyName1, policyRequest.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName1, policyRequest.asProperties(), true);
         //Now edit a policy and enable snapshot, it should fail.
         PropertiesIgnoreCase props = new PropertiesIgnoreCase();
         props.put(ReplicationPolicy.ReplicationPolicyFields.ENABLE_SNAPSHOTBASEDREPLICATION.getName(), "true");
@@ -522,7 +522,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         targetFs.mkdirs(new Path(replicationPath));
         testDataGenerator.createFSMocks(replicationPath);
         ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties(), true);
         waitOnCondition(5000, "Instance Running ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {
@@ -562,7 +562,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         String replicationPath = policyName;
         testDataGenerator.createHiveMocks(replicationPath);
         ReplicationPolicy policyRequest = testDataGenerator.getPolicy(policyName, replicationPath, "HIVE");
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties(), true);
         testDataGenerator.createHiveMocks(replicationPath);
         waitOnCondition(10000, "Instance Success ", new Condition() {
             @Override
@@ -587,7 +587,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
             Calendar calendar = Calendar.getInstance();
             calendar.add(Calendar.DATE, -30);
             policyRequest.setEndTime(calendar.getTime());
-            targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+            targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties(), true);
         } catch (BeaconClientException ex) {
             shouldThrow = true;
             assertTrue(ex.getMessage().contains("End time cannot be earlier than start time."));
@@ -607,7 +607,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
             Calendar calendar = Calendar.getInstance();
             calendar.add(Calendar.DATE, -30);
             policyRequest.setStartTime(calendar.getTime());
-            targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+            targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties(), true);
         } catch (BeaconClientException ex) {
             shouldThrow = true;
             assertTrue(ex.getMessage().contains("Start time cannot be earlier than current time."));
@@ -630,11 +630,11 @@ public class PolicyResourceTest extends ResourceBaseTest {
         String exceptionMessage = null;
         String expectedMessage = "Replication from HDP 3 cluster isn't supported yet!";
         try {
-            targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+            targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties(), false);
         } catch (BeaconClientException e) {
             exceptionMessage = e.getMessage();
         }
-        assertTrue(expectedMessage.contains(expectedMessage));
+        assertTrue(exceptionMessage.contains(expectedMessage));
         BeaconClientFactory.setBeaconClient(sourceClient);
     }
 
@@ -660,7 +660,7 @@ public class PolicyResourceTest extends ResourceBaseTest {
         ResultSet resultSetReplDump = mock(ResultSet.class);
         mockForRerunHiveFailedAdmin(statementForThisTest, resultSetReplStatus, resultSetReplDump);
         testDataGenerator.createHiveMocks(replicationPath);
-        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties());
+        targetClient.submitAndScheduleReplicationPolicy(policyName, policyRequest.asProperties(), true);
         waitOnCondition(10000, "Instance FAILED_ADMIN ", new Condition() {
             @Override
             public boolean exit() throws BeaconClientException {

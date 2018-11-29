@@ -1029,7 +1029,7 @@
         <annotations.version>3.0.1</annotations.version>
         <sdk.aws.version>1.10.6</sdk.aws.version>
         <activation.version>1.2.0</activation.version>
-        <atlas.client.version>0.8.3-SNAPSHOT</atlas.client.version>
+        <atlas.client.version>0.8.0.2.6.5.1050-SNAPSHOT</atlas.client.version>
         <beacon.schemadirectory>../src/sql</beacon.schemadirectory>
         <beacon.yml.location>../src/conf/</beacon.yml.location>
     </properties>

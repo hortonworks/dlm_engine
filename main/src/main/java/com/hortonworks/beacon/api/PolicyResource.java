@@ -40,6 +40,7 @@ import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.StatusResult;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
+import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
@@ -52,6 +53,7 @@ import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLogUtils;
+import com.hortonworks.beacon.notification.BeaconNotification;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
@@ -108,6 +110,7 @@ public class PolicyResource extends AbstractResourceManager {
     @Timed(absolute = true, name="api.beacon.policy.submitAndSchedule")
     public APIResult submitAndSchedule(@PathParam("policy-name") String policyName,
                                        @DefaultValue("true") @QueryParam("validateCloud") String validateCloudStr,
+                                       @DefaultValue("false") @QueryParam("suppressWarnings") Boolean  suppressWarnings,
                                        PropertiesIgnoreCase requestProperties) {
         BeaconReplicationPolicy beaconReplicationPolicy = null;
         try {
@@ -124,7 +127,7 @@ public class PolicyResource extends AbstractResourceManager {
                 validateCloud = false;
             }
             modifyDBReplProperty(replicationPolicy, PolicyResource.AlterDBProperty.SET);
-            return submitAndSchedulePolicy(beaconReplicationPolicy, validateCloud);
+            return submitAndSchedulePolicy(beaconReplicationPolicy, suppressWarnings);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -726,9 +729,12 @@ public class PolicyResource extends AbstractResourceManager {
         }
     }
 
-    private APIResult submitAndSchedulePolicy(BeaconReplicationPolicy replicationPolicy, boolean validateCloud) {
+    private APIResult submitAndSchedulePolicy(BeaconReplicationPolicy replicationPolicy, boolean suppressWarnings) {
         try {
-            replicationPolicy.validate();
+            BeaconNotification notification = replicationPolicy.validate();
+            if (notification.hasWarnings() && !suppressWarnings) {
+                throw new ValidationException(notification.warningMessage());
+            }
             submit(replicationPolicy, true);
             schedule(replicationPolicy);
             LOG.info("Request for policy submitAndSchedule is processed successfully. Policy-name: [{}]",
@@ -746,7 +752,11 @@ public class PolicyResource extends AbstractResourceManager {
 
     private APIResult validatePolicyInternal(BeaconReplicationPolicy replicationPolicy) {
         try {
-            replicationPolicy.validate();
+            BeaconNotification beaconNotification = replicationPolicy.validate();
+            if (beaconNotification.hasWarnings()) {
+                throw BeaconWebException.newAPIException(new ValidationException(beaconNotification.warningMessage()),
+                        Response.Status.PRECONDITION_FAILED);
+            }
             LOG.info("Request for policy dry run is processed successfully. Policy-name: [{}]",
                     replicationPolicy.getName());
             return new APIResult(APIResult.Status.SUCCEEDED, "Policy [{}] dry-run successful",

@@ -141,12 +141,13 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
-    public void submitAndScheduleReplicationPolicy(final String policyName, final PropertiesIgnoreCase properties)
+    public void submitAndScheduleReplicationPolicy(final String policyName, final PropertiesIgnoreCase properties,
+                                                   final boolean suppressWarnings)
             throws BeaconClientException {
         new ClientResource<APIResult>() {
             @Override
             APIResult api() throws BeaconWebException {
-                return policyResource.submitAndSchedule(policyName, "false", properties);
+                return policyResource.submitAndSchedule(policyName, "false", suppressWarnings, properties);
             }
         }.call();
     }

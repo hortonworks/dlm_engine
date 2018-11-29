@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.hadoop.classification.InterfaceAudience;
+import org.apache.hadoop.fs.BeaconFileStatus;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.permission.AclEntry;
 import org.apache.hadoop.fs.permission.AclEntryType;
@@ -46,7 +47,7 @@ import com.google.common.collect.Maps;
  * are not relevant to sort order.
  */
 @InterfaceAudience.Private
-public final class CopyListingFileStatus extends FileStatus {
+public final class CopyListingFileStatus extends BeaconFileStatus {
 
   private static final byte NO_ACL_ENTRIES = -1;
   private static final int NO_XATTRS = -1;

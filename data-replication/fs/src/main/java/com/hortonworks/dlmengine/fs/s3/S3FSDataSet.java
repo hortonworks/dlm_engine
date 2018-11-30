@@ -70,9 +70,6 @@ public class S3FSDataSet extends HCFSDataset {
         BeaconCloudCred cloudCred = new BeaconCloudCred(policyInput.getCloudCred());
         Configuration bucketConf = getBucketEndpointConf(new Path(resolvePath(path, policyInput)), cloudCred);
         merge(conf, bucketConf);
-        Configuration encryptionConf = EncryptionAlgorithmType
-                .getHadoopConf(policyInput, new Path(resolvePath(path, policyInput)));
-        merge(conf, encryptionConf);
         return conf;
     }
 

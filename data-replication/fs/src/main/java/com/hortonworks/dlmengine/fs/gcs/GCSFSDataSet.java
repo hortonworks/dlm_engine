@@ -28,6 +28,8 @@ import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.entity.EncryptionAlgorithmType;
 import com.hortonworks.dlmengine.fs.HCFSDataset;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
 import java.net.URI;
@@ -48,6 +50,18 @@ public class GCSFSDataSet extends HCFSDataset {
     public String resolvePath(String path, ReplicationPolicy replicationPolicy) {
         URI uri = new Path(path).toUri();
         return String.format("%s://%s%s", CloudCred.Provider.GCS.getHcfsScheme(), uri.getAuthority(), uri.getPath());
+    }
+
+    @Override
+    protected Configuration getHadoopConf(String path, ReplicationPolicy policyInput) throws BeaconException {
+        Configuration configuration =  super.getHadoopConf(path, policyInput);
+        String umask = new Configuration().get("fs.permissions.umask-mode");
+        if (StringUtils.isNotBlank(umask)) {
+            int intumask = Integer.parseInt(umask, 16);
+            int perms = 0x777 & ~intumask;
+            configuration.set("fs.gs.reported.permssions", Integer.toHexString(perms));
+        }
+        return configuration;
     }
 
     @Override

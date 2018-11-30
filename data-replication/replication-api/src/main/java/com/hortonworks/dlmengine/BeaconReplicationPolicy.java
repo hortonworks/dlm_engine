@@ -171,7 +171,7 @@ public abstract class BeaconReplicationPolicy<S extends DataSet, T extends DataS
      * For eg: Replication from Hive 3.X to any cluster is disabled.
      * @throws BeaconException
      */
-    protected abstract void validateClusterCompatibility() throws BeaconException;
+    public abstract void validateClusterCompatibility() throws BeaconException;
 
     protected abstract void validateClusters() throws BeaconException;
 

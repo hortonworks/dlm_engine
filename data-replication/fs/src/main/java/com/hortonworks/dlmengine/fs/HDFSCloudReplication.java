@@ -58,7 +58,7 @@ public class HDFSCloudReplication extends BeaconReplicationPolicy<HDFSDataSet, H
     }
 
     @Override
-    protected void validateClusterCompatibility() throws BeaconException {
+    public void validateClusterCompatibility() throws BeaconException {
         if (!BeaconServerInfo.getInstance().isCloudReplicationEnabled()) {
             throw new BeaconException("HDFS to Cloud Replication disabled for HDP 3.0");
         }

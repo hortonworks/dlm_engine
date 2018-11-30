@@ -63,7 +63,7 @@ public class HDFSReplication extends BeaconReplicationPolicy<HDFSDataSet, HDFSDa
     }
 
     @Override
-    protected void validateClusterCompatibility() throws BeaconException {
+    public void validateClusterCompatibility() throws BeaconException {
         // Do nothing.
     }
 }

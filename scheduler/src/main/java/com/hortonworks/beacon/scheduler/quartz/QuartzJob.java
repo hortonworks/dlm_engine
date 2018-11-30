@@ -116,6 +116,13 @@ public class QuartzJob implements InterruptableJob {
                     jobContext.getOffset(), jobDetail.getType());
 
             beaconReplicationPolicy = BeaconReplicationPolicy.create(jobDetail.getName());
+            try {
+                beaconReplicationPolicy.validateClusterCompatibility();
+            } catch (BeaconException e) {
+                LOG.warn("Incompatible setup for replication policy to continue, suspending policy", e);
+                jobContext.setSuspend(true);
+                throw new JobExecutionException(e);
+            }
             // TODO : fix Property doesn't get set in case of pairing is suspended, but retry params are accessed.
             jobDetail.setProperties(buildProperties(jobDetail, beaconReplicationPolicy));
 

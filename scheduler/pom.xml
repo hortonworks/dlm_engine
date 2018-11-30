@@ -116,6 +116,10 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>beacon-replication-api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

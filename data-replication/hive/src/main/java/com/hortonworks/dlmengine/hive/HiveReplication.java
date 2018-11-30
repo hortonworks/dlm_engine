@@ -78,7 +78,7 @@ public class HiveReplication extends BeaconReplicationPolicy<HiveDBDataSet, Hive
      * @throws BeaconException
      */
     @Override
-    protected void validateClusterCompatibility() throws BeaconException {
+    public void validateClusterCompatibility() throws BeaconException {
         try {
             BeaconClient sourceClient = getSourceDatasetV2().getCluster().getBeaconClient();
             BeaconClient targetClient = getTargetDatasetV2().getCluster().getBeaconClient();

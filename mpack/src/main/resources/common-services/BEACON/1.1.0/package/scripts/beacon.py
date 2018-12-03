@@ -267,7 +267,7 @@ def beacon(type, action = None, upgrade_type=None):
                 if not beacon_atlas_user_present:
                   # Updating beacon atlas user in Ranger Atlas default policy for entity resource
                   atlas_entity_policy_id = atlas_entity_policy_response['id']
-                  beacon_atlas_user_policy_item = {'groups': [], 'conditions': [], 'users': [get_beacon_atlas_user], 'accesses': [{'type': 'entity-read', 'isAllowed': True}]}
+                  beacon_atlas_user_policy_item = {'groups': [], 'conditions': [], 'users': [get_beacon_atlas_user], 'accesses': [{'type': 'entity-read', 'isAllowed': True}, {'type': 'entity-create', 'isAllowed': True}, {'type': 'entity-update', 'isAllowed': True}]}
                   atlas_entity_policy_data = ranger_api_functions.update_policy_item(atlas_entity_policy_response, beacon_atlas_user_policy_item)
                   atlas_update_entity_policy_response = ranger_api_functions.update_policy(ranger_admin_url, atlas_entity_policy_id, atlas_entity_policy_data, format("{ranger_admin_user}:{ranger_admin_passwd}"))
 

@@ -167,6 +167,18 @@ class BEACON110ServiceAdvisor(service_advisor.ServiceAdvisor):
           putHiveSiteProperty('hive.metastore.transactional.event.listeners', listeners_property_value)
           services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.metastore.transactional.event.listeners'})
 
+          # split existing values for scheme, append new one and merge back
+          scheme_delimiter = ","
+          schemes_values = set(['s3a', 'wasb', 'wasbs', 'gs'])
+          if hive_site and 'hive.repl.move.optimized.scheme' in hive_site and hive_site['hive.repl.move.optimized.scheme'] is not None:
+            schemes_values.update(
+            [item.strip() for item in hive_site['hive.repl.move.optimized.scheme'].split(scheme_delimiter)
+             if item.strip() != ""]
+            )
+          schemes_property_value = scheme_delimiter.join(schemes_values)
+          putHiveSiteProperty('hive.repl.move.optimized.scheme', schemes_property_value)
+          services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.repl.move.optimized.scheme'})
+
           if hive_site:
             hive_home_folder = os.path.dirname(hive_site['hive.metastore.warehouse.dir'])
             putHiveSiteProperty('hive.repl.cmrootdir', os.path.join(hive_home_folder, 'cmroot'))

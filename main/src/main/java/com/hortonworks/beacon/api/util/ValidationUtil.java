@@ -166,7 +166,7 @@ public final class ValidationUtil {
         }
     }
 
-    public static void validatePolicyFields(BeaconReplicationPolicy existingPolicy, PropertiesIgnoreCase properties)
+    public static void validatePolicyBasicFields(ReplicationPolicy existingPolicy, PropertiesIgnoreCase properties)
             throws BeaconException {
         String policyStatus = existingPolicy.getStatus();
         if (!(JobStatus.RUNNING.toString().equalsIgnoreCase(policyStatus)
@@ -215,6 +215,10 @@ public final class ValidationUtil {
                         frequencyInSec, deftReplicationFrequencyInSec);
             }
         }
+    }
+
+    public static void validatePolicyHDFSFields(BeaconReplicationPolicy existingPolicy, PropertiesIgnoreCase properties)
+            throws BeaconException {
         boolean enableSnapshotBasedRepl = Boolean.parseBoolean(
                 properties.getPropertyIgnoreCase(FSDRProperties.ENABLE_SNAPSHOTBASED_REPLICATION.getName()));
         if (enableSnapshotBasedRepl) {
@@ -240,6 +244,12 @@ public final class ValidationUtil {
                 }
             }
         }
+    }
+
+    public static void validatePolicyFields(BeaconReplicationPolicy existingPolicy, PropertiesIgnoreCase properties)
+            throws BeaconException {
+        validatePolicyBasicFields(existingPolicy, properties);
+        validatePolicyHDFSFields(existingPolicy, properties);
     }
 
     private static CloudCred getCloudCred(ReplicationPolicy replicationPolicy) {

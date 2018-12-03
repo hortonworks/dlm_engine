@@ -25,6 +25,7 @@ package com.hortonworks.beacon.api;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Joiner;
 import com.hortonworks.beacon.BeaconClientFactory;
+import com.hortonworks.beacon.ExecutionType;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.util.ValidationUtil;
@@ -42,6 +43,7 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
@@ -343,7 +345,6 @@ public class PolicyResource extends AbstractResourceManager {
                                 @QueryParam("update") boolean update,
                                 PropertiesIgnoreCase requestProperties) {
         BeaconLogUtils.prefixPolicy(policyName);
-        BeaconReplicationPolicy beaconReplicationPolicy = null;
         try {
             BeaconLogUtils.prefixPolicy(
                     policyName,
@@ -360,9 +361,8 @@ public class PolicyResource extends AbstractResourceManager {
             requestProperties.remove(ReplicationPolicy.ReplicationPolicyFields.EXECUTIONTYPE.getName());
             ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName,
                     false);
-            beaconReplicationPolicy = BeaconReplicationPolicy.buildReplicationPolicy(replicationPolicy);
             modifyDBReplProperty(replicationPolicy, AlterDBProperty.SET);
-            APIResult result = syncPolicy(beaconReplicationPolicy, requestProperties, id, executionType, update);
+            APIResult result = syncPolicy(replicationPolicy, requestProperties, id, executionType, update);
             if (APIResult.Status.SUCCEEDED == result.getStatus()) {
                 LOG.info("Request for policy sync is processed successfully. Policy-name: [{}]", policyName);
             }
@@ -371,10 +371,6 @@ public class PolicyResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable);
-        } finally {
-            if (beaconReplicationPolicy != null) {
-                beaconReplicationPolicy.close();
-            }
         }
     }
 
@@ -543,6 +539,48 @@ public class PolicyResource extends AbstractResourceManager {
         }
     }
 
+    private APIResult updateSubmittedPolicyForHive(ReplicationPolicy policy, PropertiesIgnoreCase properties,
+                                            boolean syncWithPeer) throws BeaconException {
+        try {
+            RequestContext.get().startTransaction();
+            ReplicationPolicy existingPolicy = new PolicyDao().getActivePolicy(policy.getName());
+            if (!syncWithPeer) {
+                ValidationUtil.validatePolicyBasicFields(existingPolicy, properties);
+            }
+            updatePolicyInternalHive(existingPolicy, properties, syncWithPeer);
+            RequestContext.get().commitTransaction();
+            return new APIResult(APIResult.Status.SUCCEEDED, "Update successful {}: {}", policy.getEntityType(),
+                    policy.getName());
+        } finally {
+            RequestContext.get().rollbackTransaction();
+        }
+    }
+
+    private void updatePolicyInternalHive(ReplicationPolicy existingPolicy, PropertiesIgnoreCase properties,
+                                      boolean syncWithPeer) throws BeaconException {
+        // Prepare policy objects for existing and updated request.
+        ReplicationPolicy updatedPolicy = ReplicationPolicyBuilder.buildPolicyWithPartialData(
+                properties, existingPolicy.getName());
+        if (updatedPolicy.getFrequencyInSec() == -1) {
+            //set it to the active policy value;
+            updatedPolicy.setFrequencyInSec(policyDao.getActivePolicy(existingPolicy.getName()).getFrequencyInSec());
+        }
+        // Prepare for policy update into store
+        PropertiesIgnoreCase updatedProps = new PropertiesIgnoreCase();
+        PropertiesIgnoreCase newProps = new PropertiesIgnoreCase();
+        findUpdatedAndNewCustomProps(updatedPolicy, existingPolicy, updatedProps, newProps);
+        ReplicationPolicy modifiedExistingPolicy = existingPolicy;
+        addNewPropsAndUpdateOlderPropsValue(modifiedExistingPolicy, updatedPolicy, newProps, updatedProps);
+        // persist policy update information
+        policyDao.persistUpdatedPolicy(modifiedExistingPolicy, updatedProps, newProps);
+
+        if (syncWithPeer) {
+            modifiedExistingPolicy.setStartTime(updatedPolicy.getStartTime());
+            syncPolicyInRemote(modifiedExistingPolicy, true);
+        }
+        LOG.info("Request for update policy is processed successfully. Policy-name: [{}]", existingPolicy.getName());
+    }
+
     private void updatePolicyInternal(BeaconReplicationPolicy policy, PropertiesIgnoreCase properties,
                                       boolean syncWithPeer) throws BeaconException {
         // Prepare policy objects for existing and updated request.
@@ -672,23 +710,31 @@ public class PolicyResource extends AbstractResourceManager {
                 policy.getFrequencyInSec());
     }
 
-    private APIResult syncPolicy(BeaconReplicationPolicy replicationPolicy, PropertiesIgnoreCase requestProperties,
+    private APIResult syncPolicy(ReplicationPolicy replicationPolicy, PropertiesIgnoreCase requestProperties,
                                  String id, String executionType, boolean update) throws BeaconException {
         String message;
         ReplicationPolicy policy;
 
         if (update) {
-            BeaconReplicationPolicy oldPolicy = null;
-            try {
-                oldPolicy = BeaconReplicationPolicy.create(replicationPolicy.getName());
-                updateSubmittedPolicy(oldPolicy, requestProperties, false);
-                message = "Update and sync policy successful ({})";
-            } finally {
-                if (oldPolicy != null) {
-                    oldPolicy.close();
+            /**
+             * When execution type is hive creating a new separate flow for sync as validations
+             * related to snapshots are not required here.
+             */
+            ExecutionType executionTypeEnum = ExecutionType.valueOf(executionType);
+            if (executionTypeEnum == ExecutionType.HIVE) {
+                updateSubmittedPolicyForHive(replicationPolicy, requestProperties, false);
+            } else {
+                BeaconReplicationPolicy oldPolicy = null;
+                try {
+                    oldPolicy = BeaconReplicationPolicy.create(replicationPolicy.getName());
+                    updateSubmittedPolicy(oldPolicy, requestProperties, false);
+                } finally {
+                    if (oldPolicy != null) {
+                        oldPolicy.close();
+                    }
                 }
             }
-
+            message = "Update and sync policy successful ({})";
         } else {
             policy = ReplicationPolicyBuilder.buildPolicy(requestProperties, replicationPolicy.getName(), false);
             policy.setPolicyId(id);

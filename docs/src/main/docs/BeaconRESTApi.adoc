@@ -520,6 +520,9 @@ POST api/beacon/policy/submitAndSchedule/:policy-name
 
 *Parameters:* _:policy-name_ Name of the replication policy
 
+*QueryParameters:* ?suppressWarnings=true/false.Set to true if user wants to ignore the
+warning shown during the validation api.By default it is false.
+
 *REST Call:* POST http://localhost:25968/api/beacon/policy/submit/hivePolicy[__http://localhost:25968/api/beacon/policy/submitAndSchedule/hivePolicy__]
 
 [source, properties]
@@ -541,12 +544,48 @@ queueName=test
 
 *Response:*
 
+If there are no validation errors or warnings.
+
+Response code: 200 OK
 [source, json]
 {
   "status": "SUCCEEDED",
   "message": "Policy [hdfspolicy] submitAndSchedule successful",
   "requestId": "1917442783@qtp-1933129092-1"
 }
+
+If there are validation errors.
+
+Response code: 400 BAD_REQUEST
+
+[source, json]
+{
+    "status": "FAILED",
+    "message": "Comma separated validation errors",
+    "entityId": null
+}
+
+If there are warnings and suppressWarnings is not set to true.
+
+Response code: 400 BAD_REQUEST
+[source, json]
+{
+    "status": "FAILED",
+    "message": "comma separated warnings",
+    "entityId": null
+}
+
+If there are warnings and suppressWarnings is set to true.
+
+Response code: 200 OK
+
+[source, json]
+{
+    "status": "SUCCEEDED",
+    "message": "Success message",
+    "entityId": null
+}
+
 
 *Note:* maxEvents is custom properties
 
@@ -637,11 +676,34 @@ sourceDataset=testdb
 
 *Response:*
 
+If there are no warnings or errors.
+
+Response code: 200 OK
 [source, json]
 {
   "status": "SUCCEEDED",
   "message": "Policy [testPolicy] dry-run successful",
-  "requestId": "60822bfe-46ac-441a-af76-291b431d35b9"
+  "entityId": null
+}
+
+If there are any validation errors.
+
+Response code: 400 BAD_REQUEST.
+[source, json]
+{
+    "status": "FAILED",
+    "message": "Comma separated validation errors",
+    "entityId": null
+}
+
+If there are any warnings but no validation error.
+
+Response code: 412 PRECONDITION_FAILED.
+[source, json]
+{
+    "status": "PRECONDITION_FAILED",
+    "message": "Comma separated warnings",
+    "entityId": null
 }
 
 

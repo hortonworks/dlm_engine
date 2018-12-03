@@ -167,6 +167,8 @@ public class LocalTestDataGenerator extends TestDataGenerator {
         DistCpFactory.setDistCp(distCp);
         when(hiveMetadataClient.getDatabaseLocation(Matchers.anyString()))
                 .thenReturn(new Path(getRandomString("hive")));
+        when(hiveMetadataClient.getTables("customers"))
+                .thenReturn(Arrays.asList("user_address"));
         Statement statement = mock(HiveStatement.class);
         when(hiveServerClient.createStatement()).thenReturn(statement);
         final ResultSet resultSet = mock(ResultSet.class);

@@ -404,6 +404,16 @@ public class LocalBeaconClient implements BeaconClient {
     }
 
     @Override
+    public DBListResult listTables(final String dbName) throws BeaconClientException {
+        return new ClientResource<DBListResult>() {
+            @Override
+            DBListResult api() throws BeaconWebException {
+                return beaconResource.listHiveTables(dbName);
+            }
+        }.call();
+    }
+
+    @Override
     public UserPrivilegesResult getUserPrivileges() throws BeaconClientException {
         return null;
     }

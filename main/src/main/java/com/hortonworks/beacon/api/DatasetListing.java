@@ -205,14 +205,6 @@ final class DatasetListing {
                 int index = 0;
                 for (String db : databases) {
                     DBListResult.DBList dbList = new DBListResult.DBList();
-                    Path dbLocation = hiveClient.getDatabaseLocation(db);
-                    String baseEncryptedPath = encryptionZoneListing.getBaseEncryptedPath(cluster,
-                            dbLocation.toString());
-                    dbList.isEncrypted = StringUtils.isNotEmpty(baseEncryptedPath);
-                    if (dbList.isEncrypted) {
-                        dbList.encryptionKeyName = encryptionZoneListing.getEncryptionKeyName(cluster.getName(),
-                                baseEncryptedPath);
-                    }
                     dbList.database = db;
                     dbLists[index++] = dbList;
                 }
@@ -220,9 +212,18 @@ final class DatasetListing {
                 dbListResult.setCollection(dbLists);
             } else {
                 DBListResult.DBList[] dbList = new DBListResult.DBList[1];
-                dbList[0] = new DBListResult.DBList();
-                dbList[0].database = dbName;
-                dbList[0].table = hiveClient.getTables(dbName);
+                DBListResult.DBList db = new DBListResult.DBList();
+                db.database = dbName;
+                Path dbLocation = hiveClient.getDatabaseLocation(dbName);
+                String baseEncryptedPath = encryptionZoneListing.getBaseEncryptedPath(cluster,
+                        dbLocation.toString());
+                db.isEncrypted = StringUtils.isNotEmpty(baseEncryptedPath);
+                if (db.isEncrypted) {
+                    db.encryptionKeyName = encryptionZoneListing.getEncryptionKeyName(cluster.getName(),
+                            baseEncryptedPath);
+                }
+                db.table = hiveClient.getTables(dbName);
+                dbList[0] = db;
                 dbListResult.setCollection(dbList);
             }
             return dbListResult;

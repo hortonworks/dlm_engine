@@ -23,6 +23,7 @@
 package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.FileListResult;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.hadoop.fs.FileStatus;
@@ -34,6 +35,7 @@ import org.junit.Assert;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -85,6 +87,23 @@ public class FileListingTest extends ResourceBaseTest {
         Assert.assertTrue(fileList[1].snapshottable);
         Assert.assertFalse(fileList[2].snapshottable);
         Assert.assertFalse(fileList[3].snapshottable);
+        targetClient.deleteCluster(targetCluster.getName());
+    }
+
+    @Test
+    public void testTableListing() throws Exception {
+        targetCluster = testDataGenerator.getCluster(ClusterType.TARGET, true);
+        targetClient.submitCluster(targetCluster.getName(), targetCluster.asProperties());
+        String dbName = "customers";
+
+        DBListResult dbListResult = targetClient.listTables(dbName);
+        DBListResult.DBList[] dbList = dbListResult.dbList;
+        DBListResult.DBList db = dbList[0];
+        Assert.assertEquals(db.database, dbName);
+        Assert.assertEquals(db.isEncrypted, false);
+        Assert.assertEquals(db.encryptionKeyName, null);
+        Assert.assertEquals(db.table, Arrays.asList("user_address"));
+
         targetClient.deleteCluster(targetCluster.getName());
 
     }

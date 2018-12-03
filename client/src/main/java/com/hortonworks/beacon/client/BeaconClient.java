@@ -126,6 +126,8 @@ public interface BeaconClient {
 
     DBListResult listDBs() throws BeaconClientException;
 
+    DBListResult listTables(String dbName) throws BeaconClientException;
+
     //Miscellaneous operations
     UserPrivilegesResult getUserPrivileges() throws BeaconClientException;
 

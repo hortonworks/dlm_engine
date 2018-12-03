@@ -285,6 +285,7 @@ public class BeaconWebClient implements BeaconClient {
         //Beacon Resource operations
         LIST_FILES(API_PREFIX + "file/list/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         LIST_DBS(API_PREFIX + "hive/listDBs/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        LIST_TABLES(API_PREFIX + "hive/listTables/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         USER_PRIVILEGES_GET(API_PREFIX + "user/", HttpMethod.GET, MediaType.APPLICATION_JSON),
 
         //Cloud Cred operations
@@ -730,6 +731,14 @@ public class BeaconWebClient implements BeaconClient {
     public DBListResult listDBs() throws BeaconClientException {
         ClientResponse clientResponse = new ResourceBuilder().path(API.LIST_DBS.path)
                 .call(API.LIST_DBS);
+        return getResponse(clientResponse, DBListResult.class);
+    }
+
+    @Override
+    public DBListResult listTables(String dbName) throws BeaconClientException {
+        ClientResponse clientResponse = new ResourceBuilder().path(API.LIST_DBS.path)
+                .addQueryParam("db", dbName)
+                .call(API.LIST_TABLES);
         return getResponse(clientResponse, DBListResult.class);
     }
 

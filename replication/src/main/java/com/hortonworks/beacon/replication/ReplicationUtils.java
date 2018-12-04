@@ -165,14 +165,14 @@ public final class ReplicationUtils {
     }
 
     public static String getInstanceTrackingInfo(String instanceId) throws BeaconException {
-        LOG.info("Getting tracking info for instance id: [{}]", instanceId);
+        LOG.debug("Getting tracking info for instance id: [{}]", instanceId);
         PolicyInstanceBean instanceBean = new PolicyInstanceBean(instanceId);
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
         List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.GET_INSTANCE_TRACKING_INFO);
         if (beanList == null || beanList.isEmpty()) {
             return "";
         }
-        LOG.info("Getting tracking info completed for instance id: [{}], size: [{}]", instanceId, beanList.size());
+        LOG.debug("Getting tracking info completed for instance id: [{}], size: [{}]", instanceId, beanList.size());
         return beanList.get(0).getTrackingInfo();
     }
 

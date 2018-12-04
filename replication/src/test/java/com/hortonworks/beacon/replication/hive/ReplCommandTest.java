@@ -111,6 +111,7 @@ public class ReplCommandTest {
                 +"'" + HIVE_QUERY_ID + "'='"
                 + hiveJobDetails.getProperties().getProperty(HIVE_QUERY_ID) +"',"
                 + "'mapreduce.job.queuename'='default','hive.exec.parallel'='true',"
+                + "'mapreduce.map.java.opts'='-Xmx640m',"
                 + "'hive.distcp.privileged.doAs'='" + user + "')";
         Assert.assertEquals(actual, expected);
     }

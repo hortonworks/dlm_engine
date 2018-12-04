@@ -58,8 +58,8 @@
     </property>
 
     <property>
-        <name>mapred.map.child.java.opts</name>
-        <value>-Xmx820m</value>
+        <name>mapreduce.map.java.opts</name>
+        <value>-Xmx640m</value>
     </property>
 
     <property>

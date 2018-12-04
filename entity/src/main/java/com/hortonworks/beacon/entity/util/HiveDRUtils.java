@@ -39,6 +39,7 @@ import com.hortonworks.beacon.util.StringFormat;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -157,6 +158,9 @@ public final class HiveDRUtils {
 
             appendConfig(builder, BeaconConstants.MAPREDUCE_JOB_SEND_TOKEN_CONF, PolicyHelper.getRMTokenConf());
         }
+        /** Set max memory for map task process */
+        appendConfig(builder, JobConf.MAPRED_MAP_TASK_JAVA_OPTS, "-Xmx640m");
+
         boolean isDataLake = Boolean.valueOf(properties.getProperty(ClusterFields.CLOUDDATALAKE.getName()));
         if (!isDataLake && Boolean.valueOf(properties.getProperty(FSDRProperties.TDE_SAMEKEY.getName()))) {
             appendConfig(builder, BeaconConstants.HIVE_TDE_SAMEKEY, "true");

@@ -313,7 +313,7 @@ public abstract class InstanceReplication implements BeaconJob {
             properties.setProperty(ClusterFields.HIVE_INHERIT_PERMS.getName(),
                     targetCluster.getCustomProperties().getProperty(ClusterFields.HIVE_INHERIT_PERMS.getName()));
             properties.setProperty(ClusterFields.HIVE_DML_EVENTS.getName(),
-                    targetCluster.getCustomProperties().getProperty(ClusterFields.HIVE_DML_EVENTS.getName()));
+                    targetCluster.getCustomProperties().getProperty(ClusterFields.HIVE_DML_EVENTS.getName(), "false"));
             properties.setProperty(ClusterFields.HIVE_FUNCTIONS_DIR.getName(),
                     targetCluster.getCustomProperties().getProperty(ClusterFields.HIVE_FUNCTIONS_DIR.getName()));
         } else {

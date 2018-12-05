@@ -28,8 +28,11 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.notification.BeaconNotification;
 import com.hortonworks.dlmengine.BeaconReplicationPolicy;
+import com.hortonworks.dlmengine.fs.gcs.GCSFSDataSet;
 import com.hortonworks.dlmengine.fs.hdfs.HDFSDataSet;
+import com.hortonworks.dlmengine.fs.wasb.WASBFSDataSet;
 
 /**
  * Cloud storage (S3/WASB/GCS) to on-prem HDFS replication.
@@ -61,6 +64,14 @@ public class CloudHDFSReplication extends BeaconReplicationPolicy<HCFSDataset, H
     public void validateClusterCompatibility() throws BeaconException {
         if (!BeaconServerInfo.getInstance().isCloudReplicationEnabled()) {
             throw new BeaconException("Cloud to HDFS Replication disabled for HDP 3.0");
+        }
+    }
+
+    @Override
+    public void validateEncryptionSourceTarget(BeaconNotification notification) throws BeaconException {
+        // No encryption validation for WASB and GCS source.
+        if (!(getSourceDatasetV2() instanceof WASBFSDataSet || getSourceDatasetV2() instanceof GCSFSDataSet)) {
+            super.validateEncryptionSourceTarget(notification);
         }
     }
 }

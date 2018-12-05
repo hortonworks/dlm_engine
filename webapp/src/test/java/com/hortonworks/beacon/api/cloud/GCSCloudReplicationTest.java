@@ -75,4 +75,9 @@ public class GCSCloudReplicationTest extends CloudReplicationTest {
         String gcsCloudCredId = targetClient.submitCloudCred(gcsCloudCred);
         assertNotNull(gcsCloudCredId);
     }
+
+    @Test(enabled = false)
+    public void testEncryptedToNonEncryptedHDFSReplication() throws Exception {
+        super.testEncryptedToNonEncryptedHDFSReplication();
+    }
 }

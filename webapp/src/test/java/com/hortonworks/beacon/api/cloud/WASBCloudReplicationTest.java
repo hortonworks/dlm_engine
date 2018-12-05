@@ -101,4 +101,9 @@ public class WASBCloudReplicationTest extends CloudReplicationTest {
         CloudCred updatedCloudCred = targetClient.getCloudCred(cloudCredIdAccessKey);
         assertEquals(updatedCloudCred.getConfigs().get(CloudCred.Config.WASB_ACCOUNT_NAME), "updated-test-account");
     }
+
+    @Test(enabled = false)
+    public void testEncryptedToNonEncryptedHDFSReplication() throws Exception {
+        super.testEncryptedToNonEncryptedHDFSReplication();
+    }
 }

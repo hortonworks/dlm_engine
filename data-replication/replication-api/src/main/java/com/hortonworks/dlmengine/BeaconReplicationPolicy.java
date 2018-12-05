@@ -163,7 +163,6 @@ public abstract class BeaconReplicationPolicy<S extends DataSet, T extends DataS
         if (isSrcEncrypted && !isTgtEncrypted) {
             notification.addWarning("Source is encrypted but target is not encrypted");
         }
-
     }
 
     /**

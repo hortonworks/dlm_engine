@@ -57,7 +57,9 @@ public final class SnapshotListing extends FSListing<Set> {
     public boolean isSnapshottable(BeaconCluster cluster, String path) throws BeaconException {
         updateListing(cluster, path);
         String clusterName = cluster.getName();
-        return listingMap.containsKey(clusterName) && listingMap.get(clusterName).contains(path);
+        String pathToCheck = path.endsWith(File.separator)
+                ? path : path + File.separator;
+        return listingMap.containsKey(clusterName) && listingMap.get(clusterName).contains(pathToCheck);
     }
 
     @Override

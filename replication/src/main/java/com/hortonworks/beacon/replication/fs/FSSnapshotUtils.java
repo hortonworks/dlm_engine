@@ -95,14 +95,20 @@ public final class FSSnapshotUtils {
                                                DistributedFileSystem targetFs, String sourceDir, String targetDir)
             throws BeaconException {
         try {
-            BeaconSnapshotPathFilter pathFilter = new BeaconSnapshotPathFilter(jobName);
+            BeaconSnapshotPathFilter pathFilter = new BeaconSnapshotPathFilter(getSnapshotNamePrefix(jobName));
             FileStatus[] sourceSnapshots = sourceFs.listStatus(new Path(getSnapshotDir(sourceDir)), pathFilter);
             Set<String> sourceSnapshotNames = new HashSet<>();
             for (FileStatus snapshot : sourceSnapshots) {
                 sourceSnapshotNames.add(snapshot.getPath().getName());
             }
-
+            LOG.debug("List of source snapshot names: {} ", sourceSnapshotNames);
             FileStatus[] targetSnapshots = targetFs.listStatus(new Path(getSnapshotDir(targetDir)), pathFilter);
+            Set<String> targetSnapshotNames = new HashSet<>();
+            for (FileStatus snapshot : targetSnapshots) {
+                targetSnapshotNames.add(snapshot.getPath().getName());
+            }
+            LOG.debug("List of target snapshot names: {} ", targetSnapshotNames);
+
             if (targetSnapshots.length > 0) {
                 //sort target snapshots in desc order of creation time.
                 Arrays.sort(targetSnapshots, new Comparator<FileStatus>() {
@@ -116,12 +122,14 @@ public final class FSSnapshotUtils {
                 for (FileStatus targetSnapshot : targetSnapshots) {
                     String name = targetSnapshot.getPath().getName();
                     if (sourceSnapshotNames.contains(name)) {
+                        LOG.info("Target snapshot {} matched on source snapshot {}", name, name);
                         return name;
                     }
                 }
                 // If control reaches here,
                 // there are snapshots on target, but none are replicated from source. Return null.
             }
+            LOG.debug("No snapshot matched on source");
             return null;
         } catch (IOException e) {
             LOG.error("Unable to find latest snapshot on targetDir {} {}", targetDir, e.getMessage());

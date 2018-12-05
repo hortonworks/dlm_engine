@@ -135,7 +135,6 @@ final class DistCpOptionsUtil {
                 }
             }
         }
-
         if (isSnapshot && StringUtils.isNotBlank(fromSnapshot)) {
             if (isInRecoveryMode) {
                 distcpOptions.setUseRdiff(fromSnapshot, toSnapshot);

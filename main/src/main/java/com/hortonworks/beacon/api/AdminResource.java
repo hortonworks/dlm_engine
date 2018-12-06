@@ -94,7 +94,7 @@ public class AdminResource extends AbstractResourceManager {
 
         //Beacon 1.1 features
         result.setReplicationTDE(true);
-        result.setReplicationCloudFS(isCloudReplicationEnabled);
+        result.setReplicationCloudFS(true);
         result.setReplicationCloudHiveWithCluster(isCloudReplicationEnabled);
         result.setEnableSourceSnapshottable(true);
         result.setKnoxProxyingSupported(true);
@@ -108,12 +108,12 @@ public class AdminResource extends AbstractResourceManager {
         result.setClusterUpdateSupported(true);
 
         //Beacon DLM 1.1.3 features
-        result.setWasbReplicationSupported(isCloudReplicationEnabled);
+        result.setWasbReplicationSupported(true);
         result.setEnableSnapshotBasedReplication(true);
         result.setFileListingFilterEnabled(true);
 
         //Beacon DLM 1.3.0 features
-        result.setGcsReplicationSupported(isCloudReplicationEnabled);
+        result.setGcsReplicationSupported(true);
 
         return result;
     }

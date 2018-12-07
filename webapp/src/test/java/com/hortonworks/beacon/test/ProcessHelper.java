@@ -30,6 +30,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.hortonworks.beacon.constants.BeaconConstants.HDP_DEFAULT_VERSION;
 import static com.hortonworks.beacon.constants.BeaconConstants.HDP_VERSION;
 
 /**
@@ -39,8 +40,6 @@ public final class ProcessHelper {
 
     private ProcessHelper() {
     }
-
-    public static final String HDP_DEFAULT_VERSION = "2.6.5.1050";
 
     private static final Logger LOG = LoggerFactory.getLogger(ProcessHelper.class);
 

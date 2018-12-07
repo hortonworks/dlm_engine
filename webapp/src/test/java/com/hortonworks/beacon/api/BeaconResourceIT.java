@@ -77,7 +77,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
-import static com.hortonworks.beacon.test.ProcessHelper.HDP_DEFAULT_VERSION;
+import static com.hortonworks.beacon.constants.BeaconConstants.HDP_DEFAULT_VERSION;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;

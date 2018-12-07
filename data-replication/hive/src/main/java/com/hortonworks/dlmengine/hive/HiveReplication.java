@@ -32,6 +32,9 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.dlmengine.BeaconReplicationPolicy;
 import com.hortonworks.dlmengine.fs.FSDataSet;
 import com.hortonworks.dlmengine.fs.HCFSDataset;
+import org.apache.commons.lang3.StringUtils;
+
+import static com.hortonworks.beacon.constants.BeaconConstants.HDP_DEFAULT_VERSION;
 
 /**
  * Hive replication - on-prem or cloud.
@@ -84,6 +87,12 @@ public class HiveReplication extends BeaconReplicationPolicy<HiveDBDataSet, Hive
             BeaconClient targetClient = getTargetDatasetV2().getCluster().getBeaconClient();
             String sourceHDPVersion = sourceClient.getServiceStatus().getHdpVersion();
             String targetHDPVersion = targetClient.getServiceStatus().getHdpVersion();
+            if (StringUtils.isEmpty(sourceHDPVersion)) {
+                sourceHDPVersion = HDP_DEFAULT_VERSION;
+            }
+            if (StringUtils.isEmpty(targetHDPVersion)) {
+                targetHDPVersion = HDP_DEFAULT_VERSION;
+            }
             if (this.getTargetDatasetV2().isHCFSDataset() && targetHDPVersion.startsWith("3")) {
                 throw new BeaconException("Hive Cloud Replication from on prem to HDP 3 cluster isn't supported yet!");
             } else if (sourceHDPVersion.startsWith("3")) {

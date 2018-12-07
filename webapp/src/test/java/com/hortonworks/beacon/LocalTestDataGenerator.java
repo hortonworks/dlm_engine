@@ -77,7 +77,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import static com.hortonworks.beacon.test.ProcessHelper.HDP_DEFAULT_VERSION;
+import static com.hortonworks.beacon.constants.BeaconConstants.HDP_DEFAULT_VERSION;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;

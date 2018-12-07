@@ -47,7 +47,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import static com.hortonworks.beacon.test.ProcessHelper.HDP_DEFAULT_VERSION;
+import static com.hortonworks.beacon.constants.BeaconConstants.HDP_DEFAULT_VERSION;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;

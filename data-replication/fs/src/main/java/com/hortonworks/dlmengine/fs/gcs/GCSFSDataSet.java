@@ -59,7 +59,7 @@ public class GCSFSDataSet extends HCFSDataset {
         if (StringUtils.isNotBlank(umask)) {
             int intumask = Integer.parseInt(umask, 16);
             int perms = 0x777 & ~intumask;
-            configuration.set("fs.gs.reported.permssions", Integer.toHexString(perms));
+            configuration.set("fs.gs.reported.permissions", Integer.toHexString(perms));
         }
         return configuration;
     }

@@ -40,6 +40,7 @@ public class RetryingClient {
 
     private static final String ERROR_MESSAGE_NO_ENTITIES = "no entities to create/update";
     private static final String ERROR_MESSAGE_IN_PROGRESS = "import or export is in progress";
+    private static final String ATLAS_ERROR_CODE_IMPORT_EMPTY_ZIP = "empty ZIP file";
 
     private static final String PROPERTY_MAX_RETRY_COUNT = "beacon.atlas.plugin.retry.count";
     private static final String PROPERTY_PAUSE_DURATION = "beacon.atlas.plugin.retry.interval";
@@ -85,7 +86,8 @@ public class RetryingClient {
             return false;
         }
 
-        return (StringUtils.contains(e.getMessage(), ERROR_MESSAGE_NO_ENTITIES));
+        return (StringUtils.contains(e.getMessage(), ERROR_MESSAGE_NO_ENTITIES))
+                || StringUtils.contains(e.getMessage(), ATLAS_ERROR_CODE_IMPORT_EMPTY_ZIP);
     }
 
     private boolean processImportExportLockException(Exception e, int currentRetryCount) throws BeaconException {

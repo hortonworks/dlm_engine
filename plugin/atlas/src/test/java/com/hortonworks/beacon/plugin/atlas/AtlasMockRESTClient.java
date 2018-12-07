@@ -75,7 +75,8 @@ public class AtlasMockRESTClient extends RetryingClient implements RESTClient {
                                 new AtlasBaseClient.API("importData",
                                         "importData",
                                         Response.Status.SEE_OTHER),
-                                new AtlasBaseException(AtlasErrorCode.INVALID_PARAMETERS, "empty file!"));
+                                new AtlasBaseException(AtlasErrorCode.IMPORT_ATTEMPTING_EMPTY_ZIP,
+                                        "Attempting to import empty ZIP file"));
                     }
                 }, getDefaultAtlasImportResult(request));
             }

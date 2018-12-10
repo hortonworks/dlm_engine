@@ -22,10 +22,8 @@
 package com.hortonworks.beacon.plugin.atlas;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import org.apache.atlas.AtlasBaseClient;
-import org.apache.atlas.AtlasErrorCode;
-import org.apache.atlas.AtlasServiceException;
-import org.apache.atlas.exception.AtlasBaseException;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.atlas.model.impexp.AtlasExportRequest;
 import org.apache.atlas.model.impexp.AtlasExportResult;
 import org.apache.atlas.model.impexp.AtlasImportRequest;
@@ -35,12 +33,13 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.testng.SkipException;
 
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.Callable;
+
+import static org.mockito.Mockito.mock;
 
 /**
  * Mock implementation of Atlas REST Client. Used by tests.
@@ -70,13 +69,9 @@ public class AtlasMockRESTClient extends RetryingClient implements RESTClient {
             if (StringUtils.contains(this.filePath, "empty")) {
                 return invokeWithRetry(new Callable<AtlasImportResult>() {
                     @Override
-                    public AtlasImportResult call() throws AtlasServiceException {
-                        throw new AtlasServiceException(
-                                new AtlasBaseClient.API("importData",
-                                        "importData",
-                                        Response.Status.SEE_OTHER),
-                                new AtlasBaseException(AtlasErrorCode.IMPORT_ATTEMPTING_EMPTY_ZIP,
-                                        "Attempting to import empty ZIP file"));
+                    public AtlasImportResult call() {
+                        ClientResponse response = mock(ClientResponse.class);
+                        throw new UniformInterfaceException("Empty", response);
                     }
                 }, getDefaultAtlasImportResult(request));
             }

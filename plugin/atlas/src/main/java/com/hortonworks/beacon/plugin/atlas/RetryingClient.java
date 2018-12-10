@@ -23,6 +23,7 @@ package com.hortonworks.beacon.plugin.atlas;
 
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.atlas.AtlasServiceException;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -82,6 +83,10 @@ public class RetryingClient {
     }
 
     private boolean processInvalidParameterException(Exception e) {
+        if (e instanceof UniformInterfaceException) {
+            return true;
+        }
+
         if (!(e instanceof AtlasServiceException)) {
             return false;
         }

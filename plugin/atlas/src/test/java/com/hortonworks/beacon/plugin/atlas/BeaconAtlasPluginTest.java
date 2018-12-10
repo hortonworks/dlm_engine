@@ -125,7 +125,7 @@ public class BeaconAtlasPluginTest extends RequestProviderBase {
         beaconAtlasPlugin.importData(dataSet, actualExportedPath);
     }
 
-    @Test(expectedExceptions = BeaconException.class)
+    @Test
     public void emptyFileExported() throws IOException, BeaconException, URISyntaxException {
         setupSingle();
         clientBuilder.setFilePath(getZipFilePathForEmpty());
